@@ -1,65 +1,147 @@
-import Image from "next/image";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import BrandCard from "@/components/BrandCard";
+import BikeCard from "@/components/BikeCard";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <Navbar />
+
+      <Hero />
+
+
+      {/* Popular Used Bike Brands */}
+
+      <section className="bg-gray-100 py-20">
+
+        <h2 className="mb-10 text-center text-4xl font-bold">
+          Popular Used Bike Brands
+        </h2>
+
+
+        <div className="mx-auto grid max-w-6xl gap-6 px-6 md:grid-cols-3 lg:grid-cols-4">
+
+
+          <BrandCard
+            name="Royal Enfield"
+            bikes="25"
+          />
+
+
+          <BrandCard
+            name="KTM"
+            bikes="18"
+          />
+
+
+          <BrandCard
+            name="Yamaha"
+            bikes="22"
+          />
+
+
+          <BrandCard
+            name="Honda"
+            bikes="30"
+          />
+
+
+          <BrandCard
+            name="TVS"
+            bikes="20"
+          />
+
+
+          <BrandCard
+            name="Bajaj"
+            bikes="35"
+          />
+
+
+          <BrandCard
+            name="Hero"
+            bikes="40"
+          />
+
+
+          <BrandCard
+            name="Suzuki"
+            bikes="15"
+          />
+
+
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+      </section>
+
+
+
+      {/* Latest Used Bikes */}
+
+      <section className="py-20">
+
+        <h2 className="mb-10 text-center text-4xl font-bold">
+          Latest Used Bikes
+        </h2>
+
+
+        <div className="mx-auto grid max-w-6xl gap-8 px-6 md:grid-cols-2 lg:grid-cols-3">
+
+
+          <BikeCard
+            name="Royal Enfield Classic 350"
+            price="₹1,65,000"
+            year="2022"
+            km="12000"
+            location="Muzaffarpur"
+          />
+
+
+          <BikeCard
+            name="KTM Duke 390"
+            price="₹2,05,000"
+            year="2023"
+            km="8500"
+            location="Patna"
+          />
+
+
+          <BikeCard
+            name="Yamaha R15 V4"
+            price="₹1,55,000"
+            year="2024"
+            km="5000"
+            location="Bihar"
+          />
+
+
         </div>
-      </main>
-    </div>
+
+      </section>
+
+
+      {/* Sell Your Bike */}
+
+      <section className="bg-black py-20 text-center text-white">
+
+        <h2 className="text-4xl font-bold">
+          Want To Sell Your Bike?
+        </h2>
+
+        <p className="mt-4 text-gray-300">
+          Get the best price for your used bike
+        </p>
+
+
+        <button className="mt-8 rounded-xl bg-orange-500 px-8 py-4 font-bold">
+          Sell Your Bike
+        </button>
+
+
+      </section>
+
+
+    </>
   );
 }

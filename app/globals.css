@@ -1,26 +1,77 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  padding:20px 60px;
+  background:#111;
+  color:white;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+
+.navbar a{
+  margin:0 15px;
+  color:white;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+
+.hero{
+  text-align:center;
+  padding:100px 20px;
+  background:#222;
+  color:white;
+}
+
+
+.hero h1{
+  font-size:50px;
+}
+
+
+.search input{
+  padding:15px;
+  width:300px;
+}
+
+
+button{
+  padding:15px 25px;
+  margin:10px;
+  border:none;
+  cursor:pointer;
+}
+
+
+.btn{
+  background:#ff6600;
+  color:white;
+}
+
+
+.section{
+  padding:50px;
+  text-align:center;
+}
+
+
+.cards{
+  display:flex;
+  gap:20px;
+  justify-content:center;
+}
+
+
+.card,
+.bike{
+
+  padding:40px;
+  width:200px;
+  background:#eee;
+  border-radius:10px;
+  font-size:20px;
+
 }
