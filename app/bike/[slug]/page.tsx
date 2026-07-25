@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { bikes as defaultBikes } from "@/lib/bikes";
 import { useParams } from "next/navigation";
+import { db } from "@/firebase/firebase";
+import {
+  collection,
+  getDocs
+} from "firebase/firestore";
 
 
 export default function BikeDetails() {
@@ -13,7 +17,6 @@ export default function BikeDetails() {
   const slug = params.slug as string;
 
 
-
   const [bike, setBike] = useState<any>(null);
 
 
@@ -21,33 +24,45 @@ export default function BikeDetails() {
   useEffect(() => {
 
 
-    const savedBikes = JSON.parse(
-
-      localStorage.getItem("bikes") || "[]"
-
-    );
+    const fetchBike = async () => {
 
 
+      const querySnapshot = await getDocs(
 
-    const allBikes = [
+        collection(db, "bikes")
 
-      ...defaultBikes,
-
-      ...savedBikes
-
-    ];
+      );
 
 
 
-    const foundBike = allBikes.find(
+      const bikes = querySnapshot.docs.map((doc) => ({
 
-      (item) => item.slug === slug
+        id: doc.id,
 
-    );
+        ...doc.data()
+
+      }));
 
 
 
-    setBike(foundBike);
+
+      const foundBike = bikes.find(
+
+        (item:any) => item.slug === slug
+
+      );
+
+
+
+      setBike(foundBike);
+
+
+
+    };
+
+
+
+    fetchBike();
 
 
 
@@ -64,15 +79,18 @@ export default function BikeDetails() {
 
       <main className="flex min-h-screen items-center justify-center">
 
+
         <h1 className="text-3xl font-bold">
 
           Loading Bike...
 
         </h1>
 
+
       </main>
 
     );
+
 
   }
 
@@ -94,6 +112,7 @@ export default function BikeDetails() {
 
           {bike.image ? (
 
+
             <img
 
               src={bike.image}
@@ -104,7 +123,9 @@ export default function BikeDetails() {
 
             />
 
+
           ) : (
+
 
             <div className="flex h-full items-center justify-center text-7xl">
 
@@ -112,10 +133,13 @@ export default function BikeDetails() {
 
             </div>
 
+
           )}
 
 
+
         </div>
+
 
 
 
@@ -133,11 +157,14 @@ export default function BikeDetails() {
 
 
 
+
           <p className="mt-4 text-3xl font-bold text-orange-500">
 
-            {bike.price}
+            ₹{bike.price}
 
           </p>
+
+
 
 
 
@@ -156,7 +183,12 @@ export default function BikeDetails() {
 
 
             <p>
-              🛣️ KM Driven: {bike.km}
+              🛣️ KM Driven: {bike.km} KM
+            </p>
+
+
+            <p>
+              👤 Owner: {bike.owner}
             </p>
 
 
@@ -165,17 +197,25 @@ export default function BikeDetails() {
             </p>
 
 
+
           </div>
+
+
 
 
 
 
           <p className="mt-6 text-gray-600">
 
-            {bike.description || 
-            "Well maintained used bike available."}
+            {bike.description ||
+
+              "Well maintained used bike available."
+
+            }
 
           </p>
+
+
 
 
 
@@ -200,6 +240,7 @@ export default function BikeDetails() {
 
 
 
+
             <a
 
               href="tel:+918789192394"
@@ -213,7 +254,10 @@ export default function BikeDetails() {
             </a>
 
 
+
           </div>
+
+
 
 
         </div>
@@ -221,6 +265,7 @@ export default function BikeDetails() {
 
 
       </div>
+
 
 
     </main>

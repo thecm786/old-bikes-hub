@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import ImageUploader from "@/components/ImageUploader";
+import { db } from "@/firebase/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 
 export default function AddBike() {
@@ -26,6 +29,7 @@ export default function AddBike() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
 
+
     setForm({
 
       ...form,
@@ -34,99 +38,124 @@ export default function AddBike() {
 
     });
 
+
   };
 
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
+
 
     e.preventDefault();
 
 
 
-    const oldBikes = JSON.parse(
-      localStorage.getItem("bikes") || "[]"
-    );
+    try {
+
+
+      const newBike = {
+
+
+        slug:
+
+          form.model
+
+          .toLowerCase()
+
+          .replaceAll(" ", "-"),
 
 
 
-    const newBike = {
+        name: form.model,
 
 
-      id: Date.now(),
+        brand: form.brand,
 
 
-      slug:
-
-        form.model
-        .toLowerCase()
-        .replaceAll(" ", "-"),
+        price: form.price,
 
 
-      name: form.model,
+        year: form.year,
 
 
-      brand: form.brand,
+        km: form.km,
 
 
-      price: form.price,
+        owner: form.owner,
 
 
-      year: form.year,
+        location: form.location,
 
 
-      km: form.km,
+        description: form.description,
 
 
-      owner: form.owner,
+        image: form.image,
 
 
-      location: form.location,
+        createdAt: serverTimestamp(),
 
 
-      description: form.description,
-
-
-      image: form.image,
-
-
-    };
+      };
 
 
 
-    localStorage.setItem(
 
-      "bikes",
+      await addDoc(
 
-      JSON.stringify([
-        ...oldBikes,
+        collection(db, "bikes"),
+
         newBike
-      ])
 
-    );
-
-
-
-    alert("Bike Added Successfully");
+      );
 
 
 
-    setForm({
 
-      brand:"",
-      model:"",
-      price:"",
-      year:"",
-      km:"",
-      owner:"",
-      location:"",
-      description:"",
-      image:"",
+      alert("Bike Added Successfully");
 
-    });
+
+
+
+
+      setForm({
+
+        brand:"",
+        model:"",
+        price:"",
+        year:"",
+        km:"",
+        owner:"",
+        location:"",
+        description:"",
+        image:"",
+
+      });
+
+
+
+
+    } catch(error) {
+
+
+      console.log(
+        "Error adding bike:",
+        error
+      );
+
+
+      alert("Something went wrong");
+
+
+    }
 
 
   };
+
+
 
 
 
@@ -136,11 +165,14 @@ export default function AddBike() {
     <main>
 
 
+
       <section className="bg-black py-16 text-center text-white">
 
 
         <h1 className="text-4xl font-bold">
+
           Add New Bike
+
         </h1>
 
 
@@ -163,99 +195,197 @@ export default function AddBike() {
 
 
 
-          <input
-            name="image"
-            value={form.image}
-            onChange={handleChange}
-            placeholder="Bike Image URL"
-            className="w-full rounded-lg border p-3"
+          <ImageUploader
+
+            onUpload={(url)=>{
+
+
+              setForm({
+
+                ...form,
+
+                image:url
+
+              });
+
+
+            }}
+
           />
 
 
 
+
+
+          {
+            form.image && (
+
+              <img
+
+                src={form.image}
+
+                alt="Bike Preview"
+
+                className="h-48 w-full rounded-lg object-cover"
+
+              />
+
+            )
+          }
+
+
+
+
+
+
           <input
+
             name="brand"
+
             value={form.brand}
+
             onChange={handleChange}
+
             placeholder="Bike Brand"
+
             className="w-full rounded-lg border p-3"
+
           />
 
 
 
+
+
           <input
+
             name="model"
+
             value={form.model}
+
             onChange={handleChange}
+
             placeholder="Bike Model"
+
             className="w-full rounded-lg border p-3"
+
           />
 
 
 
+
+
           <input
+
             name="price"
+
             value={form.price}
+
             onChange={handleChange}
+
             placeholder="Price"
+
             className="w-full rounded-lg border p-3"
+
           />
 
 
 
+
+
           <input
+
             name="year"
+
             value={form.year}
+
             onChange={handleChange}
+
             placeholder="Year"
+
             className="w-full rounded-lg border p-3"
+
           />
 
 
 
+
+
           <input
+
             name="km"
+
             value={form.km}
+
             onChange={handleChange}
+
             placeholder="KM Driven"
+
             className="w-full rounded-lg border p-3"
+
           />
 
 
 
+
+
           <input
+
             name="owner"
+
             value={form.owner}
+
             onChange={handleChange}
+
             placeholder="Owner"
+
             className="w-full rounded-lg border p-3"
+
           />
+
+
 
 
 
           <input
+
             name="location"
+
             value={form.location}
+
             onChange={handleChange}
+
             placeholder="Location"
+
             className="w-full rounded-lg border p-3"
+
           />
+
+
 
 
 
           <textarea
 
+
             name="description"
+
 
             value={form.description}
 
+
             onChange={handleChange}
+
 
             placeholder="Bike Description"
 
+
             className="h-32 w-full rounded-lg border p-3"
 
+
           />
+
+
+
 
 
 
@@ -270,6 +400,7 @@ export default function AddBike() {
             Add Bike
 
           </button>
+
 
 
 

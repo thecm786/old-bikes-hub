@@ -2,33 +2,82 @@
 
 import { useEffect, useState } from "react";
 import BikeCard from "@/components/BikeCard";
-import { bikes as defaultBikes } from "@/lib/bikes";
+import { db } from "@/firebase/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 
 export default function BuyBikes() {
 
 
-  const [allBikes, setAllBikes] = useState(defaultBikes);
+  const [allBikes, setAllBikes] = useState<any[]>([]);
 
   const [brand, setBrand] = useState("All");
+
+  const [loading, setLoading] = useState(true);
 
 
 
   useEffect(() => {
 
 
-    const savedBikes = JSON.parse(
-      localStorage.getItem("bikes") || "[]"
-    );
+    const fetchBikes = async () => {
 
 
-    setAllBikes([
-      ...defaultBikes,
-      ...savedBikes
-    ]);
+      try {
+
+
+        const querySnapshot = await getDocs(
+
+          collection(db, "bikes")
+
+        );
+
+
+
+        const bikesData = querySnapshot.docs.map((doc) => ({
+
+
+          id: doc.id,
+
+
+          ...doc.data()
+
+
+        }));
+
+
+
+        setAllBikes(bikesData);
+
+
+
+      } catch (error) {
+
+
+        console.log(
+          "Error fetching bikes:",
+          error
+        );
+
+
+      } finally {
+
+
+        setLoading(false);
+
+
+      }
+
+
+    };
+
+
+
+    fetchBikes();
 
 
   }, []);
+
 
 
 
@@ -48,17 +97,25 @@ export default function BuyBikes() {
 
 
 
+
   const filteredBikes =
+
 
     brand === "All"
 
+
       ? allBikes
+
 
       : allBikes.filter(
 
+
           (bike) => bike.brand === brand
 
+
         );
+
+
 
 
 
@@ -66,6 +123,7 @@ export default function BuyBikes() {
   return (
 
     <main className="bg-gray-100 min-h-screen">
+
 
 
       <section className="bg-black py-20 text-center text-white">
@@ -91,6 +149,7 @@ export default function BuyBikes() {
 
 
 
+
       <section className="px-6 py-12">
 
 
@@ -103,23 +162,29 @@ export default function BuyBikes() {
 
             <button
 
+
               key={item}
+
 
               onClick={() => setBrand(item)}
 
+
               className={`rounded-xl px-6 py-3 font-bold text-white ${
-                
+
                 brand === item
-                  
+
                   ? "bg-orange-600"
-                  
+
                   : "bg-black"
 
               }`}
 
+
             >
 
+
               {item}
+
 
             </button>
 
@@ -134,57 +199,88 @@ export default function BuyBikes() {
 
 
 
-        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-2 lg:grid-cols-3">
+
+        {
+          loading ? (
 
 
+            <p className="text-center text-xl">
 
-          {filteredBikes.length > 0 ? (
+              Loading Bikes...
 
-
-            filteredBikes.map((bike) => (
-
-
-              <BikeCard
-
-                key={bike.id}
-
-                slug={bike.slug}
-
-                name={bike.name}
-
-                price={bike.price}
-
-                year={bike.year}
-
-                km={bike.km}
-
-                location={bike.location}
-
-                image={bike.image}
-
-              />
-
-
-            ))
-
+            </p>
 
 
           ) : (
 
 
-            <p className="col-span-3 text-center text-xl text-gray-500">
 
-              No Bikes Available
-
-            </p>
-
-
-          )}
+          <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-2 lg:grid-cols-3">
 
 
 
+            {filteredBikes.length > 0 ? (
 
-        </div>
+
+              filteredBikes.map((bike) => (
+
+
+                <BikeCard
+
+
+                  key={bike.id}
+
+
+                  slug={bike.slug}
+
+
+                  name={bike.name || bike.model}
+
+
+                  price={bike.price}
+
+
+                  year={bike.year}
+
+
+                  km={bike.km}
+
+
+                  location={bike.location}
+
+
+                  image={bike.image}
+
+
+                />
+
+
+              ))
+
+
+
+            ) : (
+
+
+
+              <p className="col-span-3 text-center text-xl text-gray-500">
+
+                No Bikes Available
+
+              </p>
+
+
+            )}
+
+
+
+          </div>
+
+
+          )
+
+        }
+
 
 
 
