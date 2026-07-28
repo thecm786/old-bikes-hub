@@ -1,31 +1,75 @@
+"use client";
+
 import Link from "next/link";
+
+import {
+  Calendar,
+  Gauge,
+  MapPin,
+  Heart,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
+  Star,
+} from "lucide-react";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
+
+import {
+  isWishlisted,
+  toggleWishlist,
+} from "@/lib/wishlist";
+
 
 
 type BikeCardProps = {
 
-  slug: string;
+  id:string;
 
-  name: string;
+  slug:string;
 
-  price: string;
+  name:string;
 
-  year: string;
+  brand?:string;
 
-  km: string;
+  price:string | number;
 
-  location: string;
+  year:string;
 
-  image?: string;
+  km:string;
+
+  location:string;
+
+  phone?:string;
+
+  image?:string;
+
+  featured?:boolean;
+
+  verified?:boolean;
+
+  status?:string;
 
 };
 
 
 
+
+
+
 export default function BikeCard({
+
+  id,
 
   slug,
 
   name,
+
+  brand,
 
   price,
 
@@ -35,110 +79,697 @@ export default function BikeCard({
 
   location,
 
+  phone,
+
   image,
 
-}: BikeCardProps) {
+  featured,
+
+  verified=true,
+
+  status="Available",
+
+}:BikeCardProps){
 
 
-  return (
 
-    <div className="rounded-2xl bg-white p-5 shadow-md transition hover:-translate-y-2 hover:shadow-xl">
-
-
-      <div className="h-48 overflow-hidden rounded-xl bg-gray-200">
-
-
-        {image ? (
-
-          <img
-
-            src={image}
-
-            alt={name}
-
-            className="h-full w-full object-cover"
-
-          />
-
-        ) : (
-
-          <div className="flex h-full items-center justify-center text-5xl">
-
-            🏍️
-
-          </div>
-
-        )}
-
-
-      </div>
+  const [liked,setLiked] =
+    useState(false);
 
 
 
 
-      <h3 className="mt-5 text-xl font-bold">
-
-        {name}
-
-      </h3>
+  useEffect(()=>{
 
 
+    setLiked(
+      isWishlisted(id)
+    );
 
 
-      <p className="mt-2 text-2xl font-bold text-orange-500">
-
-        {price}
-
-      </p>
+  },[id]);
 
 
 
 
-      <div className="mt-3 flex justify-between text-gray-600">
 
 
-        <span>
-
-          {year}
-
-        </span>
+  const handleWishlist = ()=>{
 
 
-        <span>
-
-          {km} KM
-
-        </span>
+    const value =
+      toggleWishlist(id);
 
 
-      </div>
+    setLiked(value);
 
 
 
+    window.dispatchEvent(
+      new Event("wishlistUpdated")
+    );
 
-      <p className="mt-3 text-gray-500">
 
-        📍 {location}
-
-      </p>
+  };
 
 
 
 
-      <Link href={`/bike/${slug}`}>
 
-        <button className="mt-5 w-full rounded-xl bg-black py-3 font-semibold text-white hover:bg-orange-500">
-
-          View Details
-
-        </button>
-
-      </Link>
+  const whatsappNumber =
+    phone?.replace(
+      /\D/g,
+      ""
+    );
 
 
 
-    </div>
+  const whatsappLink =
+    whatsappNumber
+    ?
+    `https://wa.me/${whatsappNumber}`
+    :
+    "#";
 
-  );
+
+
+  const callLink =
+    phone
+    ?
+    `tel:${phone}`
+    :
+    "#";
+
+
+
+
+
+
+  const statusStyle =
+
+    status === "Available"
+
+    ?
+
+    "bg-green-500"
+
+    :
+
+    status === "Pending"
+
+    ?
+
+    "bg-yellow-400 text-black"
+
+    :
+
+    "bg-red-600";
+
+
+
+
+
+
+
+
+return (
+
+
+<div
+
+className="
+group
+overflow-hidden
+rounded-3xl
+bg-white
+shadow-lg
+transition-all
+duration-500
+hover:-translate-y-3
+hover:shadow-2xl
+"
+
+>
+
+
+
+{/* IMAGE */}
+
+<div
+
+className="
+relative
+overflow-hidden
+"
+
+>
+
+
+
+{
+image ?
+
+
+<img
+
+src={image}
+
+alt={name}
+
+className="
+h-64
+w-full
+object-cover
+transition
+duration-700
+group-hover:scale-110
+"
+
+/>
+
+
+:
+
+
+
+<div
+
+className="
+flex
+h-64
+items-center
+justify-center
+bg-gray-100
+text-7xl
+"
+
+>
+
+🏍️
+
+</div>
+
+
+}
+
+
+
+
+
+
+{/* WISHLIST */}
+
+<button
+
+onClick={handleWishlist}
+
+className="
+absolute
+right-4
+top-4
+rounded-full
+bg-white
+p-3
+shadow-lg
+"
+
+>
+
+
+<Heart
+
+size={22}
+
+className={
+
+liked
+
+?
+
+"fill-red-500 text-red-500"
+
+:
+
+"text-gray-600"
+
+}
+
+/>
+
+
+</button>
+
+
+
+
+
+
+
+{
+brand &&
+
+<div
+
+className="
+absolute
+left-4
+top-4
+rounded-full
+bg-orange-500
+px-4
+py-2
+text-sm
+font-bold
+text-white
+"
+
+>
+
+{brand}
+
+</div>
+
+}
+
+
+
+
+
+
+
+{/* STATUS BADGE */}
+
+
+<div
+
+className={`
+absolute
+left-4
+top-16
+rounded-full
+px-4
+py-2
+text-sm
+font-bold
+text-white
+
+${statusStyle}
+
+`}
+
+>
+
+
+{
+status === "Available"
+&&
+"🟢 Available"
+}
+
+
+{
+status === "Pending"
+&&
+"🟡 Pending"
+}
+
+
+
+{
+status === "Sold"
+&&
+"🔴 Sold"
+}
+
+
+</div>
+
+
+
+
+
+
+
+
+{
+featured &&
+
+
+<div
+
+className="
+absolute
+bottom-4
+left-4
+flex
+items-center
+gap-1
+rounded-full
+bg-yellow-400
+px-3
+py-2
+text-sm
+font-bold
+"
+
+>
+
+
+<Star
+
+size={16}
+
+fill="currentColor"
+
+/>
+
+
+Featured
+
+
+</div>
+
+
+}
+
+
+
+
+
+
+
+
+{
+verified &&
+
+
+<div
+
+className="
+absolute
+bottom-4
+right-4
+flex
+items-center
+gap-1
+rounded-full
+bg-white
+px-3
+py-2
+text-sm
+font-bold
+text-green-600
+shadow
+"
+
+>
+
+
+<ShieldCheck size={16}/>
+
+
+Verified
+
+
+</div>
+
+
+}
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+{/* CONTENT */}
+
+
+<div className="p-6">
+
+
+<h3
+
+className="
+text-2xl
+font-black
+"
+
+>
+
+{name}
+
+</h3>
+
+
+
+
+
+<p
+
+className="
+mt-3
+text-3xl
+font-black
+text-orange-500
+"
+
+>
+
+₹
+{Number(price)
+.toLocaleString("en-IN")}
+
+
+</p>
+
+
+
+
+
+
+
+
+<div
+
+className="
+mt-5
+grid
+grid-cols-2
+gap-3
+"
+
+>
+
+
+<div className="
+flex
+items-center
+gap-2
+rounded-xl
+bg-gray-100
+p-3
+">
+
+
+<Calendar
+size={18}
+className="text-orange-500"
+/>
+
+
+{year}
+
+
+</div>
+
+
+
+
+
+<div className="
+flex
+items-center
+gap-2
+rounded-xl
+bg-gray-100
+p-3
+">
+
+
+<Gauge
+size={18}
+className="text-orange-500"
+/>
+
+
+{km} KM
+
+
+</div>
+
+
+
+
+
+<div className="
+col-span-2
+flex
+items-center
+gap-2
+rounded-xl
+bg-gray-100
+p-3
+">
+
+
+<MapPin
+
+size={18}
+
+className="text-orange-500"
+
+/>
+
+
+{location}
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div
+
+className="
+mt-5
+grid
+grid-cols-2
+gap-3
+"
+
+>
+
+
+<a
+
+href={whatsappLink}
+
+target="_blank"
+
+rel="noopener noreferrer"
+
+className="
+flex
+items-center
+justify-center
+gap-2
+rounded-xl
+bg-green-500
+py-3
+font-bold
+text-white
+"
+
+>
+
+<MessageCircle size={18}/>
+
+WhatsApp
+
+
+</a>
+
+
+
+
+
+
+<a
+
+href={callLink}
+
+className="
+flex
+items-center
+justify-center
+gap-2
+rounded-xl
+bg-blue-600
+py-3
+font-bold
+text-white
+"
+
+>
+
+
+<Phone size={18}/>
+
+Call
+
+
+</a>
+
+
+</div>
+
+
+
+
+
+
+
+<Link
+
+href={`/bike/${slug}`}
+
+className="
+mt-5
+block
+rounded-xl
+bg-black
+py-4
+text-center
+font-bold
+text-white
+hover:bg-orange-500
+"
+
+>
+
+
+View Details →
+
+
+</Link>
+
+
+
+</div>
+
+
+
+</div>
+
+
+);
+
 
 }

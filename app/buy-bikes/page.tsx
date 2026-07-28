@@ -1,66 +1,200 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import BikeCard from "@/components/BikeCard";
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+  Suspense,
+} from "react";
+
+
+import {
+  useSearchParams,
+} from "next/navigation";
+
+
+import {
+  collection,
+  getDocs,
+} from "firebase/firestore";
+
+
 import { db } from "@/firebase/firebase";
-import { collection, getDocs } from "firebase/firestore";
 
 
-export default function BuyBikes() {
+import Hero from "@/components/buy-bikes/Hero";
 
+import FilterSidebar from "@/components/buy-bikes/FilterSidebar";
 
-  const [allBikes, setAllBikes] = useState<any[]>([]);
-
-  const [brand, setBrand] = useState("All");
-
-  const [loading, setLoading] = useState(true);
+import BikeGrid from "@/components/buy-bikes/BikeGrid";
 
 
 
-  useEffect(() => {
-
-
-    const fetchBikes = async () => {
-
-
-      try {
-
-
-        const querySnapshot = await getDocs(
-
-          collection(db, "bikes")
-
-        );
 
 
 
-        const bikesData = querySnapshot.docs.map((doc) => ({
+
+interface BikeType {
 
 
-          id: doc.id,
+  id:string;
 
 
-          ...doc.data()
+  name:string;
 
 
-        }));
+  brand:string;
+
+
+  slug:string;
+
+
+  price:number | string;
+
+
+  year:string;
+
+
+  km:string;
+
+
+  location:string;
+
+
+  owner?:string;
+
+
+  phone?:string;
+
+
+  image?:string;
+
+
+  images?:string[];
+
+
+  description?:string;
+
+
+  featured?:boolean;
+
+
+  verified?:boolean;
+
+
+  status?:string;
+
+
+}
 
 
 
-        setAllBikes(bikesData);
 
 
 
-      } catch (error) {
 
 
-        console.log(
-          "Error fetching bikes:",
-          error
-        );
+function BuyBikesContent(){
 
 
-      } finally {
+  const searchParams =
+    useSearchParams();
+
+
+
+  const initialSearch =
+    searchParams.get("search") || "";
+
+
+
+
+
+  const [bikes,setBikes] =
+    useState<BikeType[]>([]);
+
+
+
+  const [loading,setLoading] =
+    useState(true);
+
+
+
+
+  const [search,setSearch] =
+    useState(initialSearch);
+
+
+
+
+  const [brand,setBrand] =
+    useState("All");
+
+
+
+
+  const [status,setStatus] =
+    useState("All");
+
+
+
+
+  const [mobileFilter,setMobileFilter] =
+    useState(false);
+
+
+
+
+
+
+
+
+  useEffect(()=>{
+
+
+    const fetchBikes = async()=>{
+
+
+      try{
+
+
+        const snapshot =
+          await getDocs(
+            collection(
+              db,
+              "bikes"
+            )
+          );
+
+
+
+        const data =
+          snapshot.docs.map((item)=>({
+
+
+            id:item.id,
+
+
+            ...(item.data())
+
+
+          })) as BikeType[];
+
+
+
+        setBikes(data);
+
+
+
+      }
+      catch(error){
+
+
+        console.log(error);
+
+
+      }
+      finally{
 
 
         setLoading(false);
@@ -76,44 +210,183 @@ export default function BuyBikes() {
     fetchBikes();
 
 
-  }, []);
+
+  },[]);
 
 
 
 
 
-  const brands = [
-
-    "All",
-    "Royal Enfield",
-    "KTM",
-    "Yamaha",
-    "Honda",
-    "TVS",
-    "Bajaj"
-
-  ];
 
 
 
 
 
-  const filteredBikes =
+  const brands = useMemo(()=>{
 
 
-    brand === "All"
+    return [
 
 
-      ? allBikes
+      "All",
 
 
-      : allBikes.filter(
+      ...Array.from(
 
 
-          (bike) => bike.brand === brand
+        new Set(
 
 
-        );
+          bikes.map(
+            (bike)=>
+            bike.brand
+          )
+
+
+        )
+
+
+      )
+
+
+    ];
+
+
+  },[bikes]);
+
+
+
+
+
+
+
+
+
+  const filteredBikes = useMemo(()=>{
+
+
+    return bikes.filter((bike)=>{
+
+
+
+      const keyword =
+        search.toLowerCase();
+
+
+
+
+      const searchMatch =
+
+
+
+        bike.name
+        ?.toLowerCase()
+        .includes(keyword)
+
+
+
+        ||
+
+
+
+        bike.brand
+        ?.toLowerCase()
+        .includes(keyword)
+
+
+
+        ||
+
+
+
+        bike.location
+        ?.toLowerCase()
+        .includes(keyword);
+
+
+
+
+
+
+
+      const brandMatch =
+
+
+        brand === "All"
+
+
+        ||
+
+
+        bike.brand === brand;
+
+
+
+
+
+
+
+      const statusMatch =
+
+
+        status === "All"
+
+
+        ||
+
+
+        bike.status === status;
+
+
+
+
+
+
+
+      return (
+
+
+        searchMatch
+
+
+        &&
+
+
+        brandMatch
+
+
+        &&
+
+
+        statusMatch
+
+
+      );
+
+
+
+    });
+
+
+
+  },[
+
+    bikes,
+
+    search,
+
+    brand,
+
+    status
+
+  ]);
+
+
+
+
+
+
+
 
 
 
@@ -122,174 +395,327 @@ export default function BuyBikes() {
 
   return (
 
-    <main className="bg-gray-100 min-h-screen">
+
+
+<main
+
+className="
+min-h-screen
+bg-gray-100
+py-8
+"
+
+>
 
 
 
-      <section className="bg-black py-20 text-center text-white">
+<div
 
+className="
+mx-auto
+max-w-7xl
+space-y-8
+px-5
+"
 
-        <h1 className="text-5xl font-bold">
-
-          Buy Used Bikes
-
-        </h1>
-
-
-        <p className="mt-4 text-gray-300">
-
-          Find Verified Second Hand Bikes
-
-        </p>
-
-
-      </section>
+>
 
 
 
 
 
 
-      <section className="px-6 py-12">
+<Hero
+
+search={search}
+
+setSearch={setSearch}
+
+/>
 
 
 
-        <div className="mb-10 flex flex-wrap justify-center gap-4">
 
 
-          {brands.map((item) => (
 
 
-            <button
+
+<button
+
+onClick={()=>setMobileFilter(true)}
+
+className="
+rounded-xl
+bg-black
+px-5
+py-3
+font-bold
+text-white
+lg:hidden
+"
+
+>
+
+Show Filters
+
+</button>
 
 
-              key={item}
 
 
-              onClick={() => setBrand(item)}
 
 
-              className={`rounded-xl px-6 py-3 font-bold text-white ${
-
-                brand === item
-
-                  ? "bg-orange-600"
-
-                  : "bg-black"
-
-              }`}
 
 
-            >
+
+<div
+
+className="
+grid
+gap-8
+lg:grid-cols-4
+"
+
+>
 
 
-              {item}
 
 
-            </button>
 
 
-          ))}
 
+
+
+<div
+
+className="
+lg:col-span-1
+"
+
+>
+
+
+
+<FilterSidebar
+
+
+search={search}
+
+
+setSearch={setSearch}
+
+
+brand={brand}
+
+
+setBrand={setBrand}
+
+
+brands={brands}
+
+
+
+status={status}
+
+
+setStatus={setStatus}
+
+
+
+mobileOpen={mobileFilter}
+
+
+setMobileOpen={setMobileFilter}
+
+
+
+/>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<section
+
+className="
+lg:col-span-3
+"
+
+>
+
+
+
+
+
+
+
+<div
+
+className="
+mb-5
+flex
+items-center
+justify-between
+"
+
+>
+
+
+<h2
+
+className="
+text-3xl
+font-black
+"
+
+>
+
+Available Bikes
+
+</h2>
+
+
+
+
+
+
+<span
+
+className="
+rounded-full
+bg-orange-100
+px-4
+py-2
+font-bold
+text-orange-600
+"
+
+>
+
+{filteredBikes.length} Bikes
+
+</span>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<BikeGrid
+
+
+bikes={filteredBikes}
+
+
+loading={loading}
+
+
+
+/>
+
+
+
+
+
+
+
+</section>
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+</main>
+
+
+
+  );
+
+
+}
+
+
+
+
+
+
+
+
+
+export default function BuyBikesPage(){
+
+
+  return (
+
+
+    <Suspense
+
+
+      fallback={
+
+        <div
+
+        className="
+        flex
+        min-h-screen
+        items-center
+        justify-center
+        font-bold
+        "
+
+        >
+
+          Loading Bikes...
 
         </div>
 
+      }
 
 
+    >
 
 
+      <BuyBikesContent />
 
 
-        {
-          loading ? (
+    </Suspense>
 
-
-            <p className="text-center text-xl">
-
-              Loading Bikes...
-
-            </p>
-
-
-          ) : (
-
-
-
-          <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-2 lg:grid-cols-3">
-
-
-
-            {filteredBikes.length > 0 ? (
-
-
-              filteredBikes.map((bike) => (
-
-
-                <BikeCard
-
-
-                  key={bike.id}
-
-
-                  slug={bike.slug}
-
-
-                  name={bike.name || bike.model}
-
-
-                  price={bike.price}
-
-
-                  year={bike.year}
-
-
-                  km={bike.km}
-
-
-                  location={bike.location}
-
-
-                  image={bike.image}
-
-
-                />
-
-
-              ))
-
-
-
-            ) : (
-
-
-
-              <p className="col-span-3 text-center text-xl text-gray-500">
-
-                No Bikes Available
-
-              </p>
-
-
-            )}
-
-
-
-          </div>
-
-
-          )
-
-        }
-
-
-
-
-      </section>
-
-
-
-    </main>
 
   );
+
 
 }
