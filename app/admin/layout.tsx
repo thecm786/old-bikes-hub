@@ -19,7 +19,6 @@ import {
   auth,
 } from "@/firebase/firebase";
 
-
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminTopbar from "@/components/admin/AdminTopbar";
 
@@ -27,7 +26,6 @@ import {
   Menu,
   X,
 } from "lucide-react";
-
 
 
 export default function AdminLayout({
@@ -41,25 +39,45 @@ export default function AdminLayout({
 }) {
 
 
-
   const router = useRouter();
 
   const pathname = usePathname();
 
 
-  const [loading,setLoading] =
+  const [loading, setLoading] =
     useState(true);
 
 
-  const [mobileOpen,setMobileOpen] =
+  const [mobileOpen, setMobileOpen] =
     useState(false);
 
 
+  /*
+  |--------------------------------------------------------------------------
+  | LOGIN PAGE
+  |--------------------------------------------------------------------------
+  */
+
+  const isLoginPage =
+    pathname === "/admin/login";
 
 
+  /*
+  |--------------------------------------------------------------------------
+  | AUTH CHECK
+  |--------------------------------------------------------------------------
+  */
 
+  useEffect(() => {
 
-  useEffect(()=>{
+    // Login page ko auth protection se bypass karo
+    if (isLoginPage) {
+
+      setLoading(false);
+
+      return;
+
+    }
 
 
     const unsubscribe =
@@ -67,324 +85,329 @@ export default function AdminLayout({
 
         auth,
 
-        (user)=>{
+        (user) => {
 
+          if (!user) {
 
-          if(!user){
-
-
-            router.push(
+            router.replace(
               "/admin/login"
             );
 
-
-          }
-          else{
-
-
-            setLoading(false);
-
+            return;
 
           }
 
+
+          setLoading(false);
 
         }
 
       );
 
 
-    return ()=>unsubscribe();
+    return () =>
+      unsubscribe();
+
+  }, [
+    router,
+    isLoginPage,
+  ]);
 
 
-  },[router]);
+  /*
+  |--------------------------------------------------------------------------
+  | MOBILE SIDEBAR CLOSE
+  |--------------------------------------------------------------------------
+  */
 
-
-
-
-
-
-
-
-  useEffect(()=>{
+  useEffect(() => {
 
     setMobileOpen(false);
 
-  },[pathname]);
+  }, [
+    pathname,
+  ]);
 
 
+  /*
+  |--------------------------------------------------------------------------
+  | LOGIN PAGE
+  |--------------------------------------------------------------------------
+  */
+
+  if (isLoginPage) {
+
+    return (
+      <>
+        {children}
+      </>
+    );
+
+  }
 
 
+  /*
+  |--------------------------------------------------------------------------
+  | AUTH LOADING
+  |--------------------------------------------------------------------------
+  */
 
-
-
-
-
-  if(loading){
-
+  if (loading) {
 
     return (
 
-      <div className="
-      flex
-      min-h-screen
-      items-center
-      justify-center
-      bg-gray-100
-      ">
+      <div
+        className="
+        flex
+        min-h-screen
+        items-center
+        justify-center
+        bg-gray-100
+        "
+      >
+
+        <div
+          className="
+          text-center
+          "
+        >
+
+          <div
+            className="
+            mx-auto
+            h-12
+            w-12
+            animate-spin
+            rounded-full
+            border-4
+            border-orange-500
+            border-t-transparent
+            "
+          />
 
 
-        <div className="text-center">
-
-
-          <div className="
-          mx-auto
-          h-12
-          w-12
-          animate-spin
-          rounded-full
-          border-4
-          border-orange-500
-          border-t-transparent
-          "/>
-
-
-          <p className="
-          mt-4
-          font-bold
-          text-gray-600
-          ">
+          <p
+            className="
+            mt-4
+            font-bold
+            text-gray-600
+            "
+          >
 
             Checking Admin Access...
 
           </p>
 
-
         </div>
-
 
       </div>
 
     );
 
-
   }
 
 
-
-
-
-
-
-
+  /*
+  |--------------------------------------------------------------------------
+  | ADMIN PANEL
+  |--------------------------------------------------------------------------
+  */
 
   return (
 
-
-    <div className="
-    flex
-    min-h-screen
-    bg-gray-100
-    ">
-
-
-
+    <div
+      className="
+      flex
+      min-h-screen
+      bg-gray-100
+      "
+    >
 
 
-      {/* Desktop Sidebar */}
+      {/* =========================================================
+          DESKTOP SIDEBAR
+      ========================================================= */}
 
-      <aside className="
-      hidden
-      lg:block
-      w-72
-      ">
-
-
-        <div className="
-        fixed
-        h-screen
+      <aside
+        className="
+        hidden
         w-72
-        ">
+        lg:block
+        "
+      >
 
-          <AdminSidebar/>
+        <div
+          className="
+          fixed
+          h-screen
+          w-72
+          "
+        >
+
+          <AdminSidebar />
 
         </div>
-
 
       </aside>
 
 
+      {/* =========================================================
+          MOBILE SIDEBAR
+      ========================================================= */}
 
+      {mobileOpen && (
 
-
-
-
-
-      {/* Mobile Sidebar */}
-
-      {
-        mobileOpen && (
-
-          <div className="
+        <div
+          className="
           fixed
           inset-0
           z-50
           lg:hidden
-          ">
+          "
+        >
+
+          {/* Overlay */}
+
+          <div
+            onClick={() =>
+              setMobileOpen(false)
+            }
+            className="
+            absolute
+            inset-0
+            bg-black/50
+            "
+          />
 
 
-            <div
+          {/* Sidebar */}
 
-              onClick={()=>setMobileOpen(false)}
-
-              className="
-              absolute
-              inset-0
-              bg-black/50
-              "
-
-            />
-
-
-
-            <div className="
+          <div
+            className="
             relative
             h-full
             w-72
-            ">
+            "
+          >
+
+            <button
+              onClick={() =>
+                setMobileOpen(false)
+              }
+              className="
+              absolute
+              right-3
+              top-3
+              z-10
+              rounded-lg
+              bg-white
+              p-2
+              "
+            >
+
+              <X
+                size={20}
+              />
+
+            </button>
 
 
-              <button
-
-                onClick={()=>setMobileOpen(false)}
-
-                className="
-                absolute
-                right-3
-                top-3
-                z-10
-                rounded-lg
-                bg-white
-                p-2
-                "
-
-              >
-
-                <X size={20}/>
-
-              </button>
-
-
-
-              <AdminSidebar/>
-
-
-            </div>
-
-
+            <AdminSidebar />
 
           </div>
 
-        )
-      }
+        </div>
+
+      )}
 
 
+      {/* =========================================================
+          MAIN CONTENT
+      ========================================================= */}
+
+      <main
+        className="
+        flex-1
+        "
+      >
 
 
+        {/* =====================================================
+            MOBILE HEADER
+        ===================================================== */}
 
-
-
-
-
-      {/* Main Content */}
-
-
-      <main className="
-      flex-1
-      ">
-
-
-
-
-
-        {/* Mobile Header */}
-
-        <div className="
-        flex
-        items-center
-        gap-3
-        bg-white
-        p-4
-        lg:hidden
-        ">
-
+        <div
+          className="
+          flex
+          items-center
+          gap-3
+          bg-white
+          p-4
+          lg:hidden
+          "
+        >
 
           <button
-
-            onClick={()=>setMobileOpen(true)}
-
+            onClick={() =>
+              setMobileOpen(true)
+            }
             className="
             rounded-xl
             bg-black
             p-2
             text-white
             "
-
           >
 
-            <Menu size={22}/>
+            <Menu
+              size={22}
+            />
 
           </button>
 
 
-          <h2 className="
-          font-black
-          text-orange-500
-          ">
+          <h2
+            className="
+            font-black
+            text-orange-500
+            "
+          >
 
             Old Bikes Hub
 
           </h2>
 
-
         </div>
 
 
+        {/* =====================================================
+            TOPBAR
+        ===================================================== */}
+
+        <AdminTopbar />
 
 
+        {/* =====================================================
+            PAGE CONTENT
+        ===================================================== */}
 
-
-
-
-        <AdminTopbar/>
-
-
-
-
-
-
-        <div className="
-        p-5
-        md:p-8
-        ">
+        <div
+          className="
+          p-5
+          md:p-8
+          "
+        >
 
           {children}
 
         </div>
 
 
-
-
       </main>
-
-
-
-
 
 
     </div>
 
-
   );
-
 
 }
