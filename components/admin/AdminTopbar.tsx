@@ -19,10 +19,6 @@ import {
   useRouter,
 } from "next/navigation";
 
-import {
-  useState,
-} from "react";
-
 
 
 export default function AdminTopbar(){
@@ -31,13 +27,7 @@ export default function AdminTopbar(){
   const router = useRouter();
 
 
-  const [search,setSearch] =
-    useState("");
-
-
-
-
-
+ 
   const logoutHandler = async()=>{
 
 
@@ -103,7 +93,8 @@ export default function AdminTopbar(){
       gap-3
       rounded-2xl
       border
-      bg-gray-50
+      bg-gray-100
+      opacity-70
       px-4
       py-3
       ">
@@ -116,25 +107,17 @@ export default function AdminTopbar(){
 
 
         <input
-
-          value={search}
-
-          onChange={(e)=>
-            setSearch(e.target.value)
-          }
-
-          placeholder="
-          Search bikes...
-          "
-
-          className="
-          w-full
-          bg-transparent
-          outline-none
-          "
-
-        />
-
+  type="text"
+  placeholder="Search coming soon..."
+  disabled
+  className="
+    w-full
+    cursor-not-allowed
+    bg-transparent
+    text-gray-400
+    outline-none
+  "
+/>
 
       </div>
 

@@ -2,6 +2,7 @@
 
 
 import {
+  Suspense,
   useEffect,
   useMemo,
   useState,
@@ -54,7 +55,7 @@ import type {
 
 
 
-export default function BuyBikesPage(){
+function BuyBikesContent(){
 
 
 
@@ -162,17 +163,25 @@ BikeType,
 
 
 
-const combined = [
+const combined: BikeType[] = [
 
-...defaultBikes,
+  ...defaultBikes.map((bike) => ({
 
-...firebaseBikes
+    ...bike,
+
+    id: String(bike.id),
+
+  })),
+
+  ...firebaseBikes.map((bike) => ({
+
+    ...bike,
+
+    id: String(bike.id),
+
+  })),
 
 ];
-
-
-
-
 
 setBikes(combined);
 
@@ -186,7 +195,12 @@ catch(error){
 console.log(error);
 
 
-setBikes(defaultBikes);
+setBikes(
+  defaultBikes.map((bike) => ({
+    ...bike,
+    id: String(bike.id),
+  }))
+);
 
 
 }
@@ -1761,4 +1775,33 @@ Try changing your filters.
 );
 
 
+}
+
+export default function BuyBikesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="
+              mx-auto
+              h-14
+              w-14
+              animate-spin
+              rounded-full
+              border-4
+              border-orange-500
+              border-t-transparent
+            " />
+
+            <p className="mt-4 font-bold">
+              Loading Bikes...
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <BuyBikesContent />
+    </Suspense>
+  );
 }
