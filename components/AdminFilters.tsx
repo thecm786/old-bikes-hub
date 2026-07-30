@@ -16,6 +16,11 @@ interface AdminFiltersProps {
   setSearch:(value:string)=>void;
 
 
+  registrationSearch:string;
+
+  setRegistrationSearch:(value:string)=>void;
+
+
   brand:string;
 
   setBrand:(value:string)=>void;
@@ -43,29 +48,27 @@ interface AdminFiltersProps {
 
 export default function AdminFilters({
 
-
   search,
 
   setSearch,
 
+  registrationSearch,
+
+  setRegistrationSearch,
 
   brand,
 
   setBrand,
 
-
   brands,
-
 
   sort,
 
   setSort,
 
-
   status,
 
   setStatus,
-
 
 }:AdminFiltersProps){
 
@@ -76,18 +79,15 @@ export default function AdminFilters({
 
   const clearFilters = ()=>{
 
+  setSearch("");
 
-    setSearch("");
+  setBrand("All");
 
-    setBrand("All");
+  setStatus("All");
 
-    setSort("latest");
+  setSort("latest");
 
-
-  };
-
-
-
+};
 
 
 
@@ -95,14 +95,13 @@ export default function AdminFilters({
 
   const showClear =
 
-    search !== "" ||
+  search !== "" ||
 
-    brand !== "All" ||
+  brand !== "All" ||
 
-    sort !== "latest";
+  status !== "All" ||
 
-
-
+  sort !== "latest";
 
 
 
@@ -311,7 +310,35 @@ export default function AdminFilters({
 
 
 
+            {/* Registration Number Search */}
 
+<div className="relative">
+
+  <input
+    type="text"
+    placeholder="Search Registration Number..."
+    value={registrationSearch}
+    onChange={(e) =>
+      setRegistrationSearch(
+        e.target.value.toUpperCase()
+      )
+    }
+    className="
+    w-full
+    rounded-2xl
+    border
+    border-gray-200
+    py-4
+    px-4
+    outline-none
+    transition
+    focus:border-orange-500
+    focus:ring-4
+    focus:ring-orange-100
+    "
+  />
+
+</div>
 
 
 

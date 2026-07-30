@@ -15,8 +15,11 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDocs,
   updateDoc,
+  query,
+  where,
+  getDocs,
+  onSnapshot,
 } from "firebase/firestore";
 
 
@@ -26,23 +29,27 @@ import {
   Pencil,
   Trash2,
   Star,
+  Phone,
+  MessageCircle,
   MapPin,
   Calendar,
   Gauge,
   IndianRupee,
   RefreshCw,
   ShieldCheck,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 
 
 import { db } from "@/firebase/firebase";
-
-
+import toast from "react-hot-toast";
 import DashboardStats from "@/components/DashboardStats";
 import AdminFilters from "@/components/AdminFilters";
 import RecentBikes from "@/components/admin/RecentBikes";
 import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
 import DashboardActivity from "@/components/admin/DashboardActivity";
+import RecentSellRequests from "@/components/admin/RecentSellRequests";
 
 
 import type { BikeType } from "@/types/bike";
@@ -64,6 +71,17 @@ const [loading,setLoading] =
 useState(true);
 
 
+const [initialLoad,setInitialLoad] =
+useState(true);
+
+const [pendingRequests,setPendingRequests] =
+useState(0);
+
+
+const [approvedBikes,setApprovedBikes] =
+useState(0);
+
+
 
 const [refreshing,setRefreshing] =
 useState(false);
@@ -73,16 +91,14 @@ useState(false);
 const [search,setSearch] =
 useState("");
 
-
+const [registrationSearch,setRegistrationSearch] =
+useState("");
 
 const [brand,setBrand] =
 useState("All");
 
-
 const [status,setStatus] =
 useState("All");
-
-
 
 const [sort,setSort] =
 useState("latest");
@@ -92,90 +108,115 @@ useState("latest");
 const [selectedBikes,setSelectedBikes] =
 useState<string[]>([]);
 
+const [currentPage, setCurrentPage] = useState(1);
+
+const bikesPerPage = 12;
+
+const [totalPages, setTotalPages] = useState(1);
+
+const [deleteModal, setDeleteModal] =
+useState(false);
 
 
+const [deleteBikeId, setDeleteBikeId] =
+useState<string | null>(null);
+
+
+const [deleteLoading, setDeleteLoading] =
+useState(false);
 
 
 // FETCH BIKES
 
 
-const fetchBikes = async()=>{
+const fetchBikes = () => {
+
+  const unsubscribe = onSnapshot(
+    collection(db, "bikes"),
+    (snapshot) => {
 
 
-try{
+      const data =
+        snapshot.docs.map((item) => {
+
+          const bikeData = item.data();
 
 
-const snapshot =
-await getDocs(
+          return {
 
-collection(
-db,
-"bikes"
-)
+            id: item.id,
 
-);
-
+            ...(bikeData as Omit<
+              BikeType,
+              "id"
+            >),
 
 
+            status:
+              bikeData.status || "Pending",
 
+          };
 
-const data =
-snapshot.docs.map((item)=>{
+        });
 
+        data.sort((a, b) => {
 
-const bikeData =
-item.data();
+  const aTime =
+    a.createdAt?.seconds ??
+    Number(a.createdAt) ??
+    0;
 
+  const bTime =
+    b.createdAt?.seconds ??
+    Number(b.createdAt) ??
+    0;
 
-
-return {
-
-
-id:item.id,
-
-
-...(bikeData as Omit<
-BikeType,
-"id"
->),
-
-
-status:
-bikeData.status || "Pending"
-
-
-};
-
+  return bTime - aTime;
 
 });
 
 
+      data.sort((a, b) => {
+
+  const aTime = a.createdAt?.seconds || 0;
+
+  const bTime = b.createdAt?.seconds || 0;
+
+  return bTime - aTime;
+
+});
+
+      setBikes(data);
 
 
-setBikes(data);
+      setLoading(false);
+
+      setInitialLoad(false);
+
+      setRefreshing(false);
 
 
-
-}
-
-catch(error){
+    },
 
 
-console.log(error);
+    (error)=>{
+
+      console.log(
+        "Realtime error:",
+        error
+      );
 
 
-}
+      setLoading(false);
 
-finally{
+      setRefreshing(false);
+
+    }
+
+  );
 
 
-setLoading(false);
-
-setRefreshing(false);
-
-
-}
-
+  return unsubscribe;
 
 };
 
@@ -185,11 +226,22 @@ setRefreshing(false);
 
 
 
-useEffect(()=>{
+useEffect(() => {
+
+ let mounted = true;
+
+ const unsubscribeBikes = fetchBikes();
+ const unsubscribeSell = fetchSellStats();
 
 
-fetchBikes();
+ return () => {
 
+   mounted = false;
+
+   unsubscribeBikes();
+   unsubscribeSell();
+
+ };
 
 },[]);
 
@@ -201,19 +253,78 @@ fetchBikes();
 
 // REFRESH
 
+const handleRefresh = async()=>{
 
-const handleRefresh = ()=>{
+  setRefreshing(true);
 
+  await fetchBikes();
 
-setRefreshing(true);
+  await fetchSellStats();
 
-
-fetchBikes();
-
+  setRefreshing(false);
 
 };
 
 
+const fetchSellStats = () => {
+
+
+const pendingQuery = query(
+  collection(db,"sellRequests"),
+  where(
+    "status",
+    "==",
+    "Pending"
+  )
+);
+
+
+const approvedQuery = query(
+  collection(db,"sellRequests"),
+  where(
+    "status",
+    "==",
+    "Approved"
+  )
+);
+
+
+
+const unsubscribePending = onSnapshot(
+  pendingQuery,
+  (snapshot)=>{
+
+    setPendingRequests(
+      snapshot.size
+    );
+
+  }
+);
+
+
+
+const unsubscribeApproved = onSnapshot(
+  approvedQuery,
+  (snapshot)=>{
+
+    setApprovedBikes(
+      snapshot.size
+    );
+
+  }
+);
+
+
+
+return ()=>{
+
+  unsubscribePending();
+
+  unsubscribeApproved();
+
+};
+
+};
 
 
 
@@ -304,82 +415,84 @@ console.log(error);
 
 // SINGLE DELETE
 
+const handleDelete = (id: string) => {
 
-const handleDelete = async(
+  setDeleteBikeId(id);
 
-id:string
-
-)=>{
-
-
-const confirmDelete =
-confirm(
-
-"Delete this bike permanently?"
-
-);
-
-
-
-if(!confirmDelete)
-return;
-
-
-
-
-
-try{
-
-
-await deleteDoc(
-
-doc(
-
-db,
-
-"bikes",
-
-id
-
-)
-
-);
-
-
-
-
-
-setBikes((prev)=>
-
-prev.filter(
-
-(bike)=>
-
-bike.id!==id
-
-)
-
-);
-
-
-
-}
-
-catch(error){
-
-
-console.log(error);
-
-
-}
-
-
+  setDeleteModal(true);
 
 };
 
 
 
+const cancelDelete = () => {
+  setDeleteModal(false);
+  setDeleteBikeId(null);
+};
 
+const confirmDelete = async () => {
+
+  if (!deleteBikeId) return;
+
+
+  const toastId = toast.loading(
+    "Deleting bike..."
+  );
+
+
+  try {
+
+    setDeleteLoading(true);
+
+
+    await deleteDoc(
+      doc(
+        db,
+        "bikes",
+        deleteBikeId
+      )
+    );
+
+
+    setBikes((prev)=>
+      prev.filter(
+        (bike)=>
+          bike.id !== deleteBikeId
+      )
+    );
+
+
+    cancelDelete();
+
+
+    toast.success(
+      "Bike deleted successfully 🚀",
+      {
+        id: toastId,
+      }
+    );
+
+
+  } catch(error){
+
+    console.log(error);
+
+
+    toast.error(
+      "Delete Failed",
+      {
+        id: toastId,
+      }
+    );
+
+
+  } finally {
+
+    setDeleteLoading(false);
+
+  }
+
+};
 
 
 
@@ -499,111 +612,103 @@ setSelectedBikes([]);
 
 // BULK DELETE
 
-
 const handleBulkDelete = async()=>{
 
+  if(selectedBikes.length===0){
 
-if(selectedBikes.length===0){
+    toast.error("Select bikes first");
 
+    return;
 
-alert(
-"Select bikes first"
-);
-
-
-return;
+  }
 
 
-}
+  const confirmDelete =
+  confirm(
+    `Delete ${selectedBikes.length} bikes?`
+  );
 
 
+  if(!confirmDelete)
+  return;
 
 
-const confirmDelete =
-confirm(
-
-`Delete ${selectedBikes.length} bikes?`
-
-);
+  const count = selectedBikes.length;
 
 
-
-if(!confirmDelete)
-return;
-
-
+  const toastId = toast.loading(
+    `Deleting ${count} bikes...`
+  );
 
 
-try{
+  try{
 
 
-await Promise.all(
+    await Promise.all(
 
-selectedBikes.map((id)=>
+      selectedBikes.map((id)=>
 
-deleteDoc(
+        deleteDoc(
+          doc(
+            db,
+            "bikes",
+            id
+          )
+        )
 
-doc(
+      )
 
-db,
-
-"bikes",
-
-id
-
-)
-
-)
-
-)
-
-);
+    );
 
 
 
+    setBikes((prev)=>
+
+      prev.filter(
+
+        (bike)=>
+
+        !selectedBikes.includes(
+          bike.id!
+        )
+
+      )
+
+    );
 
 
-setBikes((prev)=>
-
-prev.filter(
-
-(bike)=>
-
-!selectedBikes.includes(
-
-bike.id!
-
-)
-
-)
-
-);
-
-
-
-setSelectedBikes([]);
+    setSelectedBikes([]);
 
 
 
-}
+    toast.success(
+      `${count} bikes deleted successfully 🚀`,
+      {
+        id: toastId,
+      }
+    );
 
-catch(error){
+
+  }
+
+  catch(error){
 
 
-console.log(error);
+    console.log(error);
 
 
-}
+    toast.error(
+      "Bulk delete failed",
+      {
+        id: toastId,
+      }
+    );
+
+
+  }
 
 
 };
-
-
-
-
-
-
-
 
 
 // BULK STATUS UPDATE
@@ -848,183 +953,92 @@ bike.brand
 // FILTER + SORT
 
 
-const filteredBikes =
-
-useMemo(()=>{
-
-
-let result = bikes.filter((bike)=>{
-
-
-const text =
-search.toLowerCase();
-
-
-
-const searchMatch =
-
-bike.name
-?.toLowerCase()
-.includes(text)
-
-||
-
-bike.brand
-?.toLowerCase()
-.includes(text)
-
-||
-
-bike.location
-?.toLowerCase()
-.includes(text);
-
-
-
-
-const brandMatch =
-
-brand==="All"
-
-||
-
-bike.brand===brand;
-
-
-
-return (
-
-searchMatch
-
-&&
-
-brandMatch
-
-);
-
-
-});
-
-
-
-
-
-
-
-if(sort==="price-low"){
-
-
-result.sort(
-
-(a,b)=>
-
-Number(a.price)
-
--
-
-Number(b.price)
-
-);
-
-
-}
-
-
-
-
-
-
-
-if(sort==="price-high"){
-
-
-result.sort(
-
-(a,b)=>
-
-Number(b.price)
-
--
-
-Number(a.price)
-
-);
-
-
-}
-
-
-
-
-
-
-
-if(sort==="year-new"){
-
-
-result.sort(
-
-(a,b)=>
-
-Number(b.year)
-
--
-
-Number(a.year)
-
-);
-
-
-}
-
-
-
-
-
-
-
-if(sort==="km-low"){
-
-
-result.sort(
-
-(a,b)=>
-
-Number(a.km)
-
--
-
-Number(b.km)
-
-);
-
-
-}
-
-
-
-
-
-return result;
-
-
-
-},[
-
-bikes,
-
-search,
-
-brand,
-
-sort
-
+const filteredBikes = useMemo(() => {
+
+  let result = bikes.filter((bike) => {
+
+    const text = search.toLowerCase();
+
+    const searchMatch =
+      bike.name?.toLowerCase().includes(text) ||
+      bike.brand?.toLowerCase().includes(text) ||
+      bike.location?.toLowerCase().includes(text);
+
+    const registrationMatch =
+      registrationSearch === "" ||
+      bike.registrationNumber
+        ?.toLowerCase()
+        .includes(registrationSearch.toLowerCase());
+
+    const brandMatch =
+      brand === "All" ||
+      bike.brand === brand;
+
+    const statusMatch =
+      status === "All" ||
+      bike.status === status;
+
+    return (
+      searchMatch &&
+      registrationMatch &&
+      brandMatch &&
+      statusMatch
+    );
+
+  });
+
+  if (sort === "price-low") {
+    result.sort((a, b) => Number(a.price) - Number(b.price));
+  }
+
+  if (sort === "price-high") {
+    result.sort((a, b) => Number(b.price) - Number(a.price));
+  }
+
+  if (sort === "year-new") {
+    result.sort((a, b) => Number(b.year) - Number(a.year));
+  }
+
+  if (sort === "km-low") {
+    result.sort((a, b) => Number(a.km) - Number(b.km));
+  }
+
+  return result;
+
+}, [
+  bikes,
+  search,
+  registrationSearch,
+  brand,
+  status,
+  sort,
 ]);
 
+const paginatedBikes = useMemo(() => {
 
+  const start = (currentPage - 1) * bikesPerPage;
 
+  return filteredBikes.slice(
+    start,
+    start + bikesPerPage
+  );
 
+}, [
+  filteredBikes,
+  currentPage,
+]);
 
+useEffect(() => {
+
+  const pages = Math.ceil(
+    filteredBikes.length / bikesPerPage
+  );
+
+  setTotalPages(pages || 1);
+
+  setCurrentPage(1);
+
+}, [filteredBikes]);
 
 
 
@@ -1210,7 +1224,7 @@ refreshing
 />
 
 
-Refresh
+Sync
 
 
 </button>
@@ -1269,6 +1283,10 @@ Add Bike
 
 bikes={bikes}
 
+pendingRequests={pendingRequests}
+
+approvedBikes={approvedBikes}
+
 />
 
 
@@ -1292,6 +1310,9 @@ bikes={bikes}
 bikes={bikes}
 
 />
+
+
+<RecentSellRequests />
 
 
 
@@ -1599,30 +1620,24 @@ Cancel
 
 
 
-
-
-
-
-
 <AdminFilters
 
-  search={search}
+search={search}
+setSearch={setSearch}
 
-  setSearch={setSearch}
+registrationSearch={registrationSearch}
+setRegistrationSearch={setRegistrationSearch}
 
-  brand={brand}
+brand={brand}
+setBrand={setBrand}
 
-  setBrand={setBrand}
+brands={brands}
 
-  brands={brands}
+status={status}
+setStatus={setStatus}
 
-  status={status}
-
-  setStatus={setStatus}
-
-  sort={sort}
-
-  setSort={setSort}
+sort={sort}
+setSort={setSort}
 
 />
 
@@ -1641,7 +1656,7 @@ xl:grid-cols-3
 2xl:grid-cols-4
 ">
 {
-filteredBikes.map((bike)=>(
+paginatedBikes.map((bike)=>(
 
 
 <div
@@ -1664,7 +1679,8 @@ hover:shadow-2xl
 
 <div className="
 relative
-h-60
+h-52
+sm:h-60
 overflow-hidden
 ">
 
@@ -1711,12 +1727,13 @@ rounded
 
 
 {
-bike.image ? (
-
+(bike.images && bike.images.length > 0) || bike.image ? (
 
 <img
 
-src={bike.image}
+src={
+  bike.images?.[0] || bike.image
+}
 
 alt={bike.name}
 
@@ -1731,27 +1748,24 @@ group-hover:scale-110
 
 />
 
-
 )
 
 :
 
 (
 
-
-<div className="
+<div
+className="
 flex
 h-full
 items-center
 justify-center
 bg-gray-100
 text-7xl
-">
-
+"
+>
 🏍️
-
 </div>
-
 
 )
 
@@ -1943,7 +1957,29 @@ Verified
 }
 
 
+{
+bike.images &&
+bike.images.length > 1 && (
 
+<div
+className="
+absolute
+bottom-4
+right-4
+rounded-full
+bg-black/70
+px-3
+py-1
+text-xs
+font-bold
+text-white
+"
+>
+📸 {bike.images.length} Photos
+</div>
+
+)
+}
 
 
 </div>
@@ -1992,9 +2028,6 @@ text-gray-500
 
 
 </div>
-
-
-
 
 
 
@@ -2090,6 +2123,42 @@ gap-2
 </div>
 
 
+<div
+className="
+flex
+items-center
+gap-2
+"
+>
+
+<Phone size={16}/>
+
+{bike.phone || "No Phone"}
+
+</div>
+
+
+<div
+  className="
+  flex
+  items-center
+  gap-2
+  rounded-lg
+  bg-gray-100
+  px-3
+  py-2
+  text-xs
+  font-mono
+  "
+>
+  <span className="font-bold text-orange-600">
+    Reg:
+  </span>
+
+  {bike.registrationNumber || "N/A"}
+</div>
+
+
 
 
 
@@ -2106,6 +2175,7 @@ gap-2
 
 <div className="
 flex
+flex-wrap
 gap-3
 pt-3
 ">
@@ -2187,7 +2257,28 @@ bike.featured
 
 
 
+<a
 
+href={`https://wa.me/91${bike.phone}`}
+
+target="_blank"
+
+className="
+flex
+h-11
+w-11
+items-center
+justify-center
+rounded-xl
+bg-green-600
+text-white
+"
+
+>
+
+<MessageCircle size={18}/>
+
+</a>
 
 
 
@@ -2282,99 +2373,194 @@ text-white
 
 
 )
-
 }
 
 
+{/* PAGINATION */}
+
+{filteredBikes.length > 0 && totalPages > 1 && (
+
+  <div className="mt-8 flex items-center justify-center gap-4">
+
+    <button
+      onClick={() =>
+        setCurrentPage((prev) => Math.max(prev - 1, 1))
+      }
+      disabled={currentPage === 1}
+      className="
+        rounded-xl
+        border
+        border-gray-300
+        px-5
+        py-3
+        font-bold
+        hover:bg-gray-100
+        disabled:cursor-not-allowed
+        disabled:opacity-50
+      "
+    >
+      ◀ Previous
+    </button>
+
+    <span className="
+      rounded-xl
+      bg-orange-500
+      px-5
+      py-3
+      font-bold
+      text-white
+    ">
+      Page {currentPage} of {totalPages}
+    </span>
+
+    <button
+      onClick={() =>
+        setCurrentPage((prev) =>
+          Math.min(prev + 1, totalPages)
+        )
+      }
+      disabled={currentPage === totalPages}
+      className="
+        rounded-xl
+        border
+        border-gray-300
+        px-5
+        py-3
+        font-bold
+        hover:bg-gray-100
+        disabled:cursor-not-allowed
+        disabled:opacity-50
+      "
+    >
+      Next ▶
+    </button>
+
+  </div>
+
+)}
 
 
+{filteredBikes.length > 0 && totalPages > 1 && (
+
+  <div className="mt-8 flex items-center justify-center gap-4">
+
+    <button
+      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      disabled={currentPage === 1}
+      className="rounded-xl border px-5 py-2 font-bold disabled:opacity-50"
+    >
+      ◀ Previous
+    </button>
+
+    <span className="font-bold">
+      Page {currentPage} of {totalPages}
+    </span>
+
+    <button
+      onClick={() =>
+        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+      }
+      disabled={currentPage === totalPages}
+      className="rounded-xl border px-5 py-2 font-bold disabled:opacity-50"
+    >
+      Next ▶
+    </button>
+
+  </div>
+
+)}
 
 {
+  filteredBikes.length === 0 && (
+    <div className="rounded-3xl bg-white py-20 text-center shadow-lg">
 
-filteredBikes.length===0 && (
+      <div className="text-7xl">🏍️</div>
 
+      <h2 className="mt-5 text-3xl font-black">
+        No Bikes Found
+      </h2>
 
-<div className="
-rounded-3xl
-bg-white
-py-20
-text-center
-shadow-lg
-">
+      <p className="mt-2 text-gray-500">
+        Try changing filter or add new bike.
+      </p>
 
+      <Link
+        href="/admin/add-bike"
+        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-bold text-white"
+      >
+        <Plus size={18} />
+        Add Bike
+      </Link>
 
-<div className="
-text-7xl
-">
-
-🏍️
-
-</div>
-
-
-
-<h2 className="
-mt-5
-text-3xl
-font-black
-">
-
-No Bikes Found
-
-</h2>
-
-
-
-
-<p className="
-mt-2
-text-gray-500
-">
-
-Try changing filter or add new bike.
-
-</p>
-
-
-
-
-<Link
-
-href="/admin/add-bike"
-
-className="
-mt-6
-inline-flex
-items-center
-gap-2
-rounded-xl
-bg-orange-500
-px-6
-py-3
-font-bold
-text-white
-"
-
->
-
-
-<Plus size={18}/>
-
-Add Bike
-
-
-</Link>
-
-
-
-</div>
-
-
-)
-
+    </div>
+  )
 }
 
+{/* DELETE MODAL */}
 
+{deleteModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+
+    <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+
+      <div className="flex justify-center">
+        <div className="rounded-full bg-red-100 p-4">
+          <AlertTriangle
+            size={42}
+            className="text-red-600"
+          />
+        </div>
+      </div>
+
+      <h2 className="mt-5 text-center text-2xl font-black">
+        Delete Bike?
+      </h2>
+
+      <p className="mt-3 text-center text-gray-500">
+        This action cannot be undone.
+        The bike will be permanently deleted.
+      </p>
+
+      <div className="mt-8 flex gap-3">
+
+       <button
+  onClick={cancelDelete}
+  disabled={deleteLoading}
+  className="
+    flex-1
+    rounded-xl
+    border
+    py-3
+    font-bold
+    disabled:opacity-50
+  "
+>
+  Cancel
+</button>
+
+<button
+  onClick={confirmDelete}
+  disabled={deleteLoading}
+  className="
+    flex-1
+    rounded-xl
+    bg-red-600
+    py-3
+    font-bold
+    text-white
+    hover:bg-red-700
+    disabled:opacity-50
+  "
+>
+  {deleteLoading ? "Deleting..." : "Delete"}
+</button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
 
 </div>
 

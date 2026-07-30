@@ -1,232 +1,413 @@
 "use client";
 
+import {
+  useState,
+  useEffect,
+} from "react";
+
 import Link from "next/link";
-import { useEffect, useState } from "react";
+
+import {
+  usePathname,
+} from "next/navigation";
+
 import {
   Menu,
   X,
-  Bike,
   Heart,
+  Bike,
+  ChevronRight,
 } from "lucide-react";
 
 import { getWishlistCount } from "@/lib/wishlist";
 
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [wishlistCount, setWishlistCount] =
-    useState(0);
+
+  const pathname = usePathname();
+
+  const [open, setOpen] = useState(false);
+
+  const [wishlistCount, setWishlistCount] = useState(0);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
-    };
 
-    window.addEventListener("scroll", handleScroll);
-
-    return () =>
-      window.removeEventListener(
-        "scroll",
-        handleScroll
-      );
-  }, []);
-
-  useEffect(() => {
     const updateWishlist = () => {
-      setWishlistCount(getWishlistCount());
-    };
+  setWishlistCount(getWishlistCount());
+};
 
     updateWishlist();
+
+    window.addEventListener(
+      "storage",
+      updateWishlist
+    );
 
     window.addEventListener(
       "wishlistUpdated",
       updateWishlist
     );
 
-    return () =>
+    return () => {
+
+      window.removeEventListener(
+        "storage",
+        updateWishlist
+      );
+
       window.removeEventListener(
         "wishlistUpdated",
         updateWishlist
       );
+
+    };
+
   }, []);
 
-  return (
-    <header
-      className={`fixed left-0 top-0 z-50 w-full transition-all duration-300 ${
-        scrolled
-          ? "bg-black/95 shadow-2xl backdrop-blur"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+  const menu = [
 
-        {/* Logo */}
+    {
+      name: "Home",
+      href: "/",
+    },
+
+    {
+      name: "Buy Bikes",
+      href: "/buy-bikes",
+    },
+
+    {
+      name: "Sell Bike",
+      href: "/sell-bike",
+    },
+
+    {
+      name: "Wishlist",
+      href: "/wishlist",
+    },
+
+    {
+      name: "Contact",
+      href: "/contact",
+    },
+
+  ];
+
+  return (
+
+    <header
+      className="
+      fixed
+      top-0
+      left-0
+      right-0
+      z-50
+      border-b
+      border-white/10
+      bg-black/70
+      backdrop-blur-xl
+      "
+    >
+
+      <div
+        className="
+        mx-auto
+        flex
+        h-20
+        max-w-7xl
+        items-center
+        justify-between
+        px-5
+        "
+      >
+
+        {/* LOGO */}
 
         <Link
           href="/"
-          className="flex items-center gap-2"
+          className="flex items-center gap-3"
         >
-          <Bike
-            size={32}
-            className="text-orange-500"
-          />
+
+          <div
+            className="
+            flex
+            h-12
+            w-12
+            items-center
+            justify-center
+            rounded-2xl
+            bg-orange-500
+            shadow-lg
+            shadow-orange-500/30
+            "
+          >
+            <Bike
+              size={28}
+              className="text-black"
+            />
+          </div>
 
           <div>
-            <h1 className="text-2xl font-extrabold text-white">
-              Old Bikes
+
+            <h1
+              className="
+              text-xl
+              font-black
+              tracking-tight
+              text-white
+              "
+            >
+              Old Bikes Hub
             </h1>
 
-            <p className="-mt-1 text-xs text-orange-500">
-              HUB
+            <p
+              className="
+              text-[11px]
+              font-bold
+              text-orange-500
+              "
+            >
+              India's Used Bike Marketplace
             </p>
+
           </div>
+
         </Link>
 
-        {/* Desktop Menu */}
+        {/* DESKTOP */}
 
-        <nav className="hidden items-center gap-8 text-white md:flex">
+        <nav
+          className="
+          hidden
+          items-center
+          gap-8
+          lg:flex
+          "
+        >
+
+          {menu.map((item) => (
+
+            <Link
+              key={item.href}
+              href={item.href}
+              className="
+              group
+              relative
+              font-bold
+              text-gray-300
+              transition
+              hover:text-white
+              "
+            >
+
+              <span
+                className={
+                  pathname === item.href
+                    ? "text-orange-500"
+                    : ""
+                }
+              >
+                {item.name}
+              </span>
+
+              <span
+                className={`
+                absolute
+                -bottom-2
+                left-0
+                h-[2px]
+                bg-orange-500
+                transition-all
+                ${
+                  pathname === item.href
+                    ? "w-full"
+                    : "w-0 group-hover:w-full"
+                }
+                `}
+              />
+
+            </Link>
+
+          ))}
+
+          {/* Wishlist */}
 
           <Link
-            href="/"
-            className="transition hover:text-orange-500"
+            href="/wishlist"
+            className="
+            relative
+            ml-2
+            flex
+            items-center
+            gap-2
+            font-bold
+            text-gray-300
+            hover:text-white
+            "
           >
-            Home
-          </Link>
 
-          <Link
-            href="/buy-bikes"
-            className="transition hover:text-orange-500"
-          >
-            Buy Bikes
+            <Heart size={20} />
+
+            {wishlistCount > 0 && (
+
+              <span
+                className="
+                absolute
+                -right-3
+                -top-3
+                flex
+                min-w-[20px]
+                items-center
+                justify-center
+                rounded-full
+                bg-red-500
+                px-1
+                py-[2px]
+                text-[10px]
+                font-bold
+                text-white
+                "
+              >
+                {wishlistCount}
+              </span>
+
+            )}
+
           </Link>
 
           <Link
             href="/sell-bike"
-            className="transition hover:text-orange-500"
+            className="
+            ml-5
+            flex
+            items-center
+            gap-2
+            rounded-xl
+            bg-orange-500
+            px-6
+            py-3
+            font-black
+            text-black
+            transition
+            hover:scale-105
+            hover:bg-orange-400
+            "
           >
-            Sell Bike
-          </Link>
 
-          <Link
-            href="/wishlist"
-            className="relative flex items-center gap-2 transition hover:text-orange-500"
-          >
-            <Heart size={20} />
-
-            Wishlist
-
-            {wishlistCount > 0 && (
-              <span className="absolute -right-4 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                {wishlistCount}
-              </span>
-            )}
-          </Link>
-
-          <Link
-            href="#"
-            className="transition hover:text-orange-500"
-          >
-            About
-          </Link>
-
-          <Link
-            href="#"
-            className="transition hover:text-orange-500"
-          >
-            Contact
-          </Link>
-
-          <Link
-            href="/admin"
-            className="rounded-xl bg-orange-500 px-5 py-3 font-bold transition hover:bg-orange-600"
-          >
             Post Your Bike
+
+            <ChevronRight size={18} />
+
           </Link>
 
         </nav>
 
-        {/* Mobile Button */}
+        {/* MOBILE BUTTON */}
 
         <button
-          onClick={() =>
-            setMenuOpen(!menuOpen)
-          }
-          className="text-white md:hidden"
+          onClick={() => setOpen(!open)}
+          className="
+          rounded-xl
+          p-2
+          text-white
+          lg:hidden
+          "
         >
-          {menuOpen ? (
-            <X size={30} />
-          ) : (
-            <Menu size={30} />
-          )}
+          {open ? <X size={30} /> : <Menu size={30} />}
         </button>
 
       </div>
 
-      {/* Mobile Menu */}
+      {/* MOBILE MENU */}
 
-      {menuOpen && (
-        <div className="border-t border-gray-800 bg-black md:hidden">
+      {open && (
 
-          <div className="flex flex-col px-6 py-6">
+        <div
+          className="
+          border-t
+          border-white/10
+          bg-black
+          px-6
+          py-6
+          lg:hidden
+          "
+        >
 
-            <Link
-              href="/"
-              className="py-3 text-white"
-              onClick={() => setMenuOpen(false)}
-            >
-              Home
-            </Link>
+          <div
+            className="
+            flex
+            flex-col
+            gap-5
+            "
+          >
 
-            <Link
-              href="/buy-bikes"
-              className="py-3 text-white"
-              onClick={() => setMenuOpen(false)}
-            >
-              Buy Bikes
-            </Link>
+            {menu.map((item) => (
 
-            <Link
-              href="/sell-bike"
-              className="py-3 text-white"
-              onClick={() => setMenuOpen(false)}
-            >
-              Sell Bike
-            </Link>
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={
+                  pathname === item.href
+                    ? "font-bold text-orange-500"
+                    : "font-bold text-white"
+                }
+              >
+                {item.name}
+              </Link>
+
+            ))}
+
+            {/* Mobile Wishlist */}
 
             <Link
               href="/wishlist"
-              className="flex items-center justify-between py-3 text-white"
-              onClick={() => setMenuOpen(false)}
+              onClick={() => setOpen(false)}
+              className="
+              flex
+              items-center
+              justify-between
+              rounded-xl
+              border
+              border-white/10
+              px-4
+              py-3
+              font-bold
+              text-white
+              "
             >
-              <span>❤️ Wishlist</span>
+              <span className="flex items-center gap-2">
+                <Heart size={18} />
+                Wishlist
+              </span>
 
               {wishlistCount > 0 && (
-                <span className="rounded-full bg-red-500 px-2 py-1 text-xs font-bold">
+                <span
+                  className="
+                  rounded-full
+                  bg-red-500
+                  px-2
+                  py-1
+                  text-xs
+                  font-bold
+                  text-white
+                  "
+                >
                   {wishlistCount}
                 </span>
               )}
             </Link>
 
             <Link
-              href="#"
-              className="py-3 text-white"
-              onClick={() => setMenuOpen(false)}
-            >
-              About
-            </Link>
-
-            <Link
-              href="#"
-              className="py-3 text-white"
-              onClick={() => setMenuOpen(false)}
-            >
-              Contact
-            </Link>
-
-            <Link
-              href="/admin"
-              className="mt-4 rounded-xl bg-orange-500 px-5 py-3 text-center font-bold text-white"
-              onClick={() => setMenuOpen(false)}
+              href="/sell-bike"
+              onClick={() => setOpen(false)}
+              className="
+              rounded-xl
+              bg-orange-500
+              py-3
+              text-center
+              font-black
+              text-black
+              "
             >
               Post Your Bike
             </Link>
@@ -234,7 +415,11 @@ export default function Navbar() {
           </div>
 
         </div>
+
       )}
+
     </header>
+
   );
+
 }

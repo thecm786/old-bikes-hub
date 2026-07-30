@@ -35,6 +35,9 @@ export interface BikeType {
 
   phone?: string;
 
+  
+  registrationNumber?: string;
+
 
 
   location: string;

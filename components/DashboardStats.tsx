@@ -6,10 +6,13 @@ import {
   CheckCircle,
   Clock,
   BadgeCheck,
+  ClipboardList,
 } from "lucide-react";
 
 
 import type { BikeType } from "@/types/bike";
+
+
 
 
 
@@ -18,16 +21,33 @@ interface DashboardStatsProps {
 
   bikes:BikeType[];
 
+  pendingRequests:number;
+
+  approvedBikes:number;
+
 
 }
 
 
 
+
+
+
+
 export default function DashboardStats({
+
 
   bikes,
 
+  pendingRequests,
+
+  approvedBikes,
+
+
 }:DashboardStatsProps){
+
+
+
 
 
 
@@ -36,27 +56,45 @@ export default function DashboardStats({
 
 
 
+
+
   const availableBikes =
     bikes.filter(
+
       (bike)=>
-        bike.status === "Available"
+      bike.status==="Available"
+
     ).length;
 
 
 
-  const pendingBikes =
-    bikes.filter(
-      (bike)=>
-        bike.status === "Pending"
-    ).length;
+
 
 
 
   const soldBikes =
     bikes.filter(
+
       (bike)=>
-        bike.status === "Sold"
+      bike.status==="Sold"
+
     ).length;
+
+
+
+
+
+
+
+  const featuredBikes =
+    bikes.filter(
+
+      (bike)=>
+      bike.featured
+
+    ).length;
+
+
 
 
 
@@ -65,7 +103,10 @@ export default function DashboardStats({
   const stats = [
 
 
+
+
     {
+
 
       title:"Total Bikes",
 
@@ -77,10 +118,15 @@ export default function DashboardStats({
 
       text:"text-white"
 
+
     },
 
 
+
+
+
     {
+
 
       title:"Available",
 
@@ -92,35 +138,86 @@ export default function DashboardStats({
 
       text:"text-white"
 
+
     },
+
+
+
 
 
     {
 
-      title:"Pending",
 
-      value:pendingBikes,
+      title:"Featured Bikes",
 
-      icon:<Clock size={28}/>,
+      value:featuredBikes,
+
+      icon:<BadgeCheck size={28}/>,
+
+      bg:"bg-orange-500",
+
+      text:"text-white"
+
+
+    },
+
+
+
+
+
+    {
+
+
+      title:"Pending Requests",
+
+      value:pendingRequests,
+
+      icon:<ClipboardList size={28}/>,
 
       bg:"bg-yellow-400",
 
       text:"text-black"
 
+
     },
 
 
+
+
+
     {
+
+
+      title:"Approved Bikes",
+
+      value:approvedBikes,
+
+      icon:<CheckCircle size={28}/>,
+
+      bg:"bg-blue-600",
+
+      text:"text-white"
+
+
+    },
+
+
+
+
+
+    {
+
 
       title:"Sold",
 
       value:soldBikes,
 
-      icon:<BadgeCheck size={28}/>,
+      icon:<Clock size={28}/>,
 
       bg:"bg-red-600",
 
       text:"text-white"
+
 
     },
 
@@ -133,103 +230,171 @@ export default function DashboardStats({
 
 
 
+
+
   return (
 
 
+
     <section className="
+
     grid
+
     gap-6
+
     sm:grid-cols-2
-    xl:grid-cols-4
+
+    xl:grid-cols-3
+
     ">
 
 
 
-      {
-        stats.map((item)=>(
+    {
 
 
-          <div
-
-            key={item.title}
-
-            className={`
-            ${item.bg}
-            ${item.text}
-            rounded-3xl
-            p-6
-            shadow-xl
-            transition
-            duration-300
-            hover:-translate-y-2
-            `}
-
-          >
-
-
-            <div className="
-            flex
-            items-center
-            justify-between
-            ">
-
-
-              <div>
-
-
-                <p className="
-                text-sm
-                font-bold
-                opacity-80
-                ">
-
-                  {item.title}
-
-                </p>
+      stats.map((item)=>(
 
 
 
-                <h2 className="
-                mt-3
-                text-4xl
-                font-black
-                ">
-
-                  {item.value}
-
-                </h2>
+        <div
 
 
-              </div>
+        key={item.title}
+
+
+        className={`
+
+        ${item.bg}
+
+        ${item.text}
+
+        rounded-3xl
+
+        p-6
+
+        shadow-xl
+
+        transition
+
+        duration-300
+
+        hover:-translate-y-2
+
+        `}
+
+
+        >
 
 
 
 
-              <div className="
-              flex
-              h-14
-              w-14
-              items-center
-              justify-center
-              rounded-2xl
-              bg-white/20
+
+          <div className="
+
+          flex
+
+          items-center
+
+          justify-between
+
+          ">
+
+
+
+            <div>
+
+
+
+              <p className="
+
+              text-sm
+
+              font-bold
+
+              opacity-80
+
               ">
 
-                {item.icon}
 
-              </div>
+                {item.title}
+
+
+              </p>
+
+
+
+
+
+              <h2 className="
+
+              mt-3
+
+              text-4xl
+
+              font-black
+
+              ">
+
+
+                {item.value}
+
+
+              </h2>
+
 
 
 
             </div>
 
 
+
+
+
+
+
+            <div className="
+
+            flex
+
+            h-14
+
+            w-14
+
+            items-center
+
+            justify-center
+
+            rounded-2xl
+
+            bg-white/20
+
+            ">
+
+
+              {item.icon}
+
+
+            </div>
+
+
+
+
+
           </div>
 
 
-        ))
-      }
 
+
+
+        </div>
+
+
+      ))
+
+
+
+    }
 
 
 

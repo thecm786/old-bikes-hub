@@ -5,16 +5,22 @@ import {
   useState,
 } from "react";
 
+
 import {
   useParams,
 } from "next/navigation";
 
+
+import Link from "next/link";
+
+
 import {
   collection,
+  getDocs,
   query,
   where,
-  getDocs,
 } from "firebase/firestore";
+
 
 import {
   Calendar,
@@ -25,49 +31,70 @@ import {
   ShieldCheck,
   Star,
   ArrowLeft,
+  Bike,
+  CheckCircle,
 } from "lucide-react";
 
-import Link from "next/link";
 
-import { db } from "@/firebase/firebase";
+import {
+  db,
+} from "@/firebase/firebase";
+
+
 
 
 
 interface BikeType {
 
+
   id:string;
+
 
   name:string;
 
+
   brand:string;
+
 
   slug:string;
 
+
   price:number | string;
+
 
   year:string;
 
+
   km:string;
+
 
   location:string;
 
-  owner?:string;
-
-  phone?:string;
 
   image?:string;
 
+
   images?:string[];
+
 
   description?:string;
 
+
   featured?:boolean;
+
 
   verified?:boolean;
 
+
   status?:string;
 
+
+
 }
+
+
+
+
 
 
 
@@ -76,398 +103,347 @@ interface BikeType {
 export default function BikeDetailsPage(){
 
 
-  const params = useParams();
 
+const params =
+useParams();
 
-  const slug =
-    params.slug as string;
 
 
+const slug =
+params.slug as string;
 
-  const [bike,setBike] =
-    useState<BikeType | null>(null);
 
 
 
-  const [loading,setLoading] =
-    useState(true);
 
+const [bike,setBike] =
+useState<BikeType | null>(null);
 
 
 
+const [activeImage,setActiveImage] =
+useState("");
 
-  useEffect(()=>{
 
 
-    const fetchBike = async()=>{
+const [loading,setLoading] =
+useState(true);
 
 
-      try{
 
 
-        const q = query(
 
-          collection(
-            db,
-            "bikes"
-          ),
 
-          where(
-            "slug",
-            "==",
-            slug
-          )
 
-        );
 
 
+useEffect(()=>{
 
-        const snapshot =
-          await getDocs(q);
 
 
+const fetchBike = async()=>{
 
 
-        if(!snapshot.empty){
+try{
 
 
-          const docSnap =
-            snapshot.docs[0];
 
+const q = query(
 
 
-          setBike({
+collection(
+db,
+"bikes"
+),
 
-            id:docSnap.id,
 
-            ...(docSnap.data() as Omit<BikeType,"id">)
 
-          });
+where(
 
+"slug",
 
-        }
-        else{
+"==",
 
+slug
 
-          setBike(null);
+)
 
 
-        }
 
+);
 
 
-      }
 
-      catch(error){
 
 
-        console.log(
-          "Bike Fetch Error",
-          error
-        );
+const snapshot =
+await getDocs(q);
 
 
-      }
 
-      finally{
 
 
-        setLoading(false);
+if(!snapshot.empty){
 
 
-      }
 
+const data =
+snapshot.docs[0];
 
 
-    };
 
+const bikeData = {
 
+id:data.id,
 
-    if(slug){
+...(data.data() as Omit<
+BikeType,
+"id"
+>)
 
-      fetchBike();
+};
 
-    }
 
+setBike(bikeData);
 
 
-  },[slug]);
+if(bikeData.images?.length){
 
+setActiveImage(
+bikeData.images[0]
+);
 
+}
 
+else if(bikeData.image){
 
+setActiveImage(
+bikeData.image
+);
 
+}
 
 
-  if(loading){
 
+}
 
-    return (
+else{
 
-      <div className="
-      flex
-      min-h-screen
-      items-center
-      justify-center
-      ">
 
-        <div className="
-        h-14
-        w-14
-        animate-spin
-        rounded-full
-        border-4
-        border-orange-500
-        border-t-transparent
-        "/>
+setBike(null);
 
-      </div>
 
-    );
+}
 
 
-  }
 
+}
 
+catch(error){
 
 
+console.log(
+"Bike Fetch Error",
+error
+);
 
 
-  if(!bike){
 
+}
 
-    return (
+finally{
 
-      <div className="
-      flex
-      min-h-screen
-      flex-col
-      items-center
-      justify-center
-      ">
 
+setLoading(false);
 
-        <h1 className="
-        text-4xl
-        font-black
-        ">
 
-          Bike Not Found
 
-        </h1>
+}
 
 
 
-        <Link
+};
 
-          href="/buy-bikes"
 
-          className="
-          mt-5
-          rounded-xl
-          bg-orange-500
-          px-6
-          py-3
-          font-bold
-          text-white
-          "
 
-        >
 
-          Back To Bikes
 
-        </Link>
 
 
-      </div>
+if(slug){
 
-    );
 
+fetchBike();
 
-  }
 
+}
 
 
 
+},[slug]);
 
 
 
-  const images =
 
-    bike.images &&
-    bike.images.length > 0
 
-    ?
 
-    bike.images
 
-    :
 
-    bike.image
 
-    ?
+if(loading){
 
-    [bike.image]
 
-    :
+return(
 
-    [];
 
+<div
 
+className="
+flex
+min-h-screen
+items-center
+justify-center
+"
 
+>
 
 
+<div
 
+className="
+h-14
+w-14
+animate-spin
+rounded-full
+border-4
+border-orange-500
+border-t-transparent
+"
 
-  const whatsapp =
+/>
 
-    bike.phone
 
-    ?
 
-    `https://wa.me/91${bike.phone.replace(/\D/g,"")}`
+</div>
 
-    :
 
-    "#";
+);
 
 
+}
 
 
 
-  const call =
 
-    bike.phone
 
-    ?
 
-    `tel:${bike.phone}`
 
-    :
 
-    "#";
 
+if(!bike){
 
 
 
+return(
 
 
+<div
 
+className="
+flex
+min-h-screen
+flex-col
+items-center
+justify-center
+"
 
+>
 
-  return (
 
-    <main className="
-    min-h-screen
-    bg-gray-100
-    py-10
-    ">
+<h1
 
+className="
+text-4xl
+font-black
+"
 
-      <div className="
-      mx-auto
-      max-w-7xl
-      space-y-8
-      px-5
-      ">
+>
 
+Bike Not Found
 
+</h1>
 
 
-        <Link
 
-          href="/buy-bikes"
+<Link
 
-          className="
-          inline-flex
-          items-center
-          gap-2
-          font-bold
-          "
+href="/buy-bikes"
 
-        >
+className="
+mt-5
+rounded-xl
+bg-orange-500
+px-6
+py-3
+font-bold
+text-white
+"
 
-          <ArrowLeft size={18}/>
+>
 
-          Back
+Back To Bikes
 
-        </Link>
 
+</Link>
 
 
 
+</div>
 
 
 
+);
 
-        <div className="
-        grid
-        gap-8
-        lg:grid-cols-2
-        ">
 
 
+}
 
 
 
 
-          {/* IMAGES */}
 
 
-          <div className="
-          space-y-5
-          ">
 
 
-            {
-              images.length > 0 ?
 
+const images =
 
-              images.map((img,index)=>(
 
+bike.images && bike.images.length > 0
 
-                <img
 
-                  key={index}
+?
 
-                  src={img}
 
-                  alt={bike.name}
+bike.images
 
-                  className="
-                  h-96
-                  w-full
-                  rounded-3xl
-                  object-cover
-                  shadow-xl
-                  "
 
-                />
+:
 
 
-              ))
+bike.image
 
 
-              :
+?
 
-              <div className="
-              flex
-              h-96
-              items-center
-              justify-center
-              rounded-3xl
-              bg-white
-              text-8xl
-              ">
 
-                🏍️
+[bike.image]
 
-              </div>
 
-            }
+:
 
 
-          </div>
+[];
 
 
 
@@ -475,333 +451,1028 @@ export default function BikeDetailsPage(){
 
 
 
+const whatsapp =
 
+"https://wa.me/91XXXXXXXXXX";
 
-          {/* DETAILS */}
 
 
-          <div className="
-          rounded-3xl
-          bg-white
-          p-8
-          shadow-xl
-          ">
+const call =
 
+"tel:+91XXXXXXXXXX";
 
 
-            <div className="
-            flex
-            flex-wrap
-            gap-3
-            ">
 
 
-              <div className="
-              rounded-full
-              bg-orange-500
-              px-4
-              py-2
-              font-bold
-              text-white
-              ">
+return (
 
-                {bike.brand}
+<main
 
-              </div>
+className="
+min-h-screen
+bg-gray-100
+py-8
+"
 
+>
 
 
-              {
-                bike.status &&
+<div
 
-                <div className={`
-                rounded-full
-                px-4
-                py-2
-                font-bold
+className="
+mx-auto
+max-w-7xl
+space-y-8
+px-5
+"
 
-                ${
-                  bike.status==="Available"
-                  ?
-                  "bg-green-500 text-white"
-                  :
-                  bike.status==="Pending"
-                  ?
-                  "bg-yellow-400"
-                  :
-                  "bg-red-600 text-white"
-                }
+>
 
-                `}>
 
-                  {bike.status}
 
-                </div>
 
-              }
+{/* BACK BUTTON */}
 
 
-            </div>
+<Link
 
+href="/buy-bikes"
 
+className="
+inline-flex
+items-center
+gap-2
+font-bold
+text-gray-700
+hover:text-orange-500
+"
 
+>
 
+<ArrowLeft size={18}/>
 
+Back To Bikes
 
-            <h1 className="
-            mt-5
-            text-4xl
-            font-black
-            ">
+</Link>
 
-              {bike.name}
 
-            </h1>
 
 
 
 
 
 
-            <p className="
-            mt-4
-            text-4xl
-            font-black
-            text-orange-500
-            ">
 
-              ₹
-              {Number(bike.price)
-              .toLocaleString("en-IN")}
+<div
 
-            </p>
+className="
+grid
+gap-8
+lg:grid-cols-2
+"
 
+>
 
 
 
 
 
 
-            <div className="
-            mt-6
-            space-y-4
-            ">
 
 
-              <p className="flex items-center gap-3">
+{/* IMAGE GALLERY */}
 
-                <Calendar/>
 
-                {bike.year}
 
-              </p>
+<div
 
+className="
+space-y-4
+"
 
+>
 
-              <p className="flex items-center gap-3">
 
-                <Gauge/>
+{
 
-                {bike.km} KM
+images.length > 0 ? (
 
-              </p>
 
+<>
 
 
-              <p className="flex items-center gap-3">
+<div
 
-                <MapPin/>
+className="
+overflow-hidden
+rounded-3xl
+bg-white
+shadow-xl
+"
 
-                {bike.location}
+>
 
-              </p>
 
+<img
 
-            </div>
+src={activeImage || images[0]}
 
+alt={bike.name}
 
+className="
+h-[420px]
+w-full
+object-cover
+transition
+duration-300
+"
 
+/>
 
 
+</div>
 
 
 
 
-            <div className="
-            mt-6
-            flex
-            gap-3
-            ">
 
+{
 
-              {
-                bike.featured &&
+images.length > 1 && (
 
-                <div className="
-                flex
-                items-center
-                gap-2
-                rounded-xl
-                bg-yellow-400
-                px-4
-                py-2
-                font-bold
-                ">
 
-                  <Star size={18}/>
+<div
 
-                  Featured
+className="
+grid
+grid-cols-3
+gap-3
+"
 
-                </div>
+>
 
-              }
 
+{
 
+images.slice(1).map((img,index)=>(
 
 
+<img
 
+key={index}
 
-              {
-                bike.verified &&
+src={img}
 
-                <div className="
-                flex
-                items-center
-                gap-2
-                rounded-xl
-                bg-green-100
-                px-4
-                py-2
-                font-bold
-                text-green-700
-                ">
+alt={bike.name}
 
-                  <ShieldCheck/>
+onClick={()=>setActiveImage(img)}
 
-                  Verified
+className={`
+h-28
+w-full
+rounded-xl
+object-cover
+shadow
+cursor-pointer
+transition
+hover:scale-105
 
-                </div>
+${
+activeImage===img
+?
+"ring-4 ring-orange-500"
+:
+""
+}
 
-              }
+`}
 
+/>
 
-            </div>
 
+))
 
 
+}
 
 
+</div>
 
 
+)
 
-            <p className="
-            mt-8
-            leading-7
-            text-gray-600
-            ">
 
-              {bike.description}
+}
 
-            </p>
 
+</>
 
 
 
+)
 
 
+:
 
 
-            <div className="
-            mt-8
-            grid
-            grid-cols-2
-            gap-4
-            ">
+<div
 
+className="
+flex
+h-[420px]
+items-center
+justify-center
+rounded-3xl
+bg-white
+text-8xl
+shadow-xl
+"
 
+>
 
-              <a
+🏍️
 
-                href={whatsapp}
+</div>
 
-                target="_blank"
 
-                rel="noopener noreferrer"
+}
 
-                className="
-                flex
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                bg-green-500
-                py-4
-                font-bold
-                text-white
-                "
 
-              >
 
-                <MessageCircle/>
+</div>
 
-                WhatsApp
 
-              </a>
 
 
 
 
 
 
-              <a
 
-                href={call}
 
-                className="
-                flex
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                bg-blue-600
-                py-4
-                font-bold
-                text-white
-                "
 
-              >
 
-                <Phone/>
 
-                Call
+{/* BIKE INFORMATION */}
 
-              </a>
 
 
-            </div>
+<div
 
+className="
+rounded-3xl
+bg-white
+p-6
+shadow-xl
+md:p-8
+"
 
+>
 
 
 
-          </div>
 
 
 
 
+<div
 
-        </div>
+className="
+flex
+flex-wrap
+gap-3
+"
 
+>
 
 
 
+<div
 
-      </div>
+className="
+rounded-full
+bg-orange-500
+px-4
+py-2
+text-sm
+font-black
+text-white
+"
 
+>
 
-    </main>
 
-  );
+{bike.brand}
+
+
+</div>
+
+
+
+
+
+
+
+
+{
+
+bike.verified && (
+
+
+<div
+
+className="
+flex
+items-center
+gap-1
+rounded-full
+bg-green-100
+px-4
+py-2
+text-sm
+font-bold
+text-green-700
+"
+
+>
+
+
+<ShieldCheck size={16}/>
+
+
+Verified
+
+
+</div>
+
+
+)
+
+}
+
+
+
+
+
+{
+
+bike.featured && (
+
+
+<div
+
+className="
+flex
+items-center
+gap-1
+rounded-full
+bg-yellow-400
+px-4
+py-2
+text-sm
+font-bold
+"
+
+>
+
+
+<Star size={16}/>
+
+
+Featured
+
+
+</div>
+
+
+)
+
+}
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+<h1
+
+className="
+mt-5
+text-3xl
+font-black
+md:text-5xl
+"
+
+>
+
+
+{bike.name}
+
+
+</h1>
+
+
+
+
+
+
+
+
+<p
+
+className="
+mt-4
+text-4xl
+font-black
+text-orange-600
+"
+
+>
+
+₹
+
+{
+
+Number(bike.price || 0)
+
+.toLocaleString("en-IN")
+
+}
+
+
+</p>
+
+
+
+
+
+
+
+
+
+{/* SPEC BOX */}
+
+
+
+<div
+
+className="
+mt-8
+grid
+grid-cols-2
+gap-4
+"
+
+>
+
+
+<div
+
+className="
+rounded-2xl
+bg-gray-100
+p-4
+"
+
+>
+
+<p
+
+className="
+text-xs
+text-gray-500
+"
+
+>
+
+Year
+
+</p>
+
+
+<h3
+
+className="
+mt-1
+font-black
+"
+
+>
+
+{bike.year}
+
+</h3>
+
+
+</div>
+
+
+
+
+
+
+
+<div
+
+className="
+rounded-2xl
+bg-gray-100
+p-4
+"
+
+>
+
+<p
+
+className="
+text-xs
+text-gray-500
+"
+
+>
+
+Running
+
+</p>
+
+
+<h3
+
+className="
+mt-1
+font-black
+"
+
+>
+
+{bike.km} KM
+
+</h3>
+
+
+</div>
+
+
+
+
+
+
+
+
+<div
+
+className="
+rounded-2xl
+bg-gray-100
+p-4
+"
+
+>
+
+<p
+
+className="
+text-xs
+text-gray-500
+"
+
+>
+
+Location
+
+</p>
+
+
+<h3
+
+className="
+mt-1
+font-black
+"
+
+>
+
+{bike.location}
+
+</h3>
+
+
+</div>
+
+
+
+
+
+
+
+
+<div
+
+className="
+rounded-2xl
+bg-gray-100
+p-4
+"
+
+>
+
+<p
+
+className="
+text-xs
+text-gray-500
+"
+
+>
+
+Status
+
+</p>
+
+
+<h3
+
+className="
+mt-1
+font-black
+text-green-600
+"
+
+>
+
+{bike.status || "Available"}
+
+</h3>
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<p
+
+className="
+mt-8
+leading-7
+text-gray-600
+"
+
+>
+
+{bike.description}
+
+</p>
+
+
+
+
+
+
+
+
+{/* OLD BIKES HUB TRUST */}
+
+
+
+<div
+
+className="
+mt-8
+rounded-3xl
+bg-black
+p-6
+text-white
+"
+
+>
+
+
+<div
+
+className="
+flex
+items-center
+gap-3
+"
+
+>
+
+
+<div
+
+className="
+flex
+h-12
+w-12
+items-center
+justify-center
+rounded-2xl
+bg-orange-500
+"
+
+>
+
+
+<Bike size={26}/>
+
+
+</div>
+
+
+
+
+<div>
+
+
+<h3
+
+className="
+text-xl
+font-black
+"
+
+>
+
+Old Bikes Hub
+
+</h3>
+
+
+
+<p
+
+className="
+text-sm
+text-gray-400
+"
+
+>
+
+Bihar's Trusted Used Bike Marketplace
+
+</p>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div
+
+className="
+mt-5
+space-y-3
+text-sm
+text-gray-300
+"
+
+>
+
+
+<p
+
+className="
+flex
+items-center
+gap-2
+"
+
+>
+
+
+<CheckCircle size={18}
+className="text-green-400"
+/>
+
+
+Verified Bike Listings
+
+
+</p>
+
+
+
+
+
+<p
+
+className="
+flex
+items-center
+gap-2
+"
+
+>
+
+
+<CheckCircle size={18}
+className="text-green-400"
+/>
+
+
+Quality Checked Bikes
+
+
+</p>
+
+
+
+
+
+<p
+
+className="
+flex
+items-center
+gap-2
+"
+
+>
+
+
+<CheckCircle size={18}
+className="text-green-400"
+/>
+
+
+Trusted Buying Support
+
+
+</p>
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+{/* CONTACT BUTTONS */}
+
+
+
+<div
+
+className="
+mt-6
+grid
+grid-cols-1
+gap-4
+sm:grid-cols-2
+"
+
+>
+
+
+<a
+
+
+href={whatsapp}
+
+
+target="_blank"
+
+
+rel="noopener noreferrer"
+
+
+className="
+flex
+items-center
+justify-center
+gap-2
+rounded-2xl
+bg-green-500
+py-4
+font-black
+text-white
+transition
+hover:bg-green-600
+"
+
+>
+
+
+<MessageCircle size={22}/>
+
+
+WhatsApp Inquiry
+
+
+</a>
+
+
+
+
+
+
+
+
+<a
+
+
+href={call}
+
+
+className="
+flex
+items-center
+justify-center
+gap-2
+rounded-2xl
+bg-orange-500
+py-4
+font-black
+text-white
+transition
+hover:bg-orange-600
+"
+
+>
+
+
+<Phone size={22}/>
+
+
+Call Old Bikes Hub
+
+
+</a>
+
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+</main>
+
+
+);
 
 
 }

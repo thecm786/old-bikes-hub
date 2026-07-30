@@ -15,6 +15,9 @@ import {
   addDoc,
   collection,
   serverTimestamp,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 
 
@@ -79,6 +82,8 @@ export default function AddBike(){
     owner:"",
 
     phone:"",
+
+    registrationNumber:"",
 
     location:"",
 
@@ -319,7 +324,10 @@ export default function AddBike(){
 
     }
 
-
+if (!form.registrationNumber) {
+  alert("Registration Number is required");
+  return false;
+}
 
 
     if(form.images.length===0)
@@ -362,6 +370,21 @@ export default function AddBike(){
     if(!validateForm())
       return;
 
+    const existingQuery = query(
+  collection(db, "bikes"),
+  where(
+    "registrationNumber",
+    "==",
+    form.registrationNumber.trim().toUpperCase()
+  )
+);
+
+const existingSnapshot = await getDocs(existingQuery);
+
+if (!existingSnapshot.empty) {
+  alert("❌ This Registration Number is already registered.");
+  return;
+}
 
 
 
@@ -370,6 +393,32 @@ export default function AddBike(){
 
 
       setSaving(true);
+
+      // Duplicate Registration Check
+
+const duplicateQuery = query(
+  collection(db, "bikes"),
+  where(
+    "registrationNumber",
+    "==",
+    form.registrationNumber
+  )
+);
+
+const duplicateSnapshot = await getDocs(
+  duplicateQuery
+);
+
+if (!duplicateSnapshot.empty) {
+
+  alert(
+    `❌ Bike already exists.\n\nRegistration Number: ${form.registrationNumber}`
+  );
+
+  setSaving(false);
+
+  return;
+}
 
 
 
@@ -421,6 +470,9 @@ export default function AddBike(){
 
           phone:
           form.phone,
+
+
+          registrationNumber: form.registrationNumber,
 
 
 
@@ -920,6 +972,24 @@ export default function AddBike(){
                 value={form.phone}
                 onChange={handleChange}
               />
+
+
+              <Input
+  icon={<Bike />}
+  name="registrationNumber"
+  placeholder="Registration Number (Required)"
+  value={form.registrationNumber}
+  onChange={(e) => {
+    const value = e.target.value
+      .toUpperCase()
+      .replace(/\s/g, "");
+
+    setForm((prev) => ({
+      ...prev,
+      registrationNumber: value,
+    }));
+  }}
+/>
 
 
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import {
   LayoutDashboard,
@@ -10,12 +10,22 @@ import {
   Star,
   Settings,
   LogOut,
+  ClipboardList,
 } from "lucide-react";
 
 import { signOut } from "firebase/auth";
-import { auth } from "@/firebase/firebase";
+import { auth, db } from "@/firebase/firebase";
 
-import { useRouter } from "next/navigation";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
+
+import { useEffect, useState } from "react";
+
+
 
 
 
@@ -28,8 +38,79 @@ export default function AdminSidebar() {
 
 
 
+  const [pendingCount,setPendingCount] =
+    useState(0);
+
+
+
+
+
+
+  useEffect(()=>{
+
+
+    const fetchPending = async()=>{
+
+
+      try{
+
+
+        const q = query(
+
+          collection(
+            db,
+            "sellRequests"
+          ),
+
+          where(
+            "status",
+            "==",
+            "Pending"
+          )
+
+        );
+
+
+
+        const snapshot =
+          await getDocs(q);
+
+
+
+        setPendingCount(
+          snapshot.size
+        );
+
+
+      }
+
+      catch(error){
+
+        console.log(error);
+
+      }
+
+
+    };
+
+
+
+    fetchPending();
+
+
+
+  },[]);
+
+
+
+
+
+
+
+
 
   const menu = [
+
 
     {
       name:"Dashboard",
@@ -37,11 +118,15 @@ export default function AdminSidebar() {
       icon:<LayoutDashboard size={20}/>
     },
 
+
+
     {
       name:"Add Bike",
       href:"/admin/add-bike",
       icon:<PlusCircle size={20}/>
     },
+
+
 
     {
       name:"All Bikes",
@@ -49,11 +134,24 @@ export default function AdminSidebar() {
       icon:<Bike size={20}/>
     },
 
+
+
+    {
+      name:"Sell Requests",
+      href:"/admin/sell-requests",
+      icon:<ClipboardList size={20}/>,
+      badge:pendingCount
+    },
+
+
+
     {
       name:"Featured Bikes",
       href:"/admin/featured",
       icon:<Star size={20}/>
     },
+
+
 
     {
       name:"Settings",
@@ -61,7 +159,12 @@ export default function AdminSidebar() {
       icon:<Settings size={20}/>
     },
 
+
   ];
+
+
+
+
 
 
 
@@ -72,10 +175,16 @@ export default function AdminSidebar() {
 
     await signOut(auth);
 
-    router.push("/admin/login");
+
+    router.push(
+      "/admin/login"
+    );
 
 
   };
+
+
+
 
 
 
@@ -95,7 +204,9 @@ export default function AdminSidebar() {
 
 
 
-      {/* Logo */}
+
+
+      {/* LOGO */}
 
 
       <div className="
@@ -135,7 +246,9 @@ export default function AdminSidebar() {
 
 
 
-      {/* Menu */}
+
+
+      {/* MENU */}
 
 
       <nav className="
@@ -145,43 +258,60 @@ export default function AdminSidebar() {
       ">
 
 
-        {
-          menu.map((item)=>(
+      {
+
+        menu.map((item)=>(
 
 
-            <Link
+          <Link
 
-              key={item.name}
 
-              href={item.href}
+          key={item.name}
 
-              className={`
-              
-              flex
-              items-center
-              gap-3
-              rounded-xl
-              px-4
-              py-3
-              font-semibold
-              transition-all
 
-              ${
-                pathname===item.href
+          href={item.href}
 
-                ?
 
-                "bg-orange-500 text-white shadow-lg"
+          className={`
 
-                :
+          flex
+          items-center
+          justify-between
+          rounded-xl
+          px-4
+          py-3
+          font-semibold
+          transition
 
-                "text-gray-300 hover:bg-white/10 hover:text-white"
 
-              }
+          ${
+            pathname===item.href
 
-              `}
+            ?
 
-            >
+            "bg-orange-500 text-white shadow-lg"
+
+            :
+
+            "text-gray-300 hover:bg-white/10 hover:text-white"
+
+          }
+
+
+          `}
+
+
+
+          >
+
+
+
+
+            <div className="
+            flex
+            items-center
+            gap-3
+            ">
 
 
               {item.icon}
@@ -194,12 +324,46 @@ export default function AdminSidebar() {
               </span>
 
 
-            </Link>
+            </div>
 
 
-          ))
-        }
 
+
+
+
+
+            {
+              item.badge &&
+              item.badge > 0 &&
+
+
+              <span className="
+              rounded-full
+              bg-red-500
+              px-2
+              py-1
+              text-xs
+              font-black
+              text-white
+              ">
+
+                {item.badge}
+
+
+              </span>
+
+
+            }
+
+
+
+
+          </Link>
+
+
+        ))
+
+      }
 
 
       </nav>
@@ -210,7 +374,9 @@ export default function AdminSidebar() {
 
 
 
-      {/* Logout */}
+
+
+      {/* LOGOUT */}
 
 
       <div className="
@@ -222,21 +388,23 @@ export default function AdminSidebar() {
 
         <button
 
-          onClick={logoutHandler}
 
-          className="
-          flex
-          w-full
-          items-center
-          gap-3
-          rounded-xl
-          px-4
-          py-3
-          font-bold
-          text-red-400
-          transition
-          hover:bg-red-500/10
-          "
+        onClick={logoutHandler}
+
+
+        className="
+        flex
+        w-full
+        items-center
+        gap-3
+        rounded-xl
+        px-4
+        py-3
+        font-bold
+        text-red-400
+        hover:bg-red-500/10
+        "
+
 
         >
 
@@ -252,6 +420,8 @@ export default function AdminSidebar() {
 
 
       </div>
+
+
 
 
 

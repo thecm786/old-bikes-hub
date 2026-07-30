@@ -1,32 +1,22 @@
 "use client";
 
+import { useEffect, useState } from "react";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
-
-import {
-  useParams,
-  useRouter,
-} from "next/navigation";
-
+import { useParams, useRouter } from "next/navigation";
 
 import {
   doc,
   getDoc,
   updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 
-
-import {
-  db
-} from "@/firebase/firebase";
-
+import { db } from "@/firebase/firebase";
 
 import MultiImageUploader from "@/components/MultiImageUploader";
-
 
 import {
   Bike,
@@ -42,1659 +32,720 @@ import {
   Save,
 } from "lucide-react";
 
-
-
-
-
-
-
-
 type FormType = {
-
-
-brand:string;
-
-
-name:string;
-
-
-price:string;
-
-
-year:string;
-
-
-km:string;
-
-
-owner:string;
-
-
-phone:string;
-
-
-location:string;
-
-
-description:string;
-
-
-featured:boolean;
-
-
-verified:boolean;
-
-
-status:string;
-
-
-images:string[];
-
-
+  brand: string;
+  name: string;
+  price: string;
+  year: string;
+  km: string;
+  owner: string;
+  phone: string;
+  registrationNumber: string;
+  location: string;
+  description: string;
+  featured: boolean;
+  verified: boolean;
+  status: string;
+  images: string[];
 };
 
-
-
-
-
-
-
-
-
-export default function EditBike(){
-
-
-
-const params = useParams();
-
-
-const router = useRouter();
-
-
-
-const id = params.id as string;
-
-
-
-
-
-
-
-const [loading,setLoading] =
-useState(true);
-
-
-
-const [saving,setSaving] =
-useState(false);
-
-
-
-const [success,setSuccess] =
-useState("");
-
-
-
-
-
-
-
-
-
-const [form,setForm] =
-useState<FormType>({
-
-
-brand:"",
-
-
-name:"",
-
-
-price:"",
-
-
-year:"",
-
-
-km:"",
-
-
-owner:"",
-
-
-phone:"",
-
-
-location:"",
-
-
-description:"",
-
-
-featured:false,
-
-
-verified:false,
-
-
-status:"Available",
-
-
-images:[],
-
-
-});
-
-
-
-
-
-
-
-
-
-
-
-
+export default function EditBike() {
+
+  const params = useParams();
+
+  const router = useRouter();
+
+  const id = params.id as string;
+
+  const [loading, setLoading] = useState(true);
+
+  const [saving, setSaving] = useState(false);
+
+  const [success, setSuccess] = useState("");
+
+  const [form, setForm] = useState<FormType>({
+    brand: "",
+    name: "",
+    price: "",
+    year: "",
+    km: "",
+    owner: "",
+    phone: "",
+    registrationNumber: "",
+    location: "",
+    description: "",
+    featured: false,
+    verified: false,
+    status: "Available",
+    images: [],
+  });
 
 // LOAD BIKE DATA
 
+useEffect(() => {
 
-useEffect(()=>{
+  const loadBike = async () => {
 
+    try {
 
-const loadBike = async()=>{
+      const snap = await getDoc(
+        doc(db, "bikes", id)
+      );
 
+      if (snap.exists()) {
 
-try{
+        const data = snap.data();
 
+        setForm({
 
-const snap = await getDoc(
+          brand: data.brand || "",
 
-doc(
+          name: data.name || "",
 
-db,
+          price: String(data.price || ""),
 
-"bikes",
+          year: String(data.year || ""),
 
-id
+          km: String(data.km || ""),
 
-)
+          owner: data.owner || "",
 
-);
+          phone: data.phone || "",
 
+          registrationNumber:
+            data.registrationNumber || "",
 
+          location: data.location || "",
 
+          description: data.description || "",
 
+          featured: data.featured || false,
 
-if(snap.exists()){
+          verified: data.verified ?? false,
 
+          status: data.status || "Available",
 
+          images: Array.isArray(data.images)
+            ? data.images
+            : data.image
+            ? [data.image]
+            : [],
 
-const data = snap.data();
+        });
 
+      }
 
+    } catch (error) {
 
+      console.log(error);
 
+    } finally {
 
-setForm({
+      setLoading(false);
 
+    }
 
-brand:data.brand || "",
+  };
 
+  if (id) {
 
+    loadBike();
 
-name:data.name || "",
+  }
 
+}, [id]);
 
+const handleUpdate = async (
+  e: React.FormEvent
+) => {
 
-price:String(
+  e.preventDefault();
 
-data.price || ""
+  const cleanPhone = form.phone.replace(/\D/g, "");
 
-),
+  if (cleanPhone.length !== 10) {
+    alert("Enter valid 10 digit mobile number");
+    return;
+  }
 
+  if (form.images.length === 0) {
+    alert("Please add bike image");
+    return;
+  }
 
+  const registration = form.registrationNumber
+    .trim()
+    .toUpperCase();
 
-year:String(
+  if (!registration) {
+    alert("Registration Number is required");
+    return;
+  }
 
-data.year || ""
+  try {
 
-),
+    setSaving(true);
 
+    // Duplicate Registration Check
 
+    const q = query(
+      collection(db, "bikes"),
+      where(
+        "registrationNumber",
+        "==",
+        registration
+      )
+    );
 
-km:String(
+    const snapshot = await getDocs(q);
 
-data.km || ""
+    const duplicate = snapshot.docs.find(
+      (item) => item.id !== id
+    );
 
-),
+    if (duplicate) {
 
+      alert(
+        "Bike with this Registration Number already exists."
+      );
 
+      setSaving(false);
 
+      return;
 
-owner:data.owner || "",
+    }
 
+    await updateDoc(
+      doc(db, "bikes", id),
+      {
 
+        brand: form.brand,
 
+        name: form.name,
 
-phone:data.phone || "",
+        slug: generateSlug(),
 
+        registrationNumber: registration,
 
+        price: Number(form.price),
 
+        year: form.year,
 
-location:data.location || "",
+        km: form.km,
 
+        owner: form.owner,
 
+        phone: cleanPhone,
 
+        location: form.location,
 
-description:data.description || "",
+        description: form.description,
 
+        featured: form.featured,
 
+        verified: form.verified,
 
+        status: form.status,
 
+        image: form.images[0] || "",
 
-featured:
+        images: form.images,
 
-data.featured || false,
+      }
+    );
 
+    setSuccess(
+      "Bike Updated Successfully 🚀"
+    );
 
+    setTimeout(() => {
 
+      router.push("/admin/dashboard");
 
+    }, 1500);
 
-verified:
+  } catch (error) {
 
-data.verified ?? false,
+    console.log(error);
 
+    alert("Update Failed");
 
+  } finally {
 
+    setSaving(false);
 
-
-status:
-
-data.status || "Available",
-
-
-
-
-
-images:
-
-
-Array.isArray(data.images)
-
-
-?
-
-
-data.images
-
-
-:
-
-
-data.image
-
-
-?
-
-
-[data.image]
-
-
-:
-
-
-[],
-
-
-
-
-
-});
-
-
-
-}
-
-
-
-}
-
-
-catch(error){
-
-
-console.log(error);
-
-
-}
-
-finally{
-
-
-setLoading(false);
-
-
-}
-
-
+  }
 
 };
-
-
-
-
-
-if(id){
-
-
-loadBike();
-
-
-}
-
-
-
-},[id]);
-
-
-
-
-
-
-
-
-
-
 
 // INPUT CHANGE
 
-
 const handleChange = (
+  e: React.ChangeEvent<
+    HTMLInputElement |
+    HTMLTextAreaElement |
+    HTMLSelectElement
+  >
+) => {
 
-e:
+  const { name, value } = e.target;
 
-React.ChangeEvent<
-
-HTMLInputElement |
-
-HTMLTextAreaElement |
-
-HTMLSelectElement
-
->
-
-)=>{
-
-
-const {
-
-name,
-
-value
-
-}=e.target;
-
-
-
-
-
-setForm((prev)=>({
-
-
-...prev,
-
-
-[name]:value,
-
-
-}));
-
-
+  setForm((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
 
 };
-
-
-
-
-
-
-
-
-
 
 
 // CHECKBOX CHANGE
 
-
 const handleToggle = (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
 
-e:
+  const { name, checked } = e.target;
 
-React.ChangeEvent<HTMLInputElement>
-
-)=>{
-
-
-const {
-
-name,
-
-checked
-
-}=e.target;
-
-
-
-
-
-setForm((prev)=>({
-
-
-...prev,
-
-
-[name]:checked,
-
-
-}));
-
-
+  setForm((prev) => ({
+    ...prev,
+    [name]: checked,
+  }));
 
 };
-
-
-
-
-
-
-
-
-
 
 
 // REMOVE IMAGE
 
+const removeImage = (index: number) => {
 
-const removeImage = (
-
-index:number
-
-)=>{
-
-
-setForm((prev)=>({
-
-
-...prev,
-
-
-images:
-
-prev.images.filter(
-
-(_,i)=>i!==index
-
-),
-
-
-
-}));
-
-
+  setForm((prev) => ({
+    ...prev,
+    images: prev.images.filter((_, i) => i !== index),
+  }));
 
 };
 
 
+// GENERATE SLUG
 
+const generateSlug = () => {
 
-
-
-
-
-
-
-
-// SLUG
-
-
-const generateSlug = ()=>{
-
-
-return (
-
-`${form.brand}-${form.name}-${id}`
-
-)
-
-
-.toLowerCase()
-
-
-.replace(
-
-/[^a-z0-9]+/g,
-
-"-"
-
-)
-
-
-.replace(
-
-/^-+|-+$/g,
-
-""
-
-);
-
-
+  return `${form.brand}-${form.name}-${id}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 };
 
-// UPDATE BIKE
+if (loading) {
+  return (
+    <main className="
+      flex
+      min-h-screen
+      items-center
+      justify-center
+      bg-gray-100
+    ">
+      <div className="text-center">
+        <div
+          className="
+            mx-auto
+            h-14
+            w-14
+            animate-spin
+            rounded-full
+            border-4
+            border-orange-500
+            border-t-transparent
+          "
+        />
 
-
-const handleUpdate = async(
-
-e:React.FormEvent
-
-)=>{
-
-
-e.preventDefault();
-
-
-
-
-
-const cleanPhone =
-
-form.phone.replace(
-
-/\D/g,
-
-""
-
-);
-
-
-
-
-
-
-if(cleanPhone.length !== 10){
-
-
-alert(
-"Enter valid 10 digit mobile number"
-);
-
-
-return;
-
-
+        <h1 className="mt-5 text-2xl font-bold">
+          Loading Bike...
+        </h1>
+      </div>
+    </main>
+  );
 }
-
-
-
-
-
-
-
-if(form.images.length===0){
-
-
-alert(
-"Please add bike image"
-);
-
-
-return;
-
-
-}
-
-
-
-
-
-
-
-try{
-
-
-setSaving(true);
-
-
-
-
-
-await updateDoc(
-
-doc(
-
-db,
-
-"bikes",
-
-id
-
-),
-
-
-{
-
-
-brand:
-
-form.brand,
-
-
-
-name:
-
-form.name,
-
-
-
-slug:
-
-generateSlug(),
-
-
-
-price:
-
-Number(form.price),
-
-
-
-year:
-
-form.year,
-
-
-
-km:
-
-form.km,
-
-
-
-owner:
-
-form.owner,
-
-
-
-phone:
-
-cleanPhone,
-
-
-
-location:
-
-form.location,
-
-
-
-description:
-
-form.description,
-
-
-
-featured:
-
-form.featured,
-
-
-
-verified:
-
-form.verified,
-
-
-
-status:
-
-form.status,
-
-
-
-image:
-
-form.images[0] || "",
-
-
-
-images:
-
-form.images,
-
-
-
-}
-
-
-);
-
-
-
-
-
-setSuccess(
-
-"Bike Updated Successfully 🚀"
-
-);
-
-
-
-
-
-
-setTimeout(()=>{
-
-
-router.push(
-
-"/admin/dashboard"
-
-);
-
-
-},1500);
-
-
-
-
-
-}
-
-
-catch(error){
-
-
-console.log(error);
-
-
-
-alert(
-
-"Update Failed"
-
-);
-
-
-}
-
-
-finally{
-
-
-setSaving(false);
-
-
-}
-
-
-
-};
-
-
-
-
-
-
-
-
-
-
-if(loading){
-
 
 return (
+  <main className="
+    min-h-screen
+    bg-gradient-to-br
+    from-gray-100
+    via-white
+    to-orange-50
+  ">
+    <div className="mx-auto max-w-7xl px-5 py-10">
 
+      <div className="
+        mb-8
+        rounded-3xl
+        bg-black
+        p-8
+        text-white
+        shadow-xl
+      ">
+        <Bike
+          size={45}
+          className="text-orange-500"
+        />
 
-<main className="
-flex
-min-h-screen
-items-center
-justify-center
-bg-gray-100
-">
+        <h1 className="mt-4 text-4xl font-black">
+          Edit Bike Listing
+        </h1>
 
+        <p className="mt-2 text-gray-300">
+          Update bike details and marketplace information.
+        </p>
+      </div>
 
-<div className="text-center">
+      {success && (
+        <div className="
+          mb-6
+          flex
+          items-center
+          gap-3
+          rounded-2xl
+          bg-green-100
+          p-5
+          font-bold
+          text-green-700
+        ">
+          <CheckCircle />
+          {success}
+        </div>
+      )}
 
+      <form
+        onSubmit={handleUpdate}
+        className="
+          rounded-3xl
+          bg-white
+          p-6
+          shadow-xl
+          lg:p-10
+        "
+      >
 
-<div className="
-mx-auto
-h-14
-w-14
-animate-spin
-rounded-full
-border-4
-border-orange-500
-border-t-transparent
-"/>
+        <h2 className="
+          mb-6
+          flex
+          items-center
+          gap-3
+          text-2xl
+          font-black
+        ">
+          <ImagePlus className="text-orange-500" />
+          Images
+        </h2>
 
+        <MultiImageUploader
+          onUpload={(urls) =>
+            setForm((prev) => ({
+              ...prev,
+              images: [...prev.images, ...urls],
+            }))
+          }
+        />
 
+        {form.images.length > 0 && (
+          <div className="
+            mt-6
+            grid
+            grid-cols-2
+            gap-4
+            md:grid-cols-4
+          ">
+            {form.images.map((img, index) => (
+              <div
+                key={index}
+                className="relative overflow-hidden rounded-2xl"
+              >
+                <img
+                  src={img}
+                  alt="bike"
+                  className="h-36 w-full object-cover"
+                />
 
-<h1 className="
-mt-5
-text-2xl
-font-bold
-">
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="
+                    absolute
+                    right-2
+                    top-2
+                    rounded-full
+                    bg-red-600
+                    px-3
+                    py-1
+                    text-white
+                  "
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
-Loading Bike...
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
 
-</h1>
+          <Input
+            icon={<Bike />}
+            name="brand"
+            value={form.brand}
+            placeholder="Brand"
+            onChange={handleChange}
+          />
 
+          <Input
+            icon={<Bike />}
+            name="name"
+            value={form.name}
+            placeholder="Bike Name"
+            onChange={handleChange}
+          />
 
+          <Input
+            icon={<IndianRupee />}
+            name="price"
+            value={form.price}
+            placeholder="Price"
+            type="number"
+            onChange={handleChange}
+          />
 
-</div>
+          <Input
+            icon={<Calendar />}
+            name="year"
+            value={form.year}
+            placeholder="Year"
+            onChange={handleChange}
+          />
 
+          <Input
+            icon={<Gauge />}
+            name="km"
+            value={form.km}
+            placeholder="KM Driven"
+            onChange={handleChange}
+          />
 
-</main>
+          <Input
+            icon={<User />}
+            name="owner"
+            value={form.owner}
+            placeholder="Owner Name"
+            onChange={handleChange}
+          />
 
+          <Input
+            icon={<Phone />}
+            name="phone"
+            value={form.phone}
+            placeholder="Phone Number"
+            onChange={handleChange}
+          />
+
+          <Input
+            icon={<Bike />}
+            name="registrationNumber"
+            value={form.registrationNumber}
+            placeholder="Registration Number"
+            onChange={(e: any) => {
+
+              const value = e.target.value
+                .toUpperCase()
+                .replace(/\s/g, "");
+
+              setForm((prev) => ({
+                ...prev,
+                registrationNumber: value,
+              }));
+
+            }}
+          />
+
+          <Input
+            icon={<MapPin />}
+            name="location"
+            value={form.location}
+            placeholder="Location"
+            onChange={handleChange}
+          />
+
+        </div>
+
+        {/* STATUS */}
+
+        <div className="mt-6">
+
+          <label className="mb-3 block text-lg font-black">
+            Bike Status
+          </label>
+
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            className="
+              w-full
+              rounded-2xl
+              border
+              px-5
+              py-4
+              outline-none
+              focus:border-orange-500
+              focus:ring-4
+              focus:ring-orange-100
+            "
+          >
+
+            <option value="Available">
+              🟢 Available
+            </option>
+
+            <option value="Pending">
+              🟡 Pending
+            </option>
+
+            <option value="Sold">
+              🔴 Sold
+            </option>
+
+          </select>
+
+        </div>
+
+        {/* DESCRIPTION */}
+
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          rows={6}
+          placeholder="Bike description"
+          className="
+            mt-8
+            w-full
+            rounded-2xl
+            border
+            p-5
+            outline-none
+            focus:border-orange-500
+            focus:ring-4
+            focus:ring-orange-100
+          "
+        />
+
+        {/* FEATURED & VERIFIED */}
+
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+
+          <label
+            className="
+              flex
+              cursor-pointer
+              items-center
+              gap-3
+              rounded-2xl
+              bg-orange-50
+              p-5
+            "
+          >
+
+            <input
+              type="checkbox"
+              name="featured"
+              checked={form.featured}
+              onChange={handleToggle}
+            />
+
+            <span className="font-bold">
+              Featured Bike ⭐
+            </span>
+
+          </label>
+
+          <label
+            className="
+              flex
+              cursor-pointer
+              items-center
+              gap-3
+              rounded-2xl
+              bg-green-50
+              p-5
+            "
+          >
+
+            <input
+              type="checkbox"
+              name="verified"
+              checked={form.verified}
+              onChange={handleToggle}
+            />
+
+            <span
+              className="
+                flex
+                items-center
+                gap-2
+                font-bold
+              "
+            >
+
+              <ShieldCheck className="text-green-600" />
+
+              Verified Seller
+
+            </span>
+
+          </label>
+
+        </div>
+
+        {/* UPDATE BUTTON */}
+
+        <button
+          disabled={saving}
+          className="
+            mt-10
+            flex
+            w-full
+            items-center
+            justify-center
+            gap-3
+            rounded-2xl
+            bg-orange-500
+            py-5
+            text-lg
+            font-black
+            text-white
+            shadow-lg
+            hover:bg-orange-600
+            disabled:opacity-50
+          "
+        >
+
+          <Save size={22} />
+
+          {saving
+            ? "Updating Bike..."
+            : "Update Bike"}
+
+        </button>
+
+      </form>
+
+    </div>
+
+  </main>
 
 );
 
-
 }
-
-
-
-
-
-
-
-
-
-return (
-
-
-<main className="
-min-h-screen
-bg-gradient-to-br
-from-gray-100
-via-white
-to-orange-50
-">
-
-
-<div className="
-mx-auto
-max-w-7xl
-px-5
-py-10
-">
-
-
-
-
-
-
-
-<div className="
-mb-8
-rounded-3xl
-bg-black
-p-8
-text-white
-shadow-xl
-">
-
-
-<Bike
-
-size={45}
-
-className="text-orange-500"
-
-/>
-
-
-
-<h1 className="
-mt-4
-text-4xl
-font-black
-">
-
-Edit Bike Listing
-
-</h1>
-
-
-
-
-<p className="
-mt-2
-text-gray-300
-">
-
-Update bike details and marketplace information.
-
-</p>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-{
-success && (
-
-
-<div className="
-mb-6
-flex
-items-center
-gap-3
-rounded-2xl
-bg-green-100
-p-5
-font-bold
-text-green-700
-">
-
-
-<CheckCircle/>
-
-
-{success}
-
-
-</div>
-
-
-)
-
-}
-
-
-
-
-
-
-
-
-
-<form
-
-onSubmit={handleUpdate}
-
-className="
-rounded-3xl
-bg-white
-p-6
-shadow-xl
-lg:p-10
-"
-
->
-
-
-
-
-
-
-
-
-
-<h2 className="
-mb-6
-flex
-items-center
-gap-3
-text-2xl
-font-black
-">
-
-
-<ImagePlus className="text-orange-500"/>
-
-
-Images
-
-
-</h2>
-
-
-
-
-
-
-
-
-
-<MultiImageUploader
-
-
-onUpload={(urls)=>
-
-
-setForm((prev)=>({
-
-
-...prev,
-
-
-images:[
-
-...prev.images,
-
-...urls
-
-]
-
-
-}))
-
-
-}
-
-
-/>
-
-
-
-
-
-
-
-
-
-{
-form.images.length>0 && (
-
-
-<div className="
-mt-6
-grid
-grid-cols-2
-gap-4
-md:grid-cols-4
-">
-
-
-{
-
-form.images.map(
-
-(img,index)=>(
-
-
-<div
-
-key={index}
-
-className="
-relative
-overflow-hidden
-rounded-2xl
-"
-
->
-
-
-<img
-
-src={img}
-
-alt="bike"
-
-className="
-h-36
-w-full
-object-cover
-"
-
-/>
-
-
-
-
-
-<button
-
-type="button"
-
-onClick={()=>removeImage(index)}
-
-className="
-absolute
-right-2
-top-2
-rounded-full
-bg-red-600
-px-3
-py-1
-text-white
-"
-
->
-
-×
-
-</button>
-
-
-
-
-
-</div>
-
-
-)
-
-)
-
-}
-
-
-</div>
-
-
-)
-
-}
-
-
-
-
-
-
-
-
-
-<div className="
-mt-10
-grid
-gap-5
-md:grid-cols-2
-">
-<Input
-
-icon={<Bike/>}
-
-name="brand"
-
-value={form.brand}
-
-placeholder="Brand"
-
-onChange={handleChange}
-
-/>
-
-
-
-<Input
-
-icon={<Bike/>}
-
-name="name"
-
-value={form.name}
-
-placeholder="Bike Name"
-
-onChange={handleChange}
-
-/>
-
-
-
-<Input
-
-icon={<IndianRupee/>}
-
-name="price"
-
-value={form.price}
-
-placeholder="Price"
-
-type="number"
-
-onChange={handleChange}
-
-/>
-
-
-
-<Input
-
-icon={<Calendar/>}
-
-name="year"
-
-value={form.year}
-
-placeholder="Year"
-
-onChange={handleChange}
-
-/>
-
-
-
-<Input
-
-icon={<Gauge/>}
-
-name="km"
-
-value={form.km}
-
-placeholder="KM Driven"
-
-onChange={handleChange}
-
-/>
-
-
-
-<Input
-
-icon={<User/>}
-
-name="owner"
-
-value={form.owner}
-
-placeholder="Owner Name"
-
-onChange={handleChange}
-
-/>
-
-
-
-<Input
-
-icon={<Phone/>}
-
-name="phone"
-
-value={form.phone}
-
-placeholder="Phone Number"
-
-onChange={handleChange}
-
-/>
-
-
-
-<Input
-
-icon={<MapPin/>}
-
-name="location"
-
-value={form.location}
-
-placeholder="Location"
-
-onChange={handleChange}
-
-/>
-
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-{/* STATUS */}
-
-
-
-<div className="
-mt-6
-">
-
-
-<label className="
-mb-3
-block
-font-black
-text-lg
-">
-
-Bike Status
-
-</label>
-
-
-
-
-<select
-
-name="status"
-
-value={form.status}
-
-onChange={handleChange}
-
-className="
-w-full
-rounded-2xl
-border
-px-5
-py-4
-outline-none
-focus:border-orange-500
-focus:ring-4
-focus:ring-orange-100
-"
-
->
-
-
-<option value="Available">
-
-🟢 Available
-
-</option>
-
-
-<option value="Pending">
-
-🟡 Pending
-
-</option>
-
-
-
-<option value="Sold">
-
-🔴 Sold
-
-</option>
-
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-{/* DESCRIPTION */}
-
-
-
-<textarea
-
-
-name="description"
-
-
-value={form.description}
-
-
-onChange={handleChange}
-
-
-rows={6}
-
-
-placeholder="Bike description"
-
-
-className="
-mt-8
-w-full
-rounded-2xl
-border
-p-5
-outline-none
-focus:border-orange-500
-focus:ring-4
-focus:ring-orange-100
-"
-
-
-/>
-
-
-
-
-
-
-
-
-
-{/* FEATURED VERIFIED */}
-
-
-
-<div className="
-mt-8
-grid
-gap-4
-md:grid-cols-2
-">
-
-
-
-
-
-<label className="
-flex
-items-center
-gap-3
-rounded-2xl
-bg-orange-50
-p-5
-cursor-pointer
-">
-
-
-<input
-
-type="checkbox"
-
-name="featured"
-
-checked={form.featured}
-
-onChange={handleToggle}
-
-/>
-
-
-
-<span className="
-font-bold
-">
-
-Featured Bike ⭐
-
-</span>
-
-
-</label>
-
-
-
-
-
-
-
-
-<label className="
-flex
-items-center
-gap-3
-rounded-2xl
-bg-green-50
-p-5
-cursor-pointer
-">
-
-
-<input
-
-type="checkbox"
-
-name="verified"
-
-checked={form.verified}
-
-onChange={handleToggle}
-
-/>
-
-
-
-<span className="
-flex
-items-center
-gap-2
-font-bold
-">
-
-
-<ShieldCheck
-
-className="text-green-600"
-
-/>
-
-
-Verified Seller
-
-
-</span>
-
-
-</label>
-
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-{/* UPDATE BUTTON */}
-
-
-
-<button
-
-
-disabled={saving}
-
-
-className="
-mt-10
-flex
-w-full
-items-center
-justify-center
-gap-3
-rounded-2xl
-bg-orange-500
-py-5
-text-lg
-font-black
-text-white
-shadow-lg
-hover:bg-orange-600
-disabled:opacity-50
-"
-
-
->
-
-
-<Save size={22}/>
-
-
-
-{
-
-saving
-
-?
-
-"Updating Bike..."
-
-:
-
-"Update Bike"
-
-}
-
-
-
-</button>
-
-
-
-
-
-
-
-</form>
-
-
-
-</div>
-
-
-
-</main>
-
-
-
-);
-
-
-
-}
-
-
-
 
 
 
@@ -1706,104 +757,55 @@ saving
 
 // INPUT COMPONENT
 
-
-
 function Input({
 
+  icon,
 
-icon,
+  name,
 
+  value,
 
-name,
+  placeholder,
 
+  onChange,
 
-value,
+  type = "text",
 
+}: any) {
 
-placeholder,
+  return (
 
+    <div
+      className="
+        flex
+        items-center
+        gap-3
+        rounded-2xl
+        border
+        px-4
+        py-4
+        focus-within:border-orange-500
+        focus-within:ring-4
+        focus-within:ring-orange-100
+      "
+    >
 
-onChange,
+      <span className="text-orange-500">
+        {icon}
+      </span>
 
+      <input
+        required
+        name={name}
+        value={value}
+        type={type}
+        placeholder={placeholder}
+        onChange={onChange}
+        className="w-full outline-none"
+      />
 
-type="text"
+    </div>
 
-
-}:any){
-
-
-
-return (
-
-
-
-<div className="
-flex
-items-center
-gap-3
-rounded-2xl
-border
-px-4
-py-4
-focus-within:border-orange-500
-focus-within:ring-4
-focus-within:ring-orange-100
-">
-
-
-
-
-
-<span className="
-text-orange-500
-">
-
-{icon}
-
-</span>
-
-
-
-
-
-<input
-
-
-required
-
-
-name={name}
-
-
-value={value}
-
-
-type={type}
-
-
-placeholder={placeholder}
-
-
-onChange={onChange}
-
-
-className="
-w-full
-outline-none
-"
-
-
-/>
-
-
-
-
-
-</div>
-
-
-
-);
-
+  );
 
 }

@@ -2,159 +2,674 @@
 
 import { useState } from "react";
 
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+} from "firebase/firestore";
+
+import {
+  CheckCircle,
+} from "lucide-react";
+
+import {
+  db,
+} from "@/firebase/firebase";
+
+import SellBikeImageUploader from "@/components/SellBikeImageUploader";
+
+
 export default function SellBikePage() {
-  const [form, setForm] = useState({
-    name: "",
-    mobile: "",
-    brand: "",
-    model: "",
-    year: "",
-    km: "",
-    price: "",
-    location: "",
-    description: "",
+
+
+  const [loading,setLoading] = useState(false);
+
+  const [success,setSuccess] = useState(false);
+
+
+  const [images,setImages] = useState<string[]>([]);
+
+
+
+  const [form,setForm] = useState({
+
+    name:"",
+    mobile:"",
+    brand:"",
+    model:"",
+    year:"",
+    km:"",
+    price:"",
+    location:"",
+    description:""
+
   });
 
+
+
+
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+
+    e:React.ChangeEvent<
+    HTMLInputElement | HTMLTextAreaElement
+    >
+
+  )=>{
+
+
     setForm({
+
       ...form,
-      [e.target.name]: e.target.value,
+
+      [e.target.name]:e.target.value
+
     });
+
+
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+
+
+
+
+
+
+  const submitHandler = async(
+
+    e:React.FormEvent
+
+  )=>{
+
+
     e.preventDefault();
 
-    alert("Button Clicked Successfully");
 
-    const message = `🏍️ OLD BIKES HUB - SELL BIKE REQUEST
+    try{
 
-Name: ${form.name}
 
-Mobile: ${form.mobile}
+      setLoading(true);
 
-Brand: ${form.brand}
 
-Model: ${form.model}
 
-Year: ${form.year}
+      await addDoc(
 
-KM Driven: ${form.km}
+        collection(db,"sellRequests"),
 
-Expected Price: ${form.price}
+        {
 
-Location: ${form.location}
+
+          ...form,
+
+
+          images,
+
+
+          status:"Pending",
+
+
+          createdAt:serverTimestamp()
+
+
+        }
+
+      );
+
+
+
+
+
+      setSuccess(true);
+
+
+
+
+
+      const message = `
+
+🏍️ OLD BIKES HUB SELL REQUEST
+
+
+Name:
+${form.name}
+
+
+Mobile:
+${form.mobile}
+
+
+Bike:
+${form.brand} ${form.model}
+
+
+Year:
+${form.year}
+
+
+KM:
+${form.km}
+
+
+Expected Price:
+${form.price}
+
+
+Location:
+${form.location}
+
 
 Description:
-${form.description}`;
+${form.description}
 
-    window.open(
-      `https://wa.me/918789192394?text=${encodeURIComponent(message)}`,
-      "_blank"
-    );
+
+Images:
+${images.length} uploaded
+
+
+`;
+
+
+
+
+
+      window.open(
+
+        `https://wa.me/918789192394?text=${encodeURIComponent(message)}`,
+
+        "_blank"
+
+      );
+
+
+
+
+
+
+
+      setForm({
+
+        name:"",
+        mobile:"",
+        brand:"",
+        model:"",
+        year:"",
+        km:"",
+        price:"",
+        location:"",
+        description:""
+
+      });
+
+
+
+      setImages([]);
+
+
+
+
+    }
+
+    catch(error){
+
+
+      console.log(error);
+
+
+      alert(
+        "Something went wrong"
+      );
+
+
+    }
+
+    finally{
+
+
+      setLoading(false);
+
+
+    }
+
+
   };
 
-  return (
-    <main className="min-h-screen bg-gray-100">
-      <section className="bg-black py-16 text-center text-white">
-        <h1 className="text-5xl font-bold">Sell Your Bike</h1>
 
-        <p className="mt-4 text-gray-300">
-          Get the Best Price for Your Used Bike
+
+
+
+
+
+
+
+  return(
+
+
+    <main className="
+    min-h-screen
+    bg-gray-100
+    py-16
+    ">
+
+
+      <section className="
+      bg-black
+      py-16
+      text-center
+      text-white
+      ">
+
+
+        <h1 className="
+        text-5xl
+        font-black
+        ">
+
+          Sell Your Bike
+
+        </h1>
+
+
+
+        <p className="
+        mt-4
+        text-gray-400
+        ">
+
+          Get the best price for your old bike
+
         </p>
+
+
       </section>
 
-      <section className="mx-auto max-w-3xl px-6 py-12">
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 rounded-2xl bg-white p-8 shadow-lg"
-        >
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Full Name"
-            className="w-full rounded-lg border p-3"
-            required
-          />
 
-          <input
-            name="mobile"
-            value={form.mobile}
-            onChange={handleChange}
-            placeholder="Mobile Number"
-            className="w-full rounded-lg border p-3"
-            required
-          />
 
-          <input
-            name="brand"
-            value={form.brand}
-            onChange={handleChange}
-            placeholder="Bike Brand"
-            className="w-full rounded-lg border p-3"
-            required
-          />
 
-          <input
-            name="model"
-            value={form.model}
-            onChange={handleChange}
-            placeholder="Bike Model"
-            className="w-full rounded-lg border p-3"
-            required
-          />
 
-          <input
-            name="year"
-            value={form.year}
-            onChange={handleChange}
-            placeholder="Manufacturing Year"
-            className="w-full rounded-lg border p-3"
-          />
 
-          <input
-            name="km"
-            value={form.km}
-            onChange={handleChange}
-            placeholder="KM Driven"
-            className="w-full rounded-lg border p-3"
-          />
 
-          <input
-            name="price"
-            value={form.price}
-            onChange={handleChange}
-            placeholder="Expected Price"
-            className="w-full rounded-lg border p-3"
-          />
 
-          <input
-            name="location"
-            value={form.location}
-            onChange={handleChange}
-            placeholder="Location"
-            className="w-full rounded-lg border p-3"
-          />
 
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Bike Condition / Additional Details"
-            className="h-32 w-full rounded-lg border p-3"
-          />
+      <section className="
+      mx-auto
+      max-w-3xl
+      px-6
+      py-12
+      ">
 
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-orange-500 py-4 text-lg font-bold text-white hover:bg-orange-600"
-          >
-            Submit Bike Details
-          </button>
-        </form>
+
+
+
+      {
+        success &&
+
+        <div className="
+        mb-6
+        flex
+        items-center
+        gap-3
+        rounded-xl
+        bg-green-100
+        p-5
+        font-bold
+        text-green-700
+        ">
+
+          <CheckCircle/>
+
+          Request Submitted Successfully
+
+
+        </div>
+
+      }
+
+
+
+
+
+
+
+
+
+      <form
+
+      onSubmit={submitHandler}
+
+      className="
+      space-y-5
+      rounded-3xl
+      bg-white
+      p-8
+      shadow-xl
+      "
+
+      >
+
+
+
+
+
+
+
+      <input
+
+      required
+
+      name="name"
+
+      value={form.name}
+
+      onChange={handleChange}
+
+      placeholder="Your Name"
+
+      className="
+      w-full
+      rounded-xl
+      border
+      p-4
+      "
+
+      />
+
+
+
+
+
+
+
+      <input
+
+      required
+
+      name="mobile"
+
+      value={form.mobile}
+
+      onChange={handleChange}
+
+      placeholder="Mobile Number"
+
+      className="
+      w-full
+      rounded-xl
+      border
+      p-4
+      "
+
+      />
+
+
+
+
+
+
+
+      <input
+
+      required
+
+      name="brand"
+
+      value={form.brand}
+
+      onChange={handleChange}
+
+      placeholder="Bike Brand"
+
+      className="
+      w-full
+      rounded-xl
+      border
+      p-4
+      "
+
+      />
+
+
+
+
+
+
+
+      <input
+
+      required
+
+      name="model"
+
+      value={form.model}
+
+      onChange={handleChange}
+
+      placeholder="Bike Model"
+
+      className="
+      w-full
+      rounded-xl
+      border
+      p-4
+      "
+
+      />
+
+
+
+
+
+
+
+
+      <div className="
+      grid
+      gap-5
+      md:grid-cols-2
+      ">
+
+
+
+      <input
+
+      name="year"
+
+      value={form.year}
+
+      onChange={handleChange}
+
+      placeholder="Manufacturing Year"
+
+      className="
+      rounded-xl
+      border
+      p-4
+      "
+
+      />
+
+
+
+
+
+      <input
+
+      name="km"
+
+      value={form.km}
+
+      onChange={handleChange}
+
+      placeholder="KM Driven"
+
+      className="
+      rounded-xl
+      border
+      p-4
+      "
+
+      />
+
+
+      </div>
+
+
+
+
+
+
+
+
+      <input
+
+      name="price"
+
+      value={form.price}
+
+      onChange={handleChange}
+
+      placeholder="Expected Price"
+
+      className="
+      w-full
+      rounded-xl
+      border
+      p-4
+      "
+
+      />
+
+
+
+
+
+
+
+
+      <input
+
+      name="location"
+
+      value={form.location}
+
+      onChange={handleChange}
+
+      placeholder="City"
+
+      className="
+      w-full
+      rounded-xl
+      border
+      p-4
+      "
+
+      />
+
+
+
+
+
+
+
+
+
+      <textarea
+
+      name="description"
+
+      value={form.description}
+
+      onChange={handleChange}
+
+      placeholder="Bike Condition"
+
+      className="
+      h-32
+      w-full
+      rounded-xl
+      border
+      p-4
+      "
+
+      />
+
+
+
+
+
+
+
+      {/* IMAGE UPLOAD */}
+
+      <SellBikeImageUploader
+
+      images={images}
+
+      setImages={setImages}
+
+      />
+
+
+
+
+
+
+
+
+
+      <button
+
+      disabled={loading}
+
+      className="
+      w-full
+      rounded-xl
+      bg-orange-500
+      py-4
+      font-black
+      text-white
+      hover:bg-orange-600
+      "
+
+      >
+
+
+      {
+        loading
+
+        ?
+
+        "Submitting..."
+
+        :
+
+        "Submit Bike Details"
+
+      }
+
+
+      </button>
+
+
+
+
+
+
+      </form>
+
+
+
+
+
       </section>
+
+
+
+
     </main>
+
+
   );
+
+
 }
