@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import {
-  Bike,
   MapPin,
   Phone,
   Mail,
@@ -46,42 +45,54 @@ export default function Footer() {
               className="group inline-flex items-center gap-3"
             >
 
-              <div
+              {/* SAME LOGO AS NAVBAR */}
+
+              <img
+                src="/logo.png"
+                alt="Old Bikes Hub"
                 className="
-                  flex
                   h-12
                   w-12
                   shrink-0
-                  items-center
-                  justify-center
-                  rounded-2xl
-                  bg-orange-500
-                  shadow-lg
-                  shadow-orange-500/20
+                  rounded-full
+                  object-cover
                   transition
+                  duration-200
                   group-hover:scale-105
                 "
-              >
-                <Bike
-                  size={27}
-                  strokeWidth={2.5}
-                  className="text-white"
-                />
-              </div>
+              />
 
               <div>
 
-                <h2 className="text-xl font-black tracking-tight sm:text-2xl">
+                <h2
+                  className="
+                    text-xl
+                    font-black
+                    tracking-tight
+                    sm:text-2xl
+                  "
+                >
                   Old Bikes Hub
                 </h2>
 
-                <p className="mt-0.5 text-xs font-bold text-orange-500 sm:text-sm">
+                <p
+                  className="
+                    mt-0.5
+                    text-xs
+                    font-bold
+                    text-orange-500
+                    sm:text-sm
+                  "
+                >
                   India's Trusted Used Bike Marketplace
                 </p>
 
               </div>
 
             </Link>
+
+
+            {/* DESCRIPTION */}
 
             <p
               className="
@@ -99,6 +110,9 @@ export default function Footer() {
               the best price.
             </p>
 
+
+            {/* EXPLORE */}
+
             <Link
               href="/buy-bikes"
               className="
@@ -114,7 +128,9 @@ export default function Footer() {
               "
             >
               Explore Bikes
+
               <ArrowRight size={16} />
+
             </Link>
 
           </div>
@@ -220,23 +236,54 @@ export default function Footer() {
             <ul className="mt-5 space-y-4">
 
               <li className="flex items-start gap-2.5 text-sm text-gray-400">
-                <span className="mt-0.5 text-orange-500">✓</span>
-                <span>Verified Used Bikes</span>
+
+                <span className="mt-0.5 text-orange-500">
+                  ✓
+                </span>
+
+                <span>
+                  Verified Used Bikes
+                </span>
+
               </li>
 
-              <li className="flex items-start gap-2.5 text-sm text-gray-400">
-                <span className="mt-0.5 text-orange-500">✓</span>
-                <span>Direct Seller Contact</span>
-              </li>
 
               <li className="flex items-start gap-2.5 text-sm text-gray-400">
-                <span className="mt-0.5 text-orange-500">✓</span>
-                <span>Best Market Price</span>
+
+                <span className="mt-0.5 text-orange-500">
+                  ✓
+                </span>
+
+                <span>
+                  Trusted Support
+                </span>
+
               </li>
 
+
               <li className="flex items-start gap-2.5 text-sm text-gray-400">
-                <span className="mt-0.5 text-orange-500">✓</span>
-                <span>Easy Bike Selling</span>
+
+                <span className="mt-0.5 text-orange-500">
+                  ✓
+                </span>
+
+                <span>
+                  Best Market Price
+                </span>
+
+              </li>
+
+
+              <li className="flex items-start gap-2.5 text-sm text-gray-400">
+
+                <span className="mt-0.5 text-orange-500">
+                  ✓
+                </span>
+
+                <span>
+                  Easy Bike Selling
+                </span>
+
               </li>
 
             </ul>
@@ -262,10 +309,20 @@ export default function Footer() {
 
                 <MapPin
                   size={19}
-                  className="mt-0.5 shrink-0 text-orange-500"
+                  className="
+                    mt-0.5
+                    shrink-0
+                    text-orange-500
+                  "
                 />
 
-                <span className="text-sm leading-6 text-gray-400">
+                <span
+                  className="
+                    text-sm
+                    leading-6
+                    text-gray-400
+                  "
+                >
                   {siteConfig.location}
                 </span>
 
@@ -289,7 +346,10 @@ export default function Footer() {
 
                 <Phone
                   size={19}
-                  className="shrink-0 text-orange-500"
+                  className="
+                    shrink-0
+                    text-orange-500
+                  "
                 />
 
                 <span>
@@ -317,7 +377,11 @@ export default function Footer() {
 
                 <Mail
                   size={19}
-                  className="mt-0.5 shrink-0 text-orange-500"
+                  className="
+                    mt-0.5
+                    shrink-0
+                    text-orange-500
+                  "
                 />
 
                 <span>

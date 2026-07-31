@@ -237,9 +237,7 @@ md:text-lg
 >
 
 
-Buy verified second hand bikes,
-sell your old bike and connect
-directly with buyers.
+Buy verified second hand bikes, sell your old bike and get trusted support from us.
 
 
 </p>
@@ -266,9 +264,17 @@ max-w-2xl
 items-center
 gap-2
 rounded-2xl
-bg-white
-p-2
-shadow-xl
+border
+border-white/25
+bg-white/75
+p-1.5
+shadow-[0_15px_40px_rgba(0,0,0,0.25)]
+backdrop-blur-md
+transition-all
+duration-300
+focus-within:border-orange-400
+focus-within:bg-white
+focus-within:shadow-[0_0_0_3px_rgba(249,115,22,0.15)]
 "
 
 >
@@ -310,11 +316,13 @@ className="
 min-w-0
 flex-1
 rounded-xl
+bg-transparent
 px-4
 py-3
 text-sm
 text-black
 outline-none
+placeholder:text-gray-500
 md:text-base
 "
 
@@ -503,34 +511,28 @@ Verified Bikes
 
 
 <div
-
-className="
-flex
-items-center
-gap-2
-rounded-xl
-bg-white/10
-px-4
-py-2
-text-sm
-backdrop-blur
-"
-
+  className="
+    flex
+    items-center
+    gap-2
+    rounded-xl
+    border
+    border-white/10
+    bg-white/10
+    px-4
+    py-2
+    text-xs
+    font-semibold
+    backdrop-blur-md
+    sm:text-sm
+  "
 >
+  <Users
+    size={16}
+    className="text-orange-500"
+  />
 
-
-<Users
-
-size={16}
-
-className="text-orange-500"
-
-/>
-
-
-Direct Sellers
-
-
+  Trusted Support
 </div>
 
 
