@@ -169,7 +169,7 @@ backdrop-blur
 <ShieldCheck size={18}/>
 
 
-Bihar's Trusted Used Bike Marketplace
+Bihar&apos;s Trusted Used Bike Marketplace
 
 
 </div>

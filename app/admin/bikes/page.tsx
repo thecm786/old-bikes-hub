@@ -166,12 +166,14 @@ return()=>unsubscribe();
 
 },[]);
 
-const handleRefresh=()=>{
+const handleRefresh = () => {
+  setRefreshing(true);
 
-setRefreshing(true);
-
-fetchBikes();
-
+  // Firestore onSnapshot already keeps the list realtime.
+  // No new listener is created here.
+  setTimeout(() => {
+    setRefreshing(false);
+  }, 500);
 };
 
 // ===============================

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { collection, getDocs } from "firebase/firestore";
 import { ArrowRight, Bike } from "lucide-react";
@@ -199,9 +200,11 @@ export default function PopularBrands() {
                 "
               >
                 {brandLogos[brand] ? (
-                  <img
+                  <Image
                     src={brandLogos[brand]}
                     alt={brand}
+                    width={96}
+                    height={96}
                     className="
                       h-24
                       w-24
@@ -313,7 +316,7 @@ export default function PopularBrands() {
           "
         >
           <h3 className="text-3xl font-black md:text-4xl">
-            Can't Find Your Favourite Brand?
+            Can&apos;t Find Your Favourite Brand?
           </h3>
 
           <p className="mx-auto mt-4 max-w-2xl text-orange-100">

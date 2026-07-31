@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    // Public visitors can browse listings; only admins can change them.
+    match /bikes/{bikeId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Visitors can submit a request; only admins can view or manage requests.
+    match /sellRequests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Deny every collection that has not been explicitly authorized above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

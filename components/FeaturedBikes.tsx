@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   MapPin,
@@ -19,9 +20,12 @@ import {
 
 import SectionTitle from "./SectionTitle";
 import WishlistButton from "./WishlistButton";
+import type { BikeType } from "@/types/bike";
+
+type StoredBike = BikeType & { id: string };
 
 export default function FeaturedBikes() {
-  const [bikes, setBikes] = useState<any[]>([]);
+  const [bikes, setBikes] = useState<StoredBike[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,9 +38,9 @@ export default function FeaturedBikes() {
 
         const snapshot = await getDocs(q);
 
-        const bikeList = snapshot.docs.map((doc) => ({
+        const bikeList = snapshot.docs.map((doc): StoredBike => ({
           id: doc.id,
-          ...doc.data(),
+          ...(doc.data() as Omit<BikeType, "id">),
         }));
 
         setBikes(bikeList);
@@ -67,12 +71,14 @@ export default function FeaturedBikes() {
               className="group overflow-hidden rounded-3xl bg-white shadow-lg transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
             >
               {/* Image */}
-              <div className="relative overflow-hidden">
+              <div className="relative h-64 overflow-hidden">
                 {bike.image ? (
-                  <img
+                  <Image
                     src={bike.image}
                     alt={bike.name}
-                    className="h-64 w-full object-cover transition duration-500 group-hover:scale-110"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition duration-500 group-hover:scale-110"
                   />
                 ) : (
                   <div className="flex h-64 items-center justify-center bg-gray-200 text-7xl">

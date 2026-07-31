@@ -85,7 +85,7 @@ export default function AdminLayout({
 
         auth,
 
-        (user) => {
+        async (user) => {
 
           if (!user) {
 
@@ -97,6 +97,39 @@ export default function AdminLayout({
 
           }
 
+          try {
+
+            const tokenResult =
+              await user.getIdTokenResult(true);
+
+            if (tokenResult.claims.admin !== true) {
+
+              await auth.signOut();
+
+              router.replace(
+                "/admin/login"
+              );
+
+              return;
+
+            }
+
+          } catch (error) {
+
+            console.error(
+              "Unable to verify admin access:",
+              error
+            );
+
+            await auth.signOut();
+
+            router.replace(
+              "/admin/login"
+            );
+
+            return;
+
+          }
 
           setLoading(false);
 
