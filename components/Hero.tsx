@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useState,
+  memo,
+} from "react";
+
+import Image from "next/image";
+import Link from "next/link";
 
 import {
   useRouter,
 } from "next/navigation";
-
-import Link from "next/link";
 
 import {
   Search,
@@ -17,52 +21,50 @@ import {
 
 
 
-export default function Hero(){
+
+function Hero(){
 
 
-  const router = useRouter();
+const router = useRouter();
 
 
-  const [search,setSearch] =
-  useState("");
-
-
-
-
-  const handleSearch = ()=>{
-
-
-    if(!search.trim()){
-
-      router.push("/buy-bikes");
-
-      return;
-
-    }
-
-
-    router.push(
-      `/buy-bikes?search=${encodeURIComponent(search)}`
-    );
-
-
-  };
+const [search,setSearch] =
+useState("");
 
 
 
 
-
-  const brands = [
-
-    "Royal Enfield",
-    "KTM",
-    "Yamaha",
-    "Honda",
-    "Bajaj"
-
-  ];
+const handleSearch = ()=>{
 
 
+if(!search.trim()){
+
+router.push("/buy-bikes");
+
+return;
+
+}
+
+
+router.push(
+`/buy-bikes?search=${encodeURIComponent(search)}`
+);
+
+
+};
+
+
+
+
+const brands=[
+
+"Royal Enfield",
+"KTM",
+"Yamaha",
+"Honda",
+"Bajaj"
+
+];
 
 
 
@@ -75,35 +77,51 @@ return (
 className="
 relative
 overflow-hidden
-bg-cover
-bg-center
+min-h-[560px]
 "
-
-style={{
-
-backgroundImage:
-
-"url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1800&q=80')"
-
-}}
 
 >
 
 
+{/* BACKGROUND IMAGE */}
+
+<Image
+
+src="
+https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1800&q=80
+"
+
+alt="Used Bikes Marketplace"
+
+fill
+
+priority
+
+quality={80}
+
+sizes="
+100vw
+"
+
+className="
+object-cover
+"
+
+/>
 
 
+
+{/* OVERLAY */}
 
 <div
 
 className="
 absolute
 inset-0
-bg-black/55
+bg-black/60
 "
 
 />
-
-
 
 
 
@@ -115,16 +133,14 @@ className="
 relative
 z-10
 flex
-min-h-[55vh]
-items-start
+min-h-[560px]
+items-center
 justify-center
 px-5
-pt-12
-pb-8
+py-12
 "
 
 >
-
 
 
 <div
@@ -137,11 +153,6 @@ text-white
 "
 
 >
-
-
-
-
-
 
 
 
@@ -165,18 +176,12 @@ backdrop-blur
 
 >
 
-
 <ShieldCheck size={18}/>
 
-
-Bihar&apos;s Trusted Used Bike Marketplace
+Bihar's Trusted Used Bike Marketplace
 
 
 </div>
-
-
-
-
 
 
 
@@ -195,20 +200,12 @@ md:text-6xl
 
 >
 
-
 Find Your
-
 
 <br/>
 
 
-<span
-
-className="
-text-orange-500
-"
-
->
+<span className="text-orange-500">
 
 Dream Used Bike
 
@@ -221,13 +218,11 @@ Dream Used Bike
 
 
 
-
-
 <p
 
 className="
 mx-auto
-mt-3
+mt-4
 max-w-2xl
 text-sm
 text-gray-200
@@ -236,13 +231,10 @@ md:text-lg
 
 >
 
-
-Buy verified second hand bikes, sell your old bike and get trusted support from us.
-
+Buy verified second hand bikes,
+sell your old bike and get trusted support.
 
 </p>
-
-
 
 
 
@@ -253,7 +245,6 @@ Buy verified second hand bikes, sell your old bike and get trusted support from 
 {/* SEARCH */}
 
 
-
 <div
 
 className="
@@ -261,84 +252,50 @@ mx-auto
 mt-7
 flex
 max-w-2xl
-items-center
-gap-2
 rounded-2xl
-border
-border-white/25
-bg-white/75
-p-1.5
-shadow-[0_15px_40px_rgba(0,0,0,0.25)]
-backdrop-blur-md
-transition-all
-duration-300
-focus-within:border-orange-400
-focus-within:bg-white
-focus-within:shadow-[0_0_0_3px_rgba(249,115,22,0.15)]
+bg-white/90
+p-2
+shadow-xl
+backdrop-blur
 "
 
 >
 
 
-
 <input
-
 
 value={search}
 
-
 onChange={(e)=>
-
 setSearch(e.target.value)
-
 }
-
 
 onKeyDown={(e)=>{
 
-
-if(e.key==="Enter"){
-
+if(e.key==="Enter")
 handleSearch();
 
-}
-
-
 }}
-
 
 placeholder="
 Search Royal Enfield, KTM, Yamaha...
 "
 
-
 className="
-min-w-0
 flex-1
-rounded-xl
 bg-transparent
 px-4
-py-3
-text-sm
 text-black
 outline-none
-placeholder:text-gray-500
-md:text-base
 "
-
 
 />
 
 
 
-
-
-
 <button
 
-
 onClick={handleSearch}
-
 
 className="
 flex
@@ -348,24 +305,19 @@ rounded-xl
 bg-orange-500
 px-5
 py-3
-text-sm
-font-black
+font-bold
 text-white
-transition
 hover:bg-orange-600
 "
 
 >
 
-
 <Search size={18}/>
-
 
 Search
 
 
 </button>
-
 
 
 </div>
@@ -377,9 +329,7 @@ Search
 
 
 
-
-{/* BRAND TAGS */}
-
+{/* BRANDS */}
 
 
 <div
@@ -404,19 +354,14 @@ brands.map((brand)=>(
 
 key={brand}
 
-
-onClick={()=>{
+onClick={()=>
 
 
 router.push(
-
 `/buy-bikes?search=${brand}`
-
 )
 
-
-}}
-
+}
 
 className="
 rounded-full
@@ -426,12 +371,10 @@ py-2
 text-xs
 font-bold
 backdrop-blur
-transition
 hover:bg-orange-500
 "
 
 >
-
 
 {brand}
 
@@ -442,7 +385,6 @@ hover:bg-orange-500
 ))
 
 }
-
 
 
 </div>
@@ -457,12 +399,10 @@ hover:bg-orange-500
 
 {/* TRUST */}
 
-
-
 <div
 
 className="
-mt-5
+mt-6
 flex
 flex-wrap
 justify-center
@@ -472,7 +412,6 @@ gap-3
 >
 
 
-
 <div
 
 className="
@@ -489,53 +428,14 @@ backdrop-blur
 
 >
 
-
 <BadgeCheck
-
 size={16}
-
 className="text-orange-500"
-
 />
-
 
 Verified Bikes
 
-
 </div>
-
-
-
-
-
-
-
-<div
-  className="
-    flex
-    items-center
-    gap-2
-    rounded-xl
-    border
-    border-white/10
-    bg-white/10
-    px-4
-    py-2
-    text-xs
-    font-semibold
-    backdrop-blur-md
-    sm:text-sm
-  "
->
-  <Users
-    size={16}
-    className="text-orange-500"
-  />
-
-  Trusted Support
-</div>
-
-
 
 
 
@@ -557,26 +457,46 @@ backdrop-blur
 
 >
 
-
-<ShieldCheck
-
+<Users
 size={16}
-
 className="text-orange-500"
-
 />
 
+Trusted Support
+
+</div>
+
+
+
+
+
+<div
+
+className="
+flex
+items-center
+gap-2
+rounded-xl
+bg-white/10
+px-4
+py-2
+text-sm
+backdrop-blur
+"
+
+>
+
+<ShieldCheck
+size={16}
+className="text-orange-500"
+/>
 
 Safe Deals
 
-
 </div>
 
 
-
-
 </div>
-
 
 
 
@@ -588,16 +508,15 @@ Safe Deals
 <div
 
 className="
-mt-6
+mt-7
 flex
 flex-col
-justify-center
 gap-3
 sm:flex-row
+justify-center
 "
 
 >
-
 
 
 <Link
@@ -611,7 +530,6 @@ px-8
 py-3
 font-black
 text-white
-transition
 hover:bg-orange-600
 "
 
@@ -619,12 +537,7 @@ hover:bg-orange-600
 
 Browse Bikes
 
-
 </Link>
-
-
-
-
 
 
 
@@ -639,7 +552,6 @@ border-white
 px-8
 py-3
 font-black
-transition
 hover:bg-white
 hover:text-black
 "
@@ -648,11 +560,9 @@ hover:text-black
 
 Sell Your Bike
 
-
 </Link>
 
 
-
 </div>
 
 
@@ -664,7 +574,6 @@ Sell Your Bike
 
 
 </div>
-
 
 
 </section>
@@ -674,3 +583,6 @@ Sell Your Bike
 
 
 }
+
+
+export default memo(Hero);

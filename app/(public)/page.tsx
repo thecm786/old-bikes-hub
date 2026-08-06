@@ -1,7 +1,40 @@
-import Hero from "@/components/Hero";
-import FeaturedBikes from "@/components/FeaturedBikes";
-import LatestBikes from "@/components/LatestBikes";
-import PopularBrands from "@/components/PopularBrands";
+import dynamic from "next/dynamic";
+
+const Hero = dynamic(
+  () => import("@/components/Hero"),
+  {
+    loading: () => (
+      <div className="h-[520px] animate-pulse rounded-3xl bg-gray-200" />
+    ),
+  }
+);
+
+const FeaturedBikes = dynamic(
+  () => import("@/components/FeaturedBikes"),
+  {
+    loading: () => (
+      <div className="mx-auto mt-10 h-[500px] max-w-7xl animate-pulse rounded-3xl bg-gray-200" />
+    ),
+  }
+);
+
+const PopularBrands = dynamic(
+  () => import("@/components/PopularBrands"),
+  {
+    loading: () => (
+      <div className="mx-auto mt-10 h-[250px] max-w-7xl animate-pulse rounded-3xl bg-gray-200" />
+    ),
+  }
+);
+
+const LatestBikes = dynamic(
+  () => import("@/components/LatestBikes"),
+  {
+    loading: () => (
+      <div className="mx-auto mt-10 h-[500px] max-w-7xl animate-pulse rounded-3xl bg-gray-200" />
+    ),
+  }
+);
 
 export default function Home() {
   return (

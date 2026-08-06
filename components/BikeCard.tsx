@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 import {
   Calendar,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 import {
+  memo,
   useEffect,
   useState,
 } from "react";
@@ -61,7 +63,7 @@ type BikeCardProps = {
 
 
 
-export default function BikeCard({
+function BikeCard({
 
   id,
 
@@ -85,30 +87,17 @@ export default function BikeCard({
 
   featured,
 
-  verified=true,
+  verified = true,
 
-  status="Available",
+  status = "Available",
 
-}:BikeCardProps){
+}: BikeCardProps) {
 
+  const [liked, setLiked] = useState(false);
 
-
-  const [liked,setLiked] =
-    useState(false);
-
-
-
-
-  useEffect(()=>{
-
-
-    setLiked(
-      isWishlisted(id)
-    );
-
-
-  },[id]);
-
+  useEffect(() => {
+    setLiked(isWishlisted(id));
+  }, [id]);
 
 
 
@@ -216,35 +205,40 @@ hover:shadow-2xl
 {/* IMAGE */}
 
 <div
-
 className="
 relative
+aspect-[4/3]
 overflow-hidden
 "
-
 >
-
 
 
 {
 image ?
 
 
-<img
-
-src={image}
-
-alt={name}
-
-className="
-h-64
-w-full
-object-cover
-transition
-duration-700
-group-hover:scale-110
-"
-
+<Image
+  src={
+    image?.includes("res.cloudinary.com")
+      ? image.replace(
+          "/upload/",
+          "/upload/f_auto,q_auto,w_700/"
+        )
+      : image || "/placeholder-bike.webp"
+  }
+  alt={name}
+  fill
+  loading="lazy"
+  placeholder="blur"
+  blurDataURL="/placeholder-bike.webp"
+  quality={70}
+  sizes="(max-width:640px)100vw,(max-width:1024px)50vw,33vw"
+  className="
+    object-cover
+    transition
+    duration-500
+    group-hover:scale-105
+  "
 />
 
 
@@ -773,3 +767,5 @@ View Details →
 
 
 }
+
+export default memo(BikeCard);
