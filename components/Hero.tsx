@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  useState,
-  memo,
-} from "react";
-
+import { memo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-
-import {
-  useRouter,
-} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import {
   Search,
@@ -19,570 +12,196 @@ import {
   Users,
 } from "lucide-react";
 
+function Hero() {
+  const router = useRouter();
 
+  const [search, setSearch] = useState("");
 
+  const handleSearch = () => {
+    const value = search.trim();
 
-function Hero(){
+    if (!value) {
+      router.push("/buy-bikes");
+      return;
+    }
 
+    router.push(
+      `/buy-bikes?search=${encodeURIComponent(value)}`
+    );
+  };
 
-const router = useRouter();
+  const brands = [
+    "Royal Enfield",
+    "KTM",
+    "Yamaha",
+    "Honda",
+    "Bajaj",
+  ];
 
+  return (
+    <section className="relative min-h-[560px] overflow-hidden">
+      {/* =========================
+          BACKGROUND IMAGE
+      ========================= */}
 
-const [search,setSearch] =
-useState("");
+      <Image
+        src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1800&q=80"
+        alt="Used Bikes Marketplace"
+        fill
+        priority
+        quality={90}
+        sizes="100vw"
+        className="object-cover"
+      />
 
+      {/* =========================
+          DARK OVERLAY
+      ========================= */}
 
+      <div className="absolute inset-0 bg-black/60" />
 
+      {/* =========================
+          HERO CONTENT
+      ========================= */}
 
-const handleSearch = ()=>{
+      <div className="relative z-10 flex min-h-[560px] items-center justify-center px-5 py-12">
+        <div className="mx-auto max-w-5xl text-center text-white">
 
+          {/* TRUST BADGE */}
 
-if(!search.trim()){
+          <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-orange-500/20 px-5 py-2 text-sm font-bold text-orange-400 backdrop-blur">
+            <ShieldCheck size={18} />
 
-router.push("/buy-bikes");
+            Bihar's Trusted Used Bike Marketplace
+          </div>
 
-return;
+          {/* HEADING */}
 
+          <h1 className="mt-5 text-4xl font-black leading-tight sm:text-5xl md:text-6xl">
+            Find Your
+            <br />
+
+            <span className="text-orange-500">
+              Dream Used Bike
+            </span>
+          </h1>
+
+          {/* DESCRIPTION */}
+
+          <p className="mx-auto mt-4 max-w-2xl text-sm text-gray-200 md:text-lg">
+            Buy verified second hand bikes, sell your old bike
+            and get trusted support.
+          </p>
+
+          {/* =========================
+              SEARCH
+          ========================= */}
+
+          <div className="mx-auto mt-7 flex max-w-2xl rounded-2xl bg-white/90 p-2 shadow-xl backdrop-blur">
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
+              placeholder="Search Royal Enfield, KTM, Yamaha..."
+              className="min-w-0 flex-1 bg-transparent px-4 text-black outline-none"
+            />
+
+            <button
+              type="button"
+              onClick={handleSearch}
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-bold text-white transition hover:bg-orange-600 active:scale-95"
+            >
+              <Search size={18} />
+              Search
+            </button>
+
+          </div>
+
+          {/* =========================
+              BRANDS
+          ========================= */}
+
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            {brands.map((brand) => (
+              <button
+                key={brand}
+                type="button"
+                onClick={() => {
+                  router.push(
+                    `/buy-bikes?search=${encodeURIComponent(brand)}`
+                  );
+                }}
+                className="rounded-full bg-white/15 px-4 py-2 text-xs font-bold backdrop-blur transition hover:bg-orange-500"
+              >
+                {brand}
+              </button>
+            ))}
+          </div>
+
+          {/* =========================
+              TRUST FEATURES
+          ========================= */}
+
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+
+            <div className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm backdrop-blur">
+              <BadgeCheck
+                size={16}
+                className="text-orange-500"
+              />
+              Verified Bikes
+            </div>
+
+            <div className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm backdrop-blur">
+              <Users
+                size={16}
+                className="text-orange-500"
+              />
+              Trusted Support
+            </div>
+
+            <div className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm backdrop-blur">
+              <ShieldCheck
+                size={16}
+                className="text-orange-500"
+              />
+              Safe Deals
+            </div>
+
+          </div>
+
+          {/* =========================
+              ACTION BUTTONS
+          ========================= */}
+
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+
+            <Link
+              href="/buy-bikes"
+              className="rounded-xl bg-orange-500 px-8 py-3 font-black text-white transition hover:bg-orange-600 active:scale-95"
+            >
+              Browse Bikes
+            </Link>
+
+            <Link
+              href="/sell-bike"
+              className="rounded-xl border-2 border-white px-8 py-3 font-black text-white transition hover:bg-white hover:text-black active:scale-95"
+            >
+              Sell Your Bike
+            </Link>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
 }
-
-
-router.push(
-`/buy-bikes?search=${encodeURIComponent(search)}`
-);
-
-
-};
-
-
-
-
-const brands=[
-
-"Royal Enfield",
-"KTM",
-"Yamaha",
-"Honda",
-"Bajaj"
-
-];
-
-
-
-
-
-return (
-
-<section
-
-className="
-relative
-overflow-hidden
-min-h-[560px]
-"
-
->
-
-
-{/* BACKGROUND IMAGE */}
-
-<Image
-
-src="
-https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1800&q=80
-"
-
-alt="Used Bikes Marketplace"
-
-fill
-
-priority
-
-quality={80}
-
-sizes="
-100vw
-"
-
-className="
-object-cover
-"
-
-/>
-
-
-
-{/* OVERLAY */}
-
-<div
-
-className="
-absolute
-inset-0
-bg-black/60
-"
-
-/>
-
-
-
-
-
-<div
-
-className="
-relative
-z-10
-flex
-min-h-[560px]
-items-center
-justify-center
-px-5
-py-12
-"
-
->
-
-
-<div
-
-className="
-mx-auto
-max-w-5xl
-text-center
-text-white
-"
-
->
-
-
-
-<div
-
-className="
-mx-auto
-flex
-w-fit
-items-center
-gap-2
-rounded-full
-bg-orange-500/20
-px-5
-py-2
-text-sm
-font-bold
-text-orange-400
-backdrop-blur
-"
-
->
-
-<ShieldCheck size={18}/>
-
-Bihar's Trusted Used Bike Marketplace
-
-
-</div>
-
-
-
-
-
-<h1
-
-className="
-mt-5
-text-4xl
-font-black
-leading-tight
-sm:text-5xl
-md:text-6xl
-"
-
->
-
-Find Your
-
-<br/>
-
-
-<span className="text-orange-500">
-
-Dream Used Bike
-
-</span>
-
-
-</h1>
-
-
-
-
-
-<p
-
-className="
-mx-auto
-mt-4
-max-w-2xl
-text-sm
-text-gray-200
-md:text-lg
-"
-
->
-
-Buy verified second hand bikes,
-sell your old bike and get trusted support.
-
-</p>
-
-
-
-
-
-
-
-{/* SEARCH */}
-
-
-<div
-
-className="
-mx-auto
-mt-7
-flex
-max-w-2xl
-rounded-2xl
-bg-white/90
-p-2
-shadow-xl
-backdrop-blur
-"
-
->
-
-
-<input
-
-value={search}
-
-onChange={(e)=>
-setSearch(e.target.value)
-}
-
-onKeyDown={(e)=>{
-
-if(e.key==="Enter")
-handleSearch();
-
-}}
-
-placeholder="
-Search Royal Enfield, KTM, Yamaha...
-"
-
-className="
-flex-1
-bg-transparent
-px-4
-text-black
-outline-none
-"
-
-/>
-
-
-
-<button
-
-onClick={handleSearch}
-
-className="
-flex
-items-center
-gap-2
-rounded-xl
-bg-orange-500
-px-5
-py-3
-font-bold
-text-white
-hover:bg-orange-600
-"
-
->
-
-<Search size={18}/>
-
-Search
-
-
-</button>
-
-
-</div>
-
-
-
-
-
-
-
-
-{/* BRANDS */}
-
-
-<div
-
-className="
-mt-5
-flex
-flex-wrap
-justify-center
-gap-2
-"
-
->
-
-
-{
-
-brands.map((brand)=>(
-
-
-<button
-
-key={brand}
-
-onClick={()=>
-
-
-router.push(
-`/buy-bikes?search=${brand}`
-)
-
-}
-
-className="
-rounded-full
-bg-white/15
-px-4
-py-2
-text-xs
-font-bold
-backdrop-blur
-hover:bg-orange-500
-"
-
->
-
-{brand}
-
-
-</button>
-
-
-))
-
-}
-
-
-</div>
-
-
-
-
-
-
-
-
-
-{/* TRUST */}
-
-<div
-
-className="
-mt-6
-flex
-flex-wrap
-justify-center
-gap-3
-"
-
->
-
-
-<div
-
-className="
-flex
-items-center
-gap-2
-rounded-xl
-bg-white/10
-px-4
-py-2
-text-sm
-backdrop-blur
-"
-
->
-
-<BadgeCheck
-size={16}
-className="text-orange-500"
-/>
-
-Verified Bikes
-
-</div>
-
-
-
-
-
-<div
-
-className="
-flex
-items-center
-gap-2
-rounded-xl
-bg-white/10
-px-4
-py-2
-text-sm
-backdrop-blur
-"
-
->
-
-<Users
-size={16}
-className="text-orange-500"
-/>
-
-Trusted Support
-
-</div>
-
-
-
-
-
-<div
-
-className="
-flex
-items-center
-gap-2
-rounded-xl
-bg-white/10
-px-4
-py-2
-text-sm
-backdrop-blur
-"
-
->
-
-<ShieldCheck
-size={16}
-className="text-orange-500"
-/>
-
-Safe Deals
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-<div
-
-className="
-mt-7
-flex
-flex-col
-gap-3
-sm:flex-row
-justify-center
-"
-
->
-
-
-<Link
-
-href="/buy-bikes"
-
-className="
-rounded-xl
-bg-orange-500
-px-8
-py-3
-font-black
-text-white
-hover:bg-orange-600
-"
-
->
-
-Browse Bikes
-
-</Link>
-
-
-
-<Link
-
-href="/sell-bike"
-
-className="
-rounded-xl
-border-2
-border-white
-px-8
-py-3
-font-black
-hover:bg-white
-hover:text-black
-"
-
->
-
-Sell Your Bike
-
-</Link>
-
-
-</div>
-
-
-
-
-
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
-);
-
-
-}
-
 
 export default memo(Hero);
