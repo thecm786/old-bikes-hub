@@ -498,6 +498,22 @@ function BuyBikesContent() {
       "
     >
 
+      <section className="mx-auto mb-8 max-w-7xl" aria-labelledby="bihar-bikes-heading">
+        <h1 id="bihar-bikes-heading" className="text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
+          Buy Used Bikes in Muzaffarpur, Bihar
+        </h1>
+        <p className="mt-3 max-w-3xl leading-7 text-gray-600">
+          Explore available second hand motorcycles from Old Bikes Hub. Filter by brand, compare prices and kilometres, and contact us to confirm documents and inspection details before buying.
+        </p>
+        <nav className="mt-4 flex flex-wrap gap-2" aria-label="Popular used bike brands">
+          {["Royal Enfield", "TVS", "Honda", "Hero", "Yamaha", "Bajaj", "KTM"].map((brand) => (
+            <a key={brand} href={`/buy-bikes?brand=${encodeURIComponent(brand)}`} className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-orange-500 hover:text-white">
+              Used {brand} bikes
+            </a>
+          ))}
+        </nav>
+      </section>
+
       {/* HEADER */}
 
       <section
@@ -547,7 +563,7 @@ function BuyBikesContent() {
 
             </div>
 
-            <h1
+            <h2
               className="
                 mt-2
                 text-3xl
@@ -556,7 +572,7 @@ function BuyBikesContent() {
               "
             >
               Explore Used Bikes
-            </h1>
+            </h2>
 
             <p
               className="
