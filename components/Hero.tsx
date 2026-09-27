@@ -97,7 +97,7 @@ function Hero() {
               SEARCH
           ========================= */}
 
-          <div className="mx-auto mt-7 flex max-w-2xl rounded-2xl bg-white/90 p-2 shadow-xl backdrop-blur">
+          <form className="mx-auto mt-7 flex max-w-2xl rounded-2xl bg-white/90 p-2 shadow-xl backdrop-blur" onSubmit={(event) => { event.preventDefault(); handleSearch(); }} role="search">
 
             <input
               type="text"
@@ -109,6 +109,7 @@ function Hero() {
                 }
               }}
               placeholder="Search Royal Enfield, KTM, Yamaha..."
+              aria-label="Search used bikes"
               className="min-w-0 flex-1 bg-transparent px-4 text-black outline-none"
             />
 
@@ -121,7 +122,7 @@ function Hero() {
               Search
             </button>
 
-          </div>
+          </form>
 
           {/* =========================
               BRANDS
