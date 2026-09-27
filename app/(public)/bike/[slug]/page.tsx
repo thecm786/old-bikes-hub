@@ -769,7 +769,7 @@ ${url}`;
   </h2>
 
   <p className="mt-2 text-sm text-gray-500">
-    For any enquiries regarding this bike, please contact Old Bikes Hub directly.
+    For enquiries from any city in Bihar, contact Old Bikes Hub directly. Confirm availability, inspection options and transport arrangements before purchase.
   </p>
 
   <div className="mt-5 grid grid-cols-2 gap-4">
