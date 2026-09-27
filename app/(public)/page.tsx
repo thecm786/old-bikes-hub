@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { jsonLd } from "@/lib/seo";
 
 const Hero = dynamic(
   () => import("@/components/Hero"),
@@ -39,6 +40,14 @@ const LatestBikes = dynamic(
 export default function Home() {
   return (
     <main className="bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({
+        "@context": "https://schema.org", "@type": "AutoDealer",
+        name: "Old Bikes Hub", url: "https://www.oldbikeshub.com",
+        description: "Buy and sell verified used bikes in Muzaffarpur, Bihar and across India.",
+        areaServed: ["Muzaffarpur", "Bihar", "India"], telephone: "+918789192394",
+        email: "admin@oldbikeshub.com",
+        address: { "@type": "PostalAddress", addressLocality: "Muzaffarpur", addressRegion: "Bihar", addressCountry: "IN" },
+      }) }} />
       {/* HERO */}
       <Hero />
 

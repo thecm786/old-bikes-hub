@@ -143,7 +143,11 @@ export default function BikeDetailsPage() {
          * =========================
          */
 
-        const bikeDoc = snapshot.docs[0];
+        const bikeDoc = [...snapshot.docs].sort((a, b) => {
+          const aTime = (a.data().createdAt as { seconds?: number } | undefined)?.seconds ?? 0;
+          const bTime = (b.data().createdAt as { seconds?: number } | undefined)?.seconds ?? 0;
+          return bTime - aTime || b.id.localeCompare(a.id);
+        })[0];
 
         const data =
           bikeDoc.data() as Omit<
