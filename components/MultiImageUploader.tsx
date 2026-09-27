@@ -1,13 +1,20 @@
 "use client";
 
+import { uploadCloudinaryImage, validateImageFiles } from "@/lib/cloudinary";
 import { useState } from "react";
 
 interface MultiImageUploaderProps {
   onUpload: (urls: string[]) => void;
+  existingCount?: number;
+  disabled?: boolean;
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
 export default function MultiImageUploader({
   onUpload,
+  existingCount = 0,
+  disabled = false,
+  onUploadingChange,
 }: MultiImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
 
@@ -16,36 +23,18 @@ export default function MultiImageUploader({
   ) => {
     const files = e.target.files;
 
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || uploading || disabled) return;
+    const input = e.currentTarget;
 
     setUploading(true);
+    onUploadingChange?.(true);
 
     try {
+      validateImageFiles(Array.from(files), existingCount);
       const uploadedUrls: string[] = [];
 
       for (const file of Array.from(files)) {
-        const formData = new FormData();
-
-        formData.append("file", file);
-
-        formData.append(
-          "upload_preset",
-          "old-bikes-hub"
-        );
-
-        const response = await fetch(
-          "https://api.cloudinary.com/v1_1/w4eee6vd/image/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        const data = await response.json();
-
-        if (data.secure_url) {
-          uploadedUrls.push(data.secure_url);
-        }
+        uploadedUrls.push(await uploadCloudinaryImage(file));
       }
 
       onUpload(uploadedUrls);
@@ -54,9 +43,11 @@ export default function MultiImageUploader({
     } catch (error) {
       console.log(error);
 
-      alert("Image Upload Failed");
+      alert(error instanceof Error ? error.message : "Image Upload Failed");
     } finally {
       setUploading(false);
+      onUploadingChange?.(false);
+      input.value = "";
     }
   };
 
@@ -70,7 +61,8 @@ export default function MultiImageUploader({
       <input
         type="file"
         multiple
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
+        disabled={uploading || disabled}
         onChange={uploadImages}
         className="w-full rounded-lg border p-3"
       />

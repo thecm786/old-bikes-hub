@@ -1,5 +1,6 @@
 "use client";
 
+import { uploadCloudinaryImage } from "@/lib/cloudinary";
 import { useState } from "react";
 
 
@@ -36,74 +37,9 @@ export default function ImageUploader({
     try {
 
 
-      const formData = new FormData();
-
-
-
-      formData.append(
-        "file",
-        file
-      );
-
-
-
-      formData.append(
-        "upload_preset",
-        "old-bikes-hub"
-      );
-
-
-
-      const response = await fetch(
-
-        "https://api.cloudinary.com/v1_1/w4eee6vd/image/upload",
-
-        {
-          method: "POST",
-          body: formData,
-        }
-
-      );
-
-
-
-      const data = await response.json();
-
-
-
-      console.log(
-        "Cloudinary Response:",
-        data
-      );
-
-
-
-      if(data.secure_url){
-
-
-        onUpload(data.secure_url);
-
-
-        alert("Image Uploaded Successfully");
-
-
-      }
-      else {
-
-
-        alert("Image Upload Failed");
-
-
-        console.log(
-          "Cloudinary Error:",
-          data
-        );
-
-
-      }
-
-
-
+      const url = await uploadCloudinaryImage(file);
+      onUpload(url);
+      alert("Image Uploaded Successfully");
     } catch(error){
 
 
@@ -150,7 +86,8 @@ export default function ImageUploader({
         type="file"
 
 
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
+        disabled={uploading}
 
 
         onChange={uploadImage}

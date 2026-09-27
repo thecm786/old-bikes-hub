@@ -20,7 +20,6 @@ import {
 
 
 import {
-  User,
   Bike,
   IndianRupee,
   MapPin,

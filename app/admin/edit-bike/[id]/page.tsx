@@ -1,4 +1,6 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 import { useEffect, useState } from "react";
 
@@ -60,6 +62,7 @@ export default function EditBike() {
   const [loading, setLoading] = useState(true);
 
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const [success, setSuccess] = useState("");
 
@@ -160,6 +163,7 @@ const handleUpdate = async (
 ) => {
 
   e.preventDefault();
+    if (saving || uploading) return;
 
   const cleanPhone = form.phone.replace(/\D/g, "");
 
@@ -223,7 +227,7 @@ const handleUpdate = async (
 
         name: form.name,
 
-        slug: generateSlug(),
+        // Preserve the published slug so existing links continue to work.
 
         registrationNumber: registration,
 
@@ -317,6 +321,7 @@ const handleToggle = (
 // REMOVE IMAGE
 
 const removeImage = (index: number) => {
+    if (saving || uploading) return;
 
   setForm((prev) => ({
     ...prev,
@@ -326,16 +331,7 @@ const removeImage = (index: number) => {
 };
 
 
-// GENERATE SLUG
 
-const generateSlug = () => {
-
-  return `${form.brand}-${form.name}-${id}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-};
 
 if (loading) {
   return (
@@ -441,6 +437,9 @@ return (
         </h2>
 
         <MultiImageUploader
+          disabled={saving || uploading}
+          onUploadingChange={setUploading}
+          existingCount={form.images.length}
           onUpload={(urls) =>
             setForm((prev) => ({
               ...prev,
@@ -462,7 +461,7 @@ return (
                 key={index}
                 className="relative overflow-hidden rounded-2xl"
               >
-                <img
+                <SiteImage width={320} height={288} sizes="(max-width: 768px) 50vw, 25vw"
                   src={img}
                   alt="bike"
                   className="h-36 w-full object-cover"
@@ -553,7 +552,7 @@ return (
             name="registrationNumber"
             value={form.registrationNumber}
             placeholder="Registration Number"
-            onChange={(e: any) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
 
               const value = e.target.value
                 .toUpperCase()
@@ -709,7 +708,7 @@ return (
         {/* UPDATE BUTTON */}
 
         <button
-          disabled={saving}
+          disabled={saving || uploading}
           className="
             mt-10
             flex
@@ -771,7 +770,7 @@ function Input({
 
   type = "text",
 
-}: any) {
+}: { icon: React.ReactNode; name: string; value: string; placeholder: string; onChange: React.ChangeEventHandler<HTMLInputElement>; type?: React.HTMLInputTypeAttribute }) {
 
   return (
 

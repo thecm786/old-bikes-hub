@@ -10,7 +10,6 @@ import {
 } from "react";
 
 import {
-  useRouter,
   useSearchParams,
 } from "next/navigation";
 
@@ -44,7 +43,6 @@ import type { BikeType } from "@/types/bike";
 
 function BuyBikesContent() {
 
-  const router = useRouter();
 
   const searchParams = useSearchParams();
 
@@ -92,202 +90,32 @@ function BuyBikesContent() {
   const loadMoreRef =
     useRef<HTMLDivElement | null>(null);
 
+  const [previousQuery, setPreviousQuery] = useState({ selectedBrand, initialSearch });
+  if (previousQuery.selectedBrand !== selectedBrand || previousQuery.initialSearch !== initialSearch) {
+    setPreviousQuery({ selectedBrand, initialSearch });
+    setBrand(selectedBrand || "All");
+    setSearch(initialSearch);
+  }
+
   useEffect(() => {
-
-    setBrand(
-      selectedBrand || "All"
-    );
-
-  }, [selectedBrand]);
-
-  const fetchBikes =
-    useCallback(async () => {
-
-      setLoading(true);
-
-      setBikes([]);
-
-      setLastDoc(null);
-
-      setHasMore(true);
-
-      try {
-
-        const bikesRef =
-          collection(
-            db,
-            "bikes"
-          );
-
-        const bikesQuery =
-          query(
-
-            bikesRef,
-
-            orderBy(
-              "createdAt",
-              "desc"
-            ),
-
-            limit(20)
-
-          );
-
-        const snapshot =
-          await getDocs(
-            bikesQuery
-          );
-
-        if (
-          !snapshot.empty
-        ) {
-
-          setLastDoc(
-
-            snapshot.docs[
-              snapshot.docs.length - 1
-            ]
-
-          );
-
-        }
-
-        if (
-          snapshot.docs.length < 20
-        ) {
-
-          setHasMore(false);
-
-        }
-
-        const firebaseBikes =
-          snapshot.docs.map(
-            (doc) => ({
-              id: doc.id,
-              ...(doc.data() as Omit<
-                BikeType,
-                "id"
-              >),
-            })
-          );
-
-        firebaseBikes.sort(
-
-          (a, b) =>
-
-            Number(
-              b.createdAt?.seconds || 0
-            ) -
-
-            Number(
-              a.createdAt?.seconds || 0
-            )
-
-        );
-
-        const uniqueBikes =
-          firebaseBikes.filter(
-
-            (
-              bike,
-              index,
-              self
-            ) =>
-
-              index ===
-
-              self.findIndex(
-                (b) =>
-                  b.id === bike.id
-              )
-
-          );
-
-        const brandList = [
-
-          ...defaultBikes,
-
-          ...uniqueBikes,
-
-        ];
-
-        setAllBrands([
-
-          "All",
-
-          ...Array.from(
-
-            new Set(
-
-              brandList.map(
-                (bike) =>
-                  bike.brand
-              )
-
-            )
-
-          ).sort(),
-
-        ]);
-
-        setBikes(
-
-          uniqueBikes.map(
-            (bike) => ({
-              ...bike,
-              id: String(
-                bike.id
-              ),
-            })
-          )
-
-        );
-
-      } catch (error) {
-
-        console.error(error);
-
-        setBikes(
-
-          defaultBikes.map(
-            (bike) => ({
-              ...bike,
-              id: String(
-                bike.id
-              ),
-            })
-          )
-
-        );
-
-        setAllBrands([
-
-          "All",
-
-          ...Array.from(
-
-            new Set(
-
-              defaultBikes.map(
-                (bike) =>
-                  bike.brand
-              )
-
-            )
-
-          ).sort(),
-
-        ]);
-
-        setHasMore(false);
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    }, []);
+    let active = true;
+    const bikesQuery = query(collection(db, "bikes"), orderBy("createdAt", "desc"), limit(20));
+    getDocs(bikesQuery).then((snapshot) => {
+      if (!active) return;
+      const data = snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<BikeType, "id">) }));
+      setBikes(data);
+      setLastDoc(snapshot.docs.at(-1) || null);
+      setHasMore(snapshot.size === 20);
+      setAllBrands(["All", ...Array.from(new Set([...defaultBikes, ...data].map((bike) => bike.brand))).sort()]);
+    }).catch((error: unknown) => {
+      if (!active) return;
+      console.error(error);
+      setBikes(defaultBikes.map((bike) => ({ ...bike, id: String(bike.id) })));
+      setAllBrands(["All", ...Array.from(new Set(defaultBikes.map((bike) => bike.brand))).sort()]);
+      setHasMore(false);
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const fetchMoreBikes =
     useCallback(async () => {
@@ -429,11 +257,7 @@ function BuyBikesContent() {
 
     ]);
 
-  useEffect(() => {
 
-    fetchBikes();
-
-  }, [fetchBikes]);
 
   useEffect(() => {
 

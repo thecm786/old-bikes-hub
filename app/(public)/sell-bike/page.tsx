@@ -1,5 +1,7 @@
 "use client";
 
+import { validateSellRequest } from "@/lib/sellRequest";
+import { useSiteConfig } from "@/providers/SiteConfigProvider";
 import { useState } from "react";
 
 import {
@@ -20,6 +22,8 @@ import SellBikeImageUploader from "@/components/SellBikeImageUploader";
 
 
 export default function SellBikePage() {
+  const siteConfig = useSiteConfig();
+  const [uploading, setUploading] = useState(false);
 
 
   const [loading,setLoading] = useState(false);
@@ -84,6 +88,11 @@ export default function SellBikePage() {
 
 
     e.preventDefault();
+    if (loading || uploading) return;
+    const cleaned = Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim()])) as typeof form;
+    const validationError = validateSellRequest(cleaned, images);
+    if (validationError) { alert(validationError); return; }
+    setSuccess(false);
 
 
     try{
@@ -100,7 +109,7 @@ export default function SellBikePage() {
         {
 
 
-          ...form,
+          ...cleaned,
 
 
           images,
@@ -175,7 +184,7 @@ ${images.length} uploaded
 
       window.open(
 
-        `https://wa.me/918789192394?text=${encodeURIComponent(message)}`,
+        `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(message)}`,
 
         "_blank"
 
@@ -604,6 +613,8 @@ ${images.length} uploaded
       <SellBikeImageUploader
 
       images={images}
+      disabled={loading || uploading}
+      onUploadingChange={setUploading}
 
       setImages={setImages}
 

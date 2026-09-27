@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <rect width="800" height="600" fill="#f3f4f6"/>
+  <g fill="none" stroke="#9ca3af" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="270" cy="340" r="68"/><circle cx="530" cy="340" r="68"/>
+    <path d="M270 340l76-116 91 116H270m76-116h122l62 116m-85-160h42m-19 44-23-44m-119 44h-36"/>
+  </g>
+  <text x="400" y="480" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" fill="#6b7280">Photo unavailable</text>
+</svg>

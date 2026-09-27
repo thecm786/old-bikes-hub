@@ -85,17 +85,7 @@ export default function FilterSidebar({
 
 
 
-const statuses = [
 
-  "All",
-
-  "Available",
-
-  "Pending",
-
-  "Sold",
-
-];
 
 
 

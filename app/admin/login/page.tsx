@@ -24,13 +24,18 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const token = await credential.user.getIdTokenResult(true);
+      if (token.claims.admin !== true) {
+        await auth.signOut();
+        throw new Error("This account does not have admin access.");
+      }
 
       alert("Login Successful ✅");
 
       router.push("/admin/dashboard");
-    } catch (error: any) {
-      alert(error.message);
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Login failed. Please try again.");
     }
 
     setLoading(false);

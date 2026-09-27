@@ -1,3 +1,4 @@
+import type { BikeType } from "@/types/bike";
 import { db } from "@/firebase/firebase";
 import {
   addDoc,
@@ -16,7 +17,7 @@ import {
 const bikesCollection = collection(db, "bikes");
 
 // Add Bike
-export async function addBike(data: any) {
+export async function addBike(data: Omit<BikeType, "id" | "createdAt">) {
   return await addDoc(bikesCollection, {
     ...data,
     createdAt: serverTimestamp(),
@@ -71,7 +72,7 @@ export async function getBike(id: string) {
 }
 
 // Update Bike
-export async function updateBike(id: string, data: any) {
+export async function updateBike(id: string, data: Partial<Omit<BikeType, "id" | "createdAt">>) {
   const ref = doc(db, "bikes", id);
 
   return await updateDoc(ref, data);

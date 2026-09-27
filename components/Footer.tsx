@@ -1,3 +1,7 @@
+"use client";
+import SiteImage from "@/components/SiteImage";
+
+
 import Link from "next/link";
 
 import {
@@ -8,9 +12,10 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import { siteConfig } from "@/lib/siteConfig";
+import { useSiteConfig } from "@/providers/SiteConfigProvider";
 
 export default function Footer() {
+  const siteConfig = useSiteConfig();
   return (
     <footer className="bg-black text-white">
 
@@ -47,7 +52,7 @@ export default function Footer() {
 
               {/* SAME LOGO AS NAVBAR */}
 
-              <img
+              <SiteImage width={48} height={48} sizes="48px"
                 src="/logo.png"
                 alt="Old Bikes Hub"
                 className="
@@ -72,7 +77,7 @@ export default function Footer() {
                     sm:text-2xl
                   "
                 >
-                  Old Bikes Hub
+                  {siteConfig.name}
                 </h2>
 
                 <p
@@ -84,7 +89,7 @@ export default function Footer() {
                     sm:text-sm
                   "
                 >
-                  India's Trusted Used Bike Marketplace
+                  India&apos;s Trusted Used Bike Marketplace
                 </p>
 
               </div>
@@ -105,9 +110,7 @@ export default function Footer() {
                 sm:leading-7
               "
             >
-              Buy, sell and exchange verified second hand
-              bikes across India. Find your dream bike at
-              the best price.
+              {siteConfig.description}
             </p>
 
 
@@ -452,12 +455,12 @@ export default function Footer() {
         >
 
           <p>
-            © {new Date().getFullYear()} Old Bikes Hub.
+            © {new Date().getFullYear()} {siteConfig.name}.
             All Rights Reserved.
           </p>
 
           <p className="text-gray-600">
-            India's Trusted Used Bike Marketplace
+            India&apos;s Trusted Used Bike Marketplace
           </p>
 
         </div>

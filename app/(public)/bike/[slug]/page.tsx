@@ -1,4 +1,6 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -463,7 +465,7 @@ ${url}`;
             <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
 
               {activeImage ? (
-                <img
+                <SiteImage width={1200} height={800} sizes="(max-width: 768px) 100vw, 60vw" loading="eager"
                   src={activeImage}
                   alt={bike.name}
                   className="h-[350px] w-full object-cover sm:h-[500px]"
@@ -497,7 +499,7 @@ ${url}`;
                           : "border-transparent"
                       }`}
                     >
-                      <img
+                      <SiteImage width={320} height={192} sizes="(max-width: 768px) 25vw, 15vw"
                         src={img}
                         alt={`${bike.name} ${
                           index + 1

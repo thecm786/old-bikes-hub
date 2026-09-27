@@ -30,11 +30,11 @@ export default function DashboardActivity({
 
     .sort(
 
-      (a:any,b:any)=>
+      (a,b)=>
 
-        Number(b.createdAt || 0) -
+        (b.createdAt?.seconds || 0) -
 
-        Number(a.createdAt || 0)
+        (a.createdAt?.seconds || 0)
 
     )
 

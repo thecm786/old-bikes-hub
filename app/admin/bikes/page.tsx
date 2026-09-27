@@ -1,4 +1,6 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -10,8 +12,6 @@ collection,
 deleteDoc,
 doc,
 updateDoc,
-query,
-where,
 onSnapshot,
 
 } from "firebase/firestore";
@@ -23,8 +23,6 @@ Eye,
 Pencil,
 Trash2,
 Star,
-Phone,
-MessageCircle,
 MapPin,
 Calendar,
 Gauge,
@@ -72,13 +70,12 @@ useState("latest");
 const [selectedBikes,setSelectedBikes]=
 useState<string[]>([]);
 
-const [currentPage,setCurrentPage]=
-useState(1);
+const [pagination, setPagination] = useState({ key: "", page: 1 });
+const filterKey = JSON.stringify([search, registrationSearch, brand, status, sort]);
 
 const bikesPerPage=12;
 
-const [totalPages,setTotalPages]=
-useState(1);
+
 
 const [deleteModal,setDeleteModal]=
 useState(false);
@@ -204,7 +201,7 @@ const brands = useMemo(() => {
 
 const filteredBikes = useMemo(() => {
 
-  let result = bikes.filter((bike) => {
+  const result = bikes.filter((bike) => {
 
     const text = search.toLowerCase();
 
@@ -332,6 +329,12 @@ const filteredBikes = useMemo(() => {
 // PAGINATION
 // ===============================
 
+const totalPages = Math.max(1, Math.ceil(filteredBikes.length / bikesPerPage));
+const currentPage = pagination.key === filterKey ? Math.min(pagination.page, totalPages) : 1;
+const setCurrentPage = (next: number | ((previous: number) => number)) => {
+  const page = typeof next === "function" ? next(currentPage) : next;
+  setPagination({ key: filterKey, page: Math.max(1, Math.min(page, totalPages)) });
+};
 const paginatedBikes = useMemo(() => {
 
   const start =
@@ -356,29 +359,7 @@ const paginatedBikes = useMemo(() => {
 
 ]);
 
-useEffect(() => {
 
-  const pages = Math.ceil(
-
-    filteredBikes.length /
-
-    bikesPerPage
-
-  );
-
-  setTotalPages(
-
-    pages || 1
-
-  );
-
-  setCurrentPage(1);
-
-}, [
-
-  filteredBikes,
-
-]);
 
 
 
@@ -1364,13 +1345,13 @@ w-5
 
 
 
-<img
+<SiteImage width={640} height={400} sizes="(max-width: 768px) 100vw, 33vw"
 
 src={
 
 bike.image ||
 
-"/bike-placeholder.png"
+"/bike-placeholder.svg"
 
 }
 

@@ -6,7 +6,7 @@ import {
   doc,
   getDoc,
   serverTimestamp,
-  setDoc,
+  writeBatch,
 } from "firebase/firestore";
 
 import {
@@ -27,6 +27,7 @@ import {
 
 import toast from "react-hot-toast";
 
+import { publicSiteSettings, siteConfig } from "@/lib/siteConfig";
 import { db } from "@/firebase/firebase";
 
 /*
@@ -71,12 +72,12 @@ const defaultSettings: SiteSettings = {
   websiteDescription:
     "Buy and sell quality second-hand bikes with confidence.",
 
-  phone: "",
-  whatsapp: "",
-  email: "",
+  phone: siteConfig.phone,
+  whatsapp: siteConfig.whatsapp,
+  email: siteConfig.email,
 
   address: "",
-  city: "",
+  city: "Muzaffarpur",
   state: "Bihar",
 
   defaultBikeStatus: "Available",
@@ -97,6 +98,8 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] =
     useState(true);
 
+  const [loadError, setLoadError] = useState(false);
+
   const [saving, setSaving] =
     useState(false);
 
@@ -106,40 +109,10 @@ export default function AdminSettingsPage() {
    * ==========================================================
    */
 
-  const loadSettings = async () => {
-    try {
-      setLoading(true);
-
-      const settingsRef = doc(
-        db,
-        "settings",
-        "site"
-      );
-
-      const snapshot =
-        await getDoc(settingsRef);
-
-      if (snapshot.exists()) {
-        setSettings({
-          ...defaultSettings,
-          ...(snapshot.data() as Partial<SiteSettings>),
-        });
-      } else {
-        setSettings(defaultSettings);
-      }
-    } catch (error) {
-      console.error(
-        "Failed to load settings:",
-        error
-      );
-
-      toast.error(
-        "Failed to load settings."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loadSettings = () => getDoc(doc(db, "settings", "site"))
+    .then((snapshot) => { setSettings({ ...defaultSettings, ...(snapshot.data() as Partial<SiteSettings> | undefined) }); setLoadError(false); })
+    .catch((error: unknown) => { setLoadError(true); console.error("Failed to load settings:", error); toast.error("Failed to load settings."); })
+    .finally(() => setLoading(false));
 
   /*
    * ==========================================================
@@ -174,6 +147,7 @@ export default function AdminSettingsPage() {
    */
 
   const saveSettings = async () => {
+    if (loading || loadError || saving) return;
     try {
       setSaving(true);
 
@@ -183,16 +157,10 @@ export default function AdminSettingsPage() {
         "site"
       );
 
-      await setDoc(
-        settingsRef,
-        {
-          ...settings,
-          updatedAt: serverTimestamp(),
-        },
-        {
-          merge: true,
-        }
-      );
+      const batch = writeBatch(db);
+      batch.set(settingsRef, { ...settings, updatedAt: serverTimestamp() }, { merge: true });
+      batch.set(doc(db, "publicSettings", "site"), publicSiteSettings(settings));
+      await batch.commit();
 
       toast.success(
         "Settings successfully saved."
@@ -230,6 +198,13 @@ export default function AdminSettingsPage() {
    * LOADING
    * ==========================================================
    */
+
+  if (loadError) {
+    return <main className="p-8 text-center">
+      <p role="alert">Settings could not be loaded. Retry before making changes.</p>
+      <button type="button" onClick={loadSettings} className="mt-4 rounded-xl bg-orange-500 px-6 py-3 text-white">Retry</button>
+    </main>;
+  }
 
   if (loading) {
     return (

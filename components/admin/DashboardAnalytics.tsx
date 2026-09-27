@@ -60,7 +60,7 @@ export default function DashboardAnalytics({
 
       bikes.reduce(
 
-        (acc:any,bike)=>{
+        (acc: Record<string, number>,bike)=>{
 
 
           acc[bike.brand] =
@@ -81,7 +81,7 @@ export default function DashboardAnalytics({
 
     .sort(
 
-      (a:any,b:any)=>
+      (a,b)=>
 
         b[1]-a[1]
 
@@ -388,7 +388,7 @@ export default function DashboardAnalytics({
             {
               brandData.map(
 
-                ([brand,count]:any)=>(
+                ([brand,count])=>(
 
 
                   <div

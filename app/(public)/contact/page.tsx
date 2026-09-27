@@ -15,9 +15,10 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/firebase/firebase";
-import { siteConfig } from "@/lib/siteConfig";
+import { useSiteConfig } from "@/providers/SiteConfigProvider";
 
 export default function ContactPage() {
+  const siteConfig = useSiteConfig();
   const whatsappNumber = siteConfig.whatsapp;
 
   const handleSubmit = async (
@@ -36,6 +37,12 @@ export default function ContactPage() {
 
     if (!name || !email || !subject || !message) {
       alert("Please fill all required fields.");
+      return;
+    }
+
+    if (name.length > 100 || email.length > 254 || !/^[^ @]+@[^ @]+\.[^ @]+$/.test(email)
+      || (phone && !/^\+?[0-9]{10,15}$/.test(phone)) || subject.length > 150 || message.length > 3000) {
+      alert("Enter a valid email/phone. Limit name to 100, subject to 150 and message to 3,000 characters.");
       return;
     }
 

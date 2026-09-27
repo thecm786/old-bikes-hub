@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  memo,
-  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -19,7 +17,7 @@ import {
 
 import {
   collection,
-  getDocs,
+  onSnapshot,
   limit,
   orderBy,
   query,
@@ -139,91 +137,16 @@ useState(true);
 
 
 
-const fetchLatestBikes =
-useCallback(async()=>{
-
-
-try{
-
-
-const bikesQuery =
-query(
-
-collection(
-db,
-"bikes"
-),
-
-orderBy(
-"createdAt",
-"desc"
-),
-
-limit(6)
-
-);
-
-
-
-const snapshot =
-await getDocs(
-bikesQuery
-);
-
-
-
-const bikeList = snapshot.docs.map((doc) => ({
-  id: doc.id,
-  ...(doc.data() as Omit<BikeType, "id">),
-}));
-
-
-
-setBikes(
-bikeList
-);
-
-
-
-}
-
-catch(error){
-
-
-console.log(
-"Latest Bikes Error:",
-error
-);
-
-
-}
-
-finally{
-
-
-setLoading(false);
-
-
-}
-
-
-},[]);
-
-
-
-
-
-
-
-useEffect(()=>{
-
-
-fetchLatestBikes();
-
-
-},[
-fetchLatestBikes
-]);
+useEffect(() => {
+  const bikesQuery = query(collection(db, "bikes"), orderBy("createdAt", "desc"), limit(6));
+  return onSnapshot(bikesQuery, (snapshot) => {
+    setBikes(snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<BikeType, "id">) })));
+    setLoading(false);
+  }, (error) => {
+    console.error("Unable to load bikes:", error);
+    setLoading(false);
+  });
+}, []);
 
 
 

@@ -74,7 +74,7 @@ export interface BikeType {
 
 
 
-  createdAt?: any;
+  createdAt?: { seconds: number; nanoseconds?: number };
 
 
 

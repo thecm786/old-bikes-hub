@@ -3,9 +3,10 @@ export const WISHLIST_KEY = "old-bikes-hub-wishlist";
 export function getWishlist(): string[] {
   if (typeof window === "undefined") return [];
 
-  const data = localStorage.getItem(WISHLIST_KEY);
-
-  return data ? JSON.parse(data) : [];
+  try {
+    const data: unknown = JSON.parse(localStorage.getItem(WISHLIST_KEY) || "[]");
+    return Array.isArray(data) ? data.filter((id): id is string => typeof id === "string") : [];
+  } catch { return []; }
 }
 
 export function isWishlisted(id: string): boolean {

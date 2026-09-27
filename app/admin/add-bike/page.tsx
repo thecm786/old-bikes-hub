@@ -1,4 +1,6 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 import {
   useState,
@@ -58,6 +60,7 @@ export default function AddBike(){
 
   const [saving,setSaving] =
     useState(false);
+  const [uploading, setUploading] = useState(false);
 
 
 
@@ -240,6 +243,7 @@ export default function AddBike(){
     index:number
 
   )=>{
+    if (saving || uploading) return;
 
 
     setForm((prev)=>({
@@ -364,30 +368,12 @@ if (!form.registrationNumber) {
 
 
     e.preventDefault();
+    if (saving || uploading) return;
 
 
 
     if(!validateForm())
       return;
-
-    const existingQuery = query(
-  collection(db, "bikes"),
-  where(
-    "registrationNumber",
-    "==",
-    form.registrationNumber.trim().toUpperCase()
-  )
-);
-
-const existingSnapshot = await getDocs(existingQuery);
-
-if (!existingSnapshot.empty) {
-  alert("❌ This Registration Number is already registered.");
-  return;
-}
-
-
-
 
     try{
 
@@ -401,7 +387,7 @@ const duplicateQuery = query(
   where(
     "registrationNumber",
     "==",
-    form.registrationNumber
+    form.registrationNumber.trim().toUpperCase()
   )
 );
 
@@ -472,7 +458,7 @@ if (!duplicateSnapshot.empty) {
           form.phone,
 
 
-          registrationNumber: form.registrationNumber,
+          registrationNumber: form.registrationNumber.trim().toUpperCase(),
 
 
 
@@ -758,6 +744,9 @@ if (!duplicateSnapshot.empty) {
 
 
             <MultiImageUploader
+          disabled={saving || uploading}
+          onUploadingChange={setUploading}
+          existingCount={form.images.length}
 
               onUpload={(urls)=>
 
@@ -766,7 +755,7 @@ if (!duplicateSnapshot.empty) {
 
                   ...prev,
 
-                  images:urls,
+                  images: [...prev.images, ...urls],
 
                 }))
 
@@ -810,7 +799,7 @@ if (!duplicateSnapshot.empty) {
                       >
 
 
-                        <img
+                        <SiteImage width={320} height={320} sizes="(max-width: 768px) 50vw, 25vw"
 
                           src={img}
 
@@ -1196,7 +1185,7 @@ if (!duplicateSnapshot.empty) {
 
             type="submit"
 
-            disabled={saving}
+            disabled={saving || uploading}
 
             className="
             flex

@@ -1,4 +1,6 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -319,7 +321,7 @@ export default function FeaturedBikesPage() {
 
                 <div className="relative h-56 overflow-hidden bg-gray-100">
                   {bikeImage ? (
-                    <img
+                    <SiteImage width={640} height={448} sizes="(max-width: 768px) 100vw, 33vw"
                       src={bikeImage}
                       alt={
                         bike.name ||

@@ -2,7 +2,6 @@
 
 import {
   memo,
-  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -19,7 +18,7 @@ import {
 
 import {
   collection,
-  getDocs,
+  onSnapshot,
   limit,
   orderBy,
   query,
@@ -537,97 +536,36 @@ setLoading
 
 
 
-const fetchFeatured =
-useCallback(async()=>{
-
-
-try{
-
-
-const q = query(
-
-collection(
-db,
-"bikes"
-),
-
-where(
-"featured",
-"==",
-true
-),
-
-orderBy(
-"createdAt",
-"desc"
-),
-
-limit(6)
-
-);
-
-
-
-const snapshot =
-await getDocs(q);
-
-
-
-const data =
-snapshot.docs.map(
-(doc)=>({
-
-id:doc.id,
-
-...(doc.data() as Omit<
-BikeType,
-"id"
->)
-
-})
-);
-
-
-
-setBikes(data);
-
-
-
-}
-
-catch(error){
-
-console.log(
-"Featured Bikes Error",
-error
-);
-
-}
-
-
-finally{
-
-setLoading(false);
-
-}
-
-
-
-},[]);
-
-
-
-
-
-
-
-useEffect(()=>{
-
-fetchFeatured();
-
-},[
-fetchFeatured
-]);
+useEffect(() => {
+  let stopFallback: (() => void) | undefined;
+  const showError = (error: Error) => {
+    console.error("Unable to load bikes:", error);
+    setLoading(false);
+  };
+  const bikesQuery = query(collection(db, "bikes"), where("featured", "==", true), orderBy("createdAt", "desc"), limit(6));
+  const stop = onSnapshot(bikesQuery, (snapshot) => {
+    setBikes(snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<BikeType, "id">) })));
+    setLoading(false);
+  }, (error) => {
+    if (error.code !== "failed-precondition") {
+      showError(error);
+      return;
+    }
+    // Keep existing sites working while the composite index is being deployed.
+    stopFallback = onSnapshot(query(collection(db, "bikes"), where("featured", "==", true)), (snapshot) => {
+      const bikes = snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<BikeType, "id">) }));
+      bikes.sort((a, b) => ((b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+        || ((b.createdAt?.nanoseconds ?? 0) - (a.createdAt?.nanoseconds ?? 0))
+        || b.id.localeCompare(a.id));
+      setBikes(bikes.slice(0, 6));
+      setLoading(false);
+    }, showError);
+  });
+  return () => {
+    stop();
+    stopFallback?.();
+  };
+}, []);
 
 
 

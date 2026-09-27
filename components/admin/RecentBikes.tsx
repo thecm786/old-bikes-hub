@@ -1,4 +1,6 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 import Link from "next/link";
 
@@ -35,11 +37,11 @@ export default function RecentBikes({
 
     .sort(
 
-      (a:any,b:any)=>
+      (a,b)=>
 
-        Number(b.createdAt || 0) -
+        (b.createdAt?.seconds || 0) -
 
-        Number(a.createdAt || 0)
+        (a.createdAt?.seconds || 0)
 
     )
 
@@ -232,7 +234,7 @@ export default function RecentBikes({
                       bike.image ? (
 
 
-                        <img
+                        <SiteImage width={640} height={352} sizes="(max-width: 768px) 100vw, 33vw"
 
                           src={bike.image}
 

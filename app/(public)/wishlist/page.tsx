@@ -1,14 +1,17 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, getDocs } from "firebase/firestore";
 
+import type { BikeType } from "@/types/bike";
 import { db } from "@/firebase/firebase";
 import { getWishlist } from "@/lib/wishlist";
 
 export default function WishlistPage() {
-  const [bikes, setBikes] = useState<any[]>([]);
+  const [bikes, setBikes] = useState<BikeType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,7 +21,7 @@ export default function WishlistPage() {
 
         const allBikes = snapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data(),
+          ...(doc.data() as Omit<BikeType, "id">),
         }));
 
         const wishlist = getWishlist();
@@ -91,7 +94,7 @@ export default function WishlistPage() {
                 className="overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-2 hover:shadow-2xl"
               >
                 {bike.image ? (
-                  <img
+                  <SiteImage width={640} height={512} sizes="(max-width: 768px) 100vw, 33vw"
                     src={bike.image}
                     alt={bike.name}
                     className="h-64 w-full object-cover"

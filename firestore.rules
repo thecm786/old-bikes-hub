@@ -13,9 +13,71 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // Visitors can submit a request; only admins can view or manage requests.
+    // Admin profile fields remain private. Only the public projection is readable.
+    match /settings/site {
+      allow read, write: if isAdmin();
+    }
+
+    match /publicSettings/site {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          'websiteName', 'websiteDescription', 'phone', 'whatsapp',
+          'email', 'address', 'city', 'state'
+        ])
+        && request.resource.data.websiteName is string
+        && request.resource.data.websiteDescription is string
+        && request.resource.data.phone is string
+        && request.resource.data.whatsapp is string
+        && request.resource.data.email is string
+        && request.resource.data.address is string
+        && request.resource.data.city is string
+        && request.resource.data.state is string;
+      allow delete: if isAdmin();
+    }
+
+    function validImage(images, index) {
+      return images.size() <= index || (images[index] is string
+        && images[index].size() <= 2048
+        && images[index].matches('https://res[.]cloudinary[.]com/w4eee6vd/image/upload/.+'));
+    }
+
+    function validSellRequest() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['name', 'mobile', 'brand', 'model', 'year', 'km', 'price', 'location', 'description', 'images', 'status', 'createdAt'])
+        && d.keys().hasOnly(['name', 'mobile', 'brand', 'model', 'year', 'km', 'price', 'location', 'description', 'images', 'status', 'createdAt'])
+        && d.name is string && d.name.size() <= 100 && d.name.matches('.*[^[:space:]].*')
+        && d.mobile is string && d.mobile.matches('[+]?[0-9]{10,15}')
+        && d.brand is string && d.brand.size() <= 60 && d.brand.matches('.*[^[:space:]].*')
+        && d.model is string && d.model.size() <= 100 && d.model.matches('.*[^[:space:]].*')
+        && d.year is string && (d.year == '' || (d.year.matches('[0-9]{4}') && int(d.year) >= 1900 && int(d.year) <= request.time.year() + 1))
+        && d.km is string && (d.km == '' || d.km.matches('[0-9]{1,7}'))
+        && d.price is string && (d.price == '' || d.price.matches('[0-9]{1,9}'))
+        && d.location is string && d.location.size() <= 150
+        && d.description is string && d.description.size() <= 3000
+        && d.status == 'Pending' && d.createdAt == request.time
+        && d.images is list && d.images.size() <= 8
+        && validImage(d.images, 0) && validImage(d.images, 1)
+        && validImage(d.images, 2) && validImage(d.images, 3)
+        && validImage(d.images, 4) && validImage(d.images, 5)
+        && validImage(d.images, 6) && validImage(d.images, 7);
+    }
+
+    // Visitors can submit validated requests; only admins can view/manage them.
     match /sellRequests/{requestId} {
-      allow create: if true;
+      allow create: if validSellRequest();
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /contactMessages/{messageId} {
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'phone', 'subject', 'message', 'status', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'subject', 'message', 'status', 'createdAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
+        && request.resource.data.email is string && request.resource.data.email.size() <= 254 && request.resource.data.email.matches('[^ @]+@[^ @]+[.][^ @]+')
+        && request.resource.data.phone is string && (request.resource.data.phone == '' || request.resource.data.phone.matches('[+]?[0-9]{10,15}'))
+        && request.resource.data.subject is string && request.resource.data.subject.size() > 0 && request.resource.data.subject.size() <= 150
+        && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 3000
+        && request.resource.data.status == 'New' && request.resource.data.createdAt == request.time;
       allow read, update, delete: if isAdmin();
     }
 

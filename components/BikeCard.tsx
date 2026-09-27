@@ -1,4 +1,5 @@
 "use client";
+import { useWishlisted } from "@/lib/useWishlist";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -16,13 +17,10 @@ import {
 
 import {
   memo,
-  useEffect,
-  useState,
 } from "react";
 
 
 import {
-  isWishlisted,
   toggleWishlist,
 } from "@/lib/wishlist";
 
@@ -93,11 +91,7 @@ function BikeCard({
 
 }: BikeCardProps) {
 
-  const [liked, setLiked] = useState(false);
-
-  useEffect(() => {
-    setLiked(isWishlisted(id));
-  }, [id]);
+  const liked = useWishlisted(id);
 
 
 
@@ -106,17 +100,7 @@ function BikeCard({
   const handleWishlist = ()=>{
 
 
-    const value =
-      toggleWishlist(id);
-
-
-    setLiked(value);
-
-
-
-    window.dispatchEvent(
-      new Event("wishlistUpdated")
-    );
+    toggleWishlist(id);
 
 
   };

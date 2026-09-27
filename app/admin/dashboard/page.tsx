@@ -1,4 +1,6 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 
 import {
@@ -18,7 +20,6 @@ import {
   updateDoc,
   query,
   where,
-  getDocs,
   onSnapshot,
 } from "firebase/firestore";
 
@@ -38,7 +39,6 @@ import {
   RefreshCw,
   ShieldCheck,
   AlertTriangle,
-  X,
 } from "lucide-react";
 
 
@@ -60,6 +60,8 @@ import type { BikeType } from "@/types/bike";
 
 export default function AdminDashboard(){
 
+const [refreshRevision, setRefreshRevision] = useState(0);
+
 
 
 const [bikes,setBikes] =
@@ -71,8 +73,7 @@ const [loading,setLoading] =
 useState(true);
 
 
-const [initialLoad,setInitialLoad] =
-useState(true);
+
 
 const [pendingRequests,setPendingRequests] =
 useState(0);
@@ -108,11 +109,12 @@ useState("latest");
 const [selectedBikes,setSelectedBikes] =
 useState<string[]>([]);
 
-const [currentPage, setCurrentPage] = useState(1);
+const [pagination, setPagination] = useState({ key: "", page: 1 });
+const filterKey = JSON.stringify([search, registrationSearch, brand, status, sort]);
 
 const bikesPerPage = 12;
 
-const [totalPages, setTotalPages] = useState(1);
+
 
 const [deleteModal, setDeleteModal] =
 useState(false);
@@ -124,6 +126,68 @@ useState<string | null>(null);
 
 const [deleteLoading, setDeleteLoading] =
 useState(false);
+
+
+const filteredBikes = useMemo(() => {
+
+  const result = bikes.filter((bike) => {
+
+    const text = search.toLowerCase();
+
+    const searchMatch =
+      bike.name?.toLowerCase().includes(text) ||
+      bike.brand?.toLowerCase().includes(text) ||
+      bike.location?.toLowerCase().includes(text);
+
+    const registrationMatch =
+      registrationSearch === "" ||
+      bike.registrationNumber
+        ?.toLowerCase()
+        .includes(registrationSearch.toLowerCase());
+
+    const brandMatch =
+      brand === "All" ||
+      bike.brand === brand;
+
+    const statusMatch =
+      status === "All" ||
+      bike.status === status;
+
+    return (
+      searchMatch &&
+      registrationMatch &&
+      brandMatch &&
+      statusMatch
+    );
+
+  });
+
+  if (sort === "price-low") {
+    result.sort((a, b) => Number(a.price) - Number(b.price));
+  }
+
+  if (sort === "price-high") {
+    result.sort((a, b) => Number(b.price) - Number(a.price));
+  }
+
+  if (sort === "year-new") {
+    result.sort((a, b) => Number(b.year) - Number(a.year));
+  }
+
+  if (sort === "km-low") {
+    result.sort((a, b) => Number(a.km) - Number(b.km));
+  }
+
+  return result;
+
+}, [
+  bikes,
+  search,
+  registrationSearch,
+  brand,
+  status,
+  sort,
+]);
 
 
 // FETCH BIKES
@@ -191,7 +255,7 @@ const fetchBikes = () => {
 
       setLoading(false);
 
-      setInitialLoad(false);
+
 
       setRefreshing(false);
 
@@ -226,24 +290,7 @@ const fetchBikes = () => {
 
 
 
-useEffect(() => {
 
- let mounted = true;
-
- const unsubscribeBikes = fetchBikes();
- const unsubscribeSell = fetchSellStats();
-
-
- return () => {
-
-   mounted = false;
-
-   unsubscribeBikes();
-   unsubscribeSell();
-
- };
-
-},[]);
 
 
 
@@ -253,15 +300,11 @@ useEffect(() => {
 
 // REFRESH
 
-const handleRefresh = async()=>{
+const handleRefresh = ()=>{
 
   setRefreshing(true);
 
-  await fetchBikes();
-
-  await fetchSellStats();
-
-  setRefreshing(false);
+  setRefreshRevision((revision) => revision + 1);
 
 };
 
@@ -330,6 +373,12 @@ return ()=>{
 
 
 
+
+useEffect(() => {
+  const unsubscribeBikes = fetchBikes();
+  const unsubscribeSell = fetchSellStats();
+  return () => { unsubscribeBikes(); unsubscribeSell(); };
+}, [refreshRevision]);
 
 // FEATURED TOGGLE
 
@@ -953,67 +1002,12 @@ bike.brand
 // FILTER + SORT
 
 
-const filteredBikes = useMemo(() => {
-
-  let result = bikes.filter((bike) => {
-
-    const text = search.toLowerCase();
-
-    const searchMatch =
-      bike.name?.toLowerCase().includes(text) ||
-      bike.brand?.toLowerCase().includes(text) ||
-      bike.location?.toLowerCase().includes(text);
-
-    const registrationMatch =
-      registrationSearch === "" ||
-      bike.registrationNumber
-        ?.toLowerCase()
-        .includes(registrationSearch.toLowerCase());
-
-    const brandMatch =
-      brand === "All" ||
-      bike.brand === brand;
-
-    const statusMatch =
-      status === "All" ||
-      bike.status === status;
-
-    return (
-      searchMatch &&
-      registrationMatch &&
-      brandMatch &&
-      statusMatch
-    );
-
-  });
-
-  if (sort === "price-low") {
-    result.sort((a, b) => Number(a.price) - Number(b.price));
-  }
-
-  if (sort === "price-high") {
-    result.sort((a, b) => Number(b.price) - Number(a.price));
-  }
-
-  if (sort === "year-new") {
-    result.sort((a, b) => Number(b.year) - Number(a.year));
-  }
-
-  if (sort === "km-low") {
-    result.sort((a, b) => Number(a.km) - Number(b.km));
-  }
-
-  return result;
-
-}, [
-  bikes,
-  search,
-  registrationSearch,
-  brand,
-  status,
-  sort,
-]);
-
+const totalPages = Math.max(1, Math.ceil(filteredBikes.length / bikesPerPage));
+const currentPage = pagination.key === filterKey ? Math.min(pagination.page, totalPages) : 1;
+const setCurrentPage = (next: number | ((previous: number) => number)) => {
+  const page = typeof next === "function" ? next(currentPage) : next;
+  setPagination({ key: filterKey, page: Math.max(1, Math.min(page, totalPages)) });
+};
 const paginatedBikes = useMemo(() => {
 
   const start = (currentPage - 1) * bikesPerPage;
@@ -1028,17 +1022,7 @@ const paginatedBikes = useMemo(() => {
   currentPage,
 ]);
 
-useEffect(() => {
 
-  const pages = Math.ceil(
-    filteredBikes.length / bikesPerPage
-  );
-
-  setTotalPages(pages || 1);
-
-  setCurrentPage(1);
-
-}, [filteredBikes]);
 
 
 
@@ -1729,7 +1713,7 @@ rounded
 {
 (bike.images && bike.images.length > 0) || bike.image ? (
 
-<img
+<SiteImage width={640} height={400} sizes="(max-width: 768px) 100vw, 33vw"
 
 src={
   bike.images?.[0] || bike.image

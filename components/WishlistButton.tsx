@@ -1,9 +1,9 @@
 "use client";
+import { useWishlisted } from "@/lib/useWishlist";
 
-import { useEffect, useState } from "react";
+
 import { Heart } from "lucide-react";
 import {
-  isWishlisted,
   toggleWishlist,
 } from "@/lib/wishlist";
 
@@ -14,20 +14,10 @@ interface WishlistButtonProps {
 export default function WishlistButton({
   bikeId,
 }: WishlistButtonProps) {
-  const [liked, setLiked] = useState(false);
-
-  useEffect(() => {
-    setLiked(isWishlisted(bikeId));
-  }, [bikeId]);
+  const liked = useWishlisted(bikeId);
 
   const handleClick = () => {
-    const status = toggleWishlist(bikeId);
-
-    setLiked(status);
-
-    window.dispatchEvent(
-      new Event("wishlistUpdated")
-    );
+    toggleWishlist(bikeId);
   };
 
   return (

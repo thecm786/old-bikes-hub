@@ -1,3 +1,4 @@
+import { SiteConfigProvider } from "@/providers/SiteConfigProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -7,7 +8,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <SiteConfigProvider><div className="flex min-h-screen flex-col">
 
       <Navbar />
 
@@ -17,6 +18,6 @@ export default function PublicLayout({
 
       <Footer />
 
-    </div>
+    </div></SiteConfigProvider>
   );
 }

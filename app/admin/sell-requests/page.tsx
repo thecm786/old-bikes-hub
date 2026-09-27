@@ -1,7 +1,10 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 import {
   useEffect,
+  useRef,
   useMemo,
   useState,
 } from "react";
@@ -9,12 +12,9 @@ import {
 import {
   collection,
   getDocs,
-  updateDoc,
-  doc,
-  addDoc,
-  serverTimestamp,
 } from "firebase/firestore";
 
+import { decideSellRequest } from "@/lib/sellRequestDecision";
 import { db } from "@/firebase/firebase";
 
 import {
@@ -45,6 +45,8 @@ export default function SellRequestsPage() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
+  const inFlight = useRef(new Set<string>());
+  const [processing, setProcessing] = useState<string[]>([]);
 
   /*
    * IMPORTANT:
@@ -62,42 +64,10 @@ export default function SellRequestsPage() {
    * ----------------------------------------------------
    */
 
-  const fetchRequests = async () => {
-
-    try {
-
-      setLoading(true);
-
-      const snapshot = await getDocs(
-        collection(
-          db,
-          "sellRequests"
-        )
-      );
-
-      const data: SellRequest[] = snapshot.docs.map(
-        (item) => ({
-          id: item.id,
-          ...(item.data() as Omit<SellRequest, "id">),
-        })
-      );
-
-      setRequests(data);
-
-    } catch (error) {
-
-      console.log(
-        "Failed to fetch sell requests:",
-        error
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  };
+  const fetchRequests = () => getDocs(collection(db, "sellRequests"))
+    .then((snapshot) => setRequests(snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<SellRequest, "id">) }))))
+    .catch((error: unknown) => console.error("Failed to fetch sell requests:", error))
+    .finally(() => setLoading(false));
 
   /*
    * ----------------------------------------------------
@@ -117,181 +87,23 @@ export default function SellRequestsPage() {
    * ----------------------------------------------------
    */
 
-  const approveBike = async (
-    bike: SellRequest
-  ) => {
-
+  const processRequest = async (id: string, decision: "Approved" | "Rejected") => {
+    if (inFlight.current.has(id)) return;
+    inFlight.current.add(id);
+    setProcessing((current) => [...current, id]);
     try {
-
-      /*
-       * Prevent duplicate approval
-       */
-
-      if (bike.status === "Approved") {
-        return;
-      }
-
-      /*
-       * Create bike document
-       */
-
-      await addDoc(
-        collection(
-          db,
-          "bikes"
-        ),
-        {
-          name:
-            `${bike.brand} ${bike.model}`,
-
-          brand:
-            bike.brand,
-
-          slug:
-            `${bike.brand}-${bike.model}-${Date.now()}`
-              .toLowerCase()
-              .replace(/\s+/g, "-"),
-
-          price:
-            bike.price,
-
-          year:
-            bike.year,
-
-          km:
-            bike.km,
-
-          location:
-            bike.location,
-
-          owner:
-            bike.name,
-
-          phone:
-            bike.mobile,
-
-          image:
-            bike.images?.[0] || "",
-
-          images:
-            bike.images || [],
-
-          description:
-            bike.description,
-
-          featured:
-            false,
-
-          verified:
-            true,
-
-          status:
-            "Available",
-
-          createdAt:
-            serverTimestamp(),
-        }
-      );
-
-      /*
-       * Update sell request status
-       */
-
-      await updateDoc(
-        doc(
-          db,
-          "sellRequests",
-          bike.id
-        ),
-        {
-          status: "Approved",
-        }
-      );
-
-      /*
-       * Remove from current UI immediately.
-       *
-       * This prevents the request from staying visible
-       * until another Firestore fetch happens.
-       */
-
-      setRequests((current) =>
-        current.filter(
-          (request) =>
-            request.id !== bike.id
-        )
-      );
-
+      await decideSellRequest(db, id, decision);
+      setRequests((current) => current.filter((request) => request.id !== id));
     } catch (error) {
-
-      console.log(
-        "Approve failed:",
-        error
-      );
-
-      alert(
-        "Approve failed. Please try again."
-      );
-
+      console.error("Sell request update failed:", error);
+      alert(error instanceof Error ? error.message : "Unable to process this request. Please try again.");
+    } finally {
+      inFlight.current.delete(id);
+      setProcessing((current) => current.filter((requestId) => requestId !== id));
     }
-
   };
-
-  /*
-   * ----------------------------------------------------
-   * REJECT BIKE
-   * ----------------------------------------------------
-   */
-
-  const rejectBike = async (
-    id: string
-  ) => {
-
-    try {
-
-      /*
-       * Update Firestore
-       */
-
-      await updateDoc(
-        doc(
-          db,
-          "sellRequests",
-          id
-        ),
-        {
-          status: "Rejected",
-        }
-      );
-
-      /*
-       * IMPORTANT:
-       *
-       * Remove rejected request from current UI
-       * immediately.
-       */
-
-      setRequests((current) =>
-        current.filter(
-          (request) =>
-            request.id !== id
-        )
-      );
-
-    } catch (error) {
-
-      console.log(
-        "Reject failed:",
-        error
-      );
-
-      alert(
-        "Reject failed. Please try again."
-      );
-
-    }
-
-  };
+  const approveBike = (bike: SellRequest) => processRequest(bike.id, "Approved");
+  const rejectBike = (id: string) => processRequest(id, "Rejected");
 
   /*
    * ----------------------------------------------------
@@ -622,7 +434,7 @@ export default function SellRequestsPage() {
                         index
                       ) => (
 
-                        <img
+                        <SiteImage width={320} height={256} sizes="(max-width: 768px) 50vw, 25vw"
                           key={index}
                           src={img}
                           alt={`${bike.brand} ${bike.model}`}
@@ -733,10 +545,7 @@ export default function SellRequestsPage() {
                 {/* APPROVE */}
 
                 <button
-                  disabled={
-                    bike.status ===
-                    "Approved"
-                  }
+                  disabled={processing.includes(bike.id) || bike.status !== "Pending"}
                   onClick={() =>
                     approveBike(
                       bike
@@ -778,10 +587,7 @@ export default function SellRequestsPage() {
                 {/* REJECT */}
 
                 <button
-                  disabled={
-                    bike.status ===
-                    "Rejected"
-                  }
+                  disabled={processing.includes(bike.id) || bike.status !== "Pending"}
                   onClick={() =>
                     rejectBike(
                       bike.id

@@ -72,7 +72,7 @@ function Hero() {
           <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-orange-500/20 px-5 py-2 text-sm font-bold text-orange-400 backdrop-blur">
             <ShieldCheck size={18} />
 
-            Bihar's Trusted Used Bike Marketplace
+            Bihar&apos;s Trusted Used Bike Marketplace
           </div>
 
           {/* HEADING */}

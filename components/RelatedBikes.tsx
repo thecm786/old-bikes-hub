@@ -1,4 +1,6 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
+
 
 import Link from "next/link";
 
@@ -48,7 +50,7 @@ export default function RelatedBikes({
             className="overflow-hidden rounded-2xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-2xl"
           >
             {bike.image ? (
-              <img
+              <SiteImage width={640} height={416} sizes="(max-width: 768px) 100vw, 33vw"
                 src={bike.image}
                 alt={bike.name}
                 className="h-52 w-full object-cover"

@@ -1,6 +1,8 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
 
-import { useEffect, useState } from "react";
+
+import { useState } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,59 +14,20 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-import { getWishlistCount } from "@/lib/wishlist";
+import { useWishlistCount } from "@/lib/useWishlist";
 
 export default function Navbar() {
   const pathname = usePathname();
+  return <NavbarContent key={pathname} />;
+}
 
-  const [open, setOpen] = useState(false);
-  const [wishlistCount, setWishlistCount] = useState(0);
+function NavbarContent() {
+  const pathname = usePathname();
 
-  /*
-   * ----------------------------------------------------
-   * WISHLIST COUNT
-   * ----------------------------------------------------
-   */
-
-  useEffect(() => {
-    const updateWishlist = () => {
-      setWishlistCount(getWishlistCount());
-    };
-
-    updateWishlist();
-
-    window.addEventListener(
-      "storage",
-      updateWishlist
-    );
-
-    window.addEventListener(
-      "wishlistUpdated",
-      updateWishlist
-    );
-
-    return () => {
-      window.removeEventListener(
-        "storage",
-        updateWishlist
-      );
-
-      window.removeEventListener(
-        "wishlistUpdated",
-        updateWishlist
-      );
-    };
-  }, []);
-
-  /*
-   * ----------------------------------------------------
-   * CLOSE MOBILE MENU WHEN ROUTE CHANGES
-   * ----------------------------------------------------
-   */
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const open = openPath === pathname;
+  const setOpen = (value: boolean) => setOpenPath(value ? pathname : null);
+  const wishlistCount = useWishlistCount();
 
   /*
    * ----------------------------------------------------
@@ -176,7 +139,7 @@ export default function Navbar() {
     rounded-full
   "
 >
-  <img
+  <SiteImage sizes="48px"
     src="/logo.png"
     alt="Old Bikes Hub"
     width={48}
@@ -198,7 +161,7 @@ export default function Navbar() {
               leading-none
             "
           >
-            <h1
+            <p
               className="
                 truncate
                 text-[17px]
@@ -209,7 +172,7 @@ export default function Navbar() {
               "
             >
               Old Bikes Hub
-            </h1>
+            </p>
 
             <p
               className="
@@ -406,7 +369,7 @@ export default function Navbar() {
               : "Open menu"
           }
           aria-expanded={open}
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => setOpen(!open)}
           className="
             flex
             h-11

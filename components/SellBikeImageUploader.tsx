@@ -1,5 +1,8 @@
 "use client";
+import SiteImage from "@/components/SiteImage";
 
+
+import { uploadCloudinaryImage, validateImageFiles } from "@/lib/cloudinary";
 import { useState } from "react";
 
 import {
@@ -12,6 +15,8 @@ import {
 interface Props {
 
   images:string[];
+  disabled?: boolean;
+  onUploadingChange: (uploading: boolean) => void;
 
   setImages:(images:string[])=>void;
 
@@ -24,6 +29,8 @@ export default function SellBikeImageUploader({
   images,
 
   setImages,
+  disabled = false,
+  onUploadingChange,
 
 }:Props){
 
@@ -45,16 +52,19 @@ export default function SellBikeImageUploader({
       e.target.files;
 
 
-    if(!files) return;
+    if (!files?.length || uploading || disabled) return;
+    const input = e.currentTarget;
 
 
 
 
     setUploading(true);
+    onUploadingChange(true);
 
 
 
     try{
+      validateImageFiles(Array.from(files), images.length);
 
 
       const uploadedImages = [
@@ -71,46 +81,7 @@ export default function SellBikeImageUploader({
 
 
 
-        const formData =
-          new FormData();
-
-
-
-        formData.append(
-          "file",
-          files[i]
-        );
-
-
-
-        formData.append(
-          "upload_preset",
-          "old-bikes-hub"
-        );
-
-
-
-
-        const response =
-         await fetch(
-         "https://api.cloudinary.com/v1_1/w4eee6vd/image/upload",
-        {
-         method: "POST",
-         body: formData,
-        }
-        );
-
-
-
-
-        const data =
-          await response.json();
-
-
-
-        uploadedImages.push(
-          data.secure_url
-        );
+        uploadedImages.push(await uploadCloudinaryImage(files[i]));
 
 
 
@@ -131,7 +102,7 @@ export default function SellBikeImageUploader({
       console.log(error);
 
       alert(
-        "Image upload failed"
+        error instanceof Error ? error.message : "Image upload failed"
       );
 
     }
@@ -139,6 +110,8 @@ export default function SellBikeImageUploader({
     finally{
 
       setUploading(false);
+      onUploadingChange(false);
+      input.value = "";
 
     }
 
@@ -243,7 +216,7 @@ export default function SellBikeImageUploader({
           "
         >
 
-          Select multiple images
+          Up to 8 JPG, PNG or WebP photos, 5 MB each
 
         </p>
 
@@ -256,7 +229,8 @@ export default function SellBikeImageUploader({
 
           multiple
 
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={uploading || disabled}
 
           onChange={uploadImages}
 
@@ -297,7 +271,7 @@ export default function SellBikeImageUploader({
               >
 
 
-                <img
+                <SiteImage width={320} height={256} sizes="(max-width: 768px) 50vw, 180px"
 
                   src={img}
 
@@ -317,6 +291,7 @@ export default function SellBikeImageUploader({
                 <button
 
                   type="button"
+                  disabled={uploading || disabled}
 
                   onClick={()=>
                     removeImage(img)

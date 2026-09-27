@@ -8,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
     },
 
     sitemap:
-      "https://oldbikeshub.com/sitemap.xml",
+      "https://www.oldbikeshub.com/sitemap.xml",
   };
 }
