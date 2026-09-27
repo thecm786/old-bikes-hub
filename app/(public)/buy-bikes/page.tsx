@@ -41,6 +41,8 @@ import {
 
 import type { BikeType } from "@/types/bike";
 
+const BIHAR_SERVICE_AREAS = new Set(["araria", "arwal", "aurangabad", "banka", "begusarai", "bhagalpur", "bhojpur", "buxar", "darbhanga", "east champaran", "motihari", "gaya", "gopalganj", "jamui", "jehanabad", "kaimur", "katihar", "khagaria", "kishanganj", "lakhisarai", "madhepura", "madhubani", "munger", "muzaffarpur", "nalanda", "nawada", "patna", "purnia", "rohtas", "saharsa", "samastipur", "saran", "sheikhpura", "sheohar", "sitamarhi", "siwan", "supaul", "vaishali", "west champaran", "bettiah"]);
+
 function BuyBikesContent() {
 
 
@@ -336,7 +338,11 @@ function BuyBikesContent() {
           const text =
             search.toLowerCase();
 
+          const citySearch = BIHAR_SERVICE_AREAS.has(text);
+
           const searchMatch =
+
+            !text || citySearch ||
 
             bike.name
               ?.toLowerCase()
