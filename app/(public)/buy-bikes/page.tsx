@@ -500,7 +500,7 @@ function BuyBikesContent() {
 
       <section className="mx-auto mb-8 max-w-7xl" aria-labelledby="bihar-bikes-heading">
         <h1 id="bihar-bikes-heading" className="text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
-          Buy Used Bikes in Muzaffarpur, Bihar
+          Buy Used Bikes Across Bihar
         </h1>
         <p className="mt-3 max-w-3xl leading-7 text-gray-600">
           Explore available second hand motorcycles from Old Bikes Hub. Filter by brand, compare prices and kilometres, and contact us to confirm documents and inspection details before buying.

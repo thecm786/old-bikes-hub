@@ -42,7 +42,7 @@ export default function Home() {
     <main className="bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({
         "@context": "https://schema.org", "@graph": [
-          { "@type": "AutoDealer", "@id": "https://www.oldbikeshub.com/#business", name: "Old Bikes Hub", url: "https://www.oldbikeshub.com", description: "Buy and sell verified used bikes in Muzaffarpur, Bihar and across India.", areaServed: ["Muzaffarpur", "Bihar", "India"], telephone: "+918789192394", email: "admin@oldbikeshub.com", address: { "@type": "PostalAddress", addressLocality: "Muzaffarpur", addressRegion: "Bihar", addressCountry: "IN" } },
+          { "@type": "AutoDealer", "@id": "https://www.oldbikeshub.com/#business", name: "Old Bikes Hub", url: "https://www.oldbikeshub.com", description: "Buy and sell verified used bikes across Bihar and India.", areaServed: ["Bihar", "India"], telephone: "+918789192394", email: "admin@oldbikeshub.com", address: { "@type": "PostalAddress", addressLocality: "Muzaffarpur", addressRegion: "Bihar", addressCountry: "IN" } },
           { "@type": "WebSite", "@id": "https://www.oldbikeshub.com/#website", url: "https://www.oldbikeshub.com", name: "Old Bikes Hub", publisher: { "@id": "https://www.oldbikeshub.com/#business" }, potentialAction: { "@type": "SearchAction", target: "https://www.oldbikeshub.com/buy-bikes?search={search_term_string}", "query-input": "required name=search_term_string" } },
           { "@type": "FAQPage", mainEntity: [
             { "@type": "Question", name: "Where can I find used bikes in Muzaffarpur?", acceptedAnswer: { "@type": "Answer", text: "Browse available listings on Old Bikes Hub and contact us to confirm the bike location, documents and inspection options." } },
@@ -198,10 +198,10 @@ export default function Home() {
       <section className="border-t border-gray-100 bg-gray-50 px-4 py-14 sm:px-6 lg:px-8" aria-labelledby="local-guide-title">
         <div className="mx-auto max-w-4xl">
           <h2 id="local-guide-title" className="text-2xl font-black tracking-tight text-gray-900 sm:text-3xl">
-            Used Bikes in Muzaffarpur, Bihar
+            Used Bikes Across Bihar
           </h2>
           <p className="mt-4 leading-7 text-gray-600">
-            Old Bikes Hub helps riders in Muzaffarpur and nearby Bihar areas find and sell pre-owned motorcycles. Browse real bike photos, compare model year, kilometres and price, then contact our team for availability and inspection details.
+            Old Bikes Hub helps riders across Bihar find and sell pre-owned motorcycles. Browse real bike photos, compare model year, kilometres and price, then contact our team for availability, location and inspection details.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
             <div className="rounded-2xl bg-white p-6 shadow-sm">
@@ -213,7 +213,7 @@ export default function Home() {
               <p className="mt-2 text-sm leading-6 text-gray-600">Share your bike details and clear photos through our sell form. Our team will review the request and contact you.</p>
             </div>
           </div>
-          <p className="mt-6 text-sm text-gray-600">Serving Muzaffarpur, Bihar and buyers looking for used bikes across India.</p>
+          <p className="mt-6 text-sm text-gray-600">Serving buyers and sellers across Bihar, including Muzaffarpur and nearby districts.</p>
           <div className="mt-10 border-t border-gray-200 pt-8">
             <h2 className="text-xl font-black text-gray-900">Common questions about buying a used bike</h2>
             <dl className="mt-5 space-y-5">
