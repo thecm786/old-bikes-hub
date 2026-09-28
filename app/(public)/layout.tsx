@@ -1,6 +1,7 @@
 import { SiteConfigProvider } from "@/providers/SiteConfigProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 export default function PublicLayout({
   children,
@@ -17,6 +18,7 @@ export default function PublicLayout({
       </main>
 
       <Footer />
+      <GoogleAnalytics />
 
     </div></SiteConfigProvider>
   );
