@@ -9,7 +9,7 @@ const seoCollections = [
 export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const bikes = await getPublicInventory();
-  const pages: MetadataRoute.Sitemap = ["", "/buy-bikes", "/used-bikes-bihar", "/sell-bike", "/contact"].map(path => ({
+  const pages: MetadataRoute.Sitemap = ["", "/buy-bikes", "/used-bikes-bihar", "/blog", "/sell-bike", "/contact"].map(path => ({
     url: `${baseUrl}${path}`,
     changeFrequency: path === "" || path === "/buy-bikes" ? "daily" : "weekly",
     priority: path === "" ? 1 : 0.8,
@@ -18,7 +18,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${baseUrl}/used-bikes-bihar/${slug}`,
     changeFrequency: "daily" as const, priority: 0.75,
   }));
-  return [...pages, ...collectionPages, ...bikes.filter(bike => bike.status === "Available").map(bike => ({
+  const blogPages = ["used-bike-buying-checklist-bihar", "best-used-bikes-under-50000-bihar", "used-royal-enfield-classic-350-buying-guide", "used-bike-ownership-transfer-documents-india"].map(slug => ({ url: `${baseUrl}/blog/${slug}`, changeFrequency: "monthly" as const, priority: 0.65 }));
+  return [...pages, ...collectionPages, ...blogPages, ...bikes.filter(bike => bike.status === "Available").map(bike => ({
     url: baseUrl + bikePath(bike), lastModified: bike.updatedAt,
     changeFrequency: "weekly" as const, priority: 0.7,
   }))];
