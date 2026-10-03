@@ -10,7 +10,7 @@ const seoCollections = [
 export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const bikes = await getPublicInventory();
-  const pages: MetadataRoute.Sitemap = ["", "/buy-bikes", "/used-bikes-bihar", "/new-bikes-india", "/blog", "/sell-bike", "/contact"].map(path => ({
+  const pages: MetadataRoute.Sitemap = ["", "/buy-bikes", "/used-bikes-bihar", "/used-bikes-muzaffarpur", "/new-bikes-india", "/blog", "/sell-bike", "/contact"].map(path => ({
     url: `${baseUrl}${path}`,
     changeFrequency: path === "" || path === "/buy-bikes" ? "daily" : "weekly",
     priority: path === "" ? 1 : 0.8,
