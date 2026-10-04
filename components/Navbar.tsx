@@ -52,11 +52,6 @@ function NavbarContent() {
     },
 
     {
-      name: "Wishlist",
-      href: "/wishlist",
-    },
-
-    {
       name: "Contact",
       href: "/contact",
     },
