@@ -180,6 +180,20 @@ export default function Footer() {
               </Link>
 
               <Link
+                href="/new-bikes-india"
+                className="
+                  w-fit
+                  text-sm
+                  text-gray-400
+                  transition
+                  hover:translate-x-1
+                  hover:text-orange-500
+                "
+              >
+                New Bikes
+              </Link>
+
+              <Link
                 href="/sell-bike"
                 className="
                   w-fit

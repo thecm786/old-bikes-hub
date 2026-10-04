@@ -47,6 +47,11 @@ function NavbarContent() {
     },
 
     {
+      name: "New Bikes",
+      href: "/new-bikes-india",
+    },
+
+    {
       name: "Sell Bike",
       href: "/sell-bike",
     },
