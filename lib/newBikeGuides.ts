@@ -92,28 +92,14 @@ newBikeGuides.push(...additionalGuides);
 export function getNewBikeGuide(slug: string) { return newBikeGuides.find((guide) => guide.slug === slug); }
 
 const verifiedGuideImages: Record<string, string> = {
-  "royal-enfield-classic-350": "/new-bikes/royal-enfield-classic-350.png",
-  "bajaj-pulsar-n160": "/new-bikes/bajaj-pulsar-n160.png",
-  "yamaha-r15-v4": "/new-bikes/yamaha-r15-v4.png",
-  "tvs-apache-rtr-160-4v": "/new-bikes/tvs-apache-rtr-160-4v.png",
-  "honda-shine-125": "/new-bikes/honda-shine-125.png",
-  "hero-splendor-plus": "/new-bikes/hero-splendor-plus.png",
   "hero-xtreme-125r": "https://www.heromotocorp.com/content/dam/hero-commerce/in/en/products/performance/content-fragments/xtreme-125r/assets/banner/Xtreme-125-Latest-Mob-Banner.png",
   "hero-hf-deluxe": "https://www.heromotocorp.com/content/dam/hero-commerce/in/en/products/practical/content-fragments/hf-deluxe/assets/hf-deluxe-mobile-banner_720x564pxl.jpg",
   "tvs-raider": "https://www.tvsmotor.com/tvs-raider/-/media/TVSv2/Brand-Pages/Raider2/360View/Bike_Yellow/1.png",
-  "tvs-apache-rtr-200-4v": "/new-bikes/tvs-apache-rtr-200-4v.png",
-  "tvs-jupiter-110": "/new-bikes/tvs-jupiter-110.png",
-  "tvs-ntorq-125": "/new-bikes/tvs-ntorq-125.png",
-  "honda-sp-125": "/new-bikes/honda-sp-125.png",
-  "honda-activa-6g": "/new-bikes/honda-activa-6g.png",
-  "bajaj-pulsar-150": "/new-bikes/bajaj-pulsar-150.png",
-  "bajaj-pulsar-ns200": "/new-bikes/bajaj-pulsar-ns200.png",
-  "yamaha-mt-15-v2": "/new-bikes/yamaha-mt-15-v2.png",
-  "royal-enfield-hunter-350": "/new-bikes/royal-enfield-hunter-350.png",
-  "royal-enfield-meteor-350": "/new-bikes/royal-enfield-meteor-350.png",
-  "suzuki-access-125": "/new-bikes/suzuki-access-125.png",
 };
 
+const guidesWithoutVerifiedPhoto = new Set(["hero-splendor-plus"]);
+
 export function getNewBikeGuideImage(guide: NewBikeGuide) {
+  if (guidesWithoutVerifiedPhoto.has(guide.slug)) return undefined;
   return verifiedGuideImages[guide.slug] ?? guide.image;
 }
