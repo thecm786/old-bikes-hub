@@ -92,7 +92,12 @@ newBikeGuides.push(...additionalGuides);
 export function getNewBikeGuide(slug: string) { return newBikeGuides.find((guide) => guide.slug === slug); }
 
 const verifiedGuideImages: Record<string, string> = {
+  "royal-enfield-classic-350": "/new-bikes/royal-enfield-classic-350.png",
   "bajaj-pulsar-n160": "/new-bikes/bajaj-pulsar-n160.png",
+  "yamaha-r15-v4": "/new-bikes/yamaha-r15-v4.png",
+  "tvs-apache-rtr-160-4v": "/new-bikes/tvs-apache-rtr-160-4v.png",
+  "honda-shine-125": "/new-bikes/honda-shine-125.png",
+  "hero-splendor-plus": "/new-bikes/hero-splendor-plus.png",
   "hero-xtreme-125r": "https://www.heromotocorp.com/content/dam/hero-commerce/in/en/products/performance/content-fragments/xtreme-125r/assets/banner/Xtreme-125-Latest-Mob-Banner.png",
   "hero-hf-deluxe": "https://www.heromotocorp.com/content/dam/hero-commerce/in/en/products/practical/content-fragments/hf-deluxe/assets/hf-deluxe-mobile-banner_720x564pxl.jpg",
   "tvs-raider": "https://www.tvsmotor.com/tvs-raider/-/media/TVSv2/Brand-Pages/Raider2/360View/Bike_Yellow/1.png",
