@@ -92,6 +92,7 @@ newBikeGuides.push(...additionalGuides);
 export function getNewBikeGuide(slug: string) { return newBikeGuides.find((guide) => guide.slug === slug); }
 
 const verifiedGuideImages: Record<string, string> = {
+  "bajaj-pulsar-n160": "/new-bikes/bajaj-pulsar-n160.png",
   "hero-xtreme-125r": "https://www.heromotocorp.com/content/dam/hero-commerce/in/en/products/performance/content-fragments/xtreme-125r/assets/banner/Xtreme-125-Latest-Mob-Banner.png",
   "hero-hf-deluxe": "https://www.heromotocorp.com/content/dam/hero-commerce/in/en/products/practical/content-fragments/hf-deluxe/assets/hf-deluxe-mobile-banner_720x564pxl.jpg",
   "tvs-raider": "https://www.tvsmotor.com/tvs-raider/-/media/TVSv2/Brand-Pages/Raider2/360View/Bike_Yellow/1.png",
@@ -109,5 +110,5 @@ const verifiedGuideImages: Record<string, string> = {
 };
 
 export function getNewBikeGuideImage(guide: NewBikeGuide) {
-  return guide.image ?? verifiedGuideImages[guide.slug];
+  return verifiedGuideImages[guide.slug] ?? guide.image;
 }
