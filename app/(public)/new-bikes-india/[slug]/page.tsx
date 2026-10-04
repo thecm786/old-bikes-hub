@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getNewBikeGuide, newBikeGuides } from "@/lib/newBikeGuides";
+import { getNewBikeGuide, getNewBikeGuideImage, newBikeGuides } from "@/lib/newBikeGuides";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -14,12 +14,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function NewBikeGuidePage({ params }: Props) {
   const guide = getNewBikeGuide((await params).slug);
   if (!guide) notFound();
+  const image = getNewBikeGuideImage(guide);
   const url = `${SITE_URL}/new-bikes-india/${guide.slug}`;
   const schema = { "@context": "https://schema.org", "@type": "Article", headline: `${guide.brand} ${guide.model} Guide India`, description: guide.description, mainEntityOfPage: url, author: { "@type": "Organization", name: "Old Bikes Hub" }, publisher: { "@type": "Organization", name: "Old Bikes Hub", url: SITE_URL } };
   return <article className="bg-gray-100 py-10"><div className="mx-auto max-w-4xl px-4">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
     <div className="overflow-hidden rounded-3xl bg-black p-7 shadow-xl"><p className="text-sm font-bold uppercase tracking-wide text-orange-400">{guide.brand} · {guide.category}</p><h1 className="mt-2 text-3xl font-black text-white">{guide.brand} {guide.model}: India guide</h1><p className="mt-4 text-lg text-gray-300">{guide.description}</p></div>
-    <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-lg">{guide.image ? <img src={guide.image} alt={`${guide.brand} ${guide.model}`} className="h-72 w-full object-contain p-6 sm:h-96" /> : <div className="flex h-72 items-end bg-gradient-to-br from-gray-950 via-gray-800 to-orange-950 p-8 sm:h-96"><p className="text-4xl font-black text-white">{guide.brand} {guide.model}</p></div>}</div>
+    <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-lg">{image ? <img src={image} alt={`${guide.brand} ${guide.model}`} className="h-72 w-full object-contain p-6 sm:h-96" /> : <div className="flex h-72 items-end bg-gradient-to-br from-gray-950 via-gray-800 to-orange-950 p-8 sm:h-96"><p className="text-4xl font-black text-white">{guide.brand} {guide.model}</p></div>}</div>
     <div className="mt-6 rounded-3xl bg-white p-5 shadow-lg"><h2 className="font-black text-gray-900">Before you decide</h2><p className="mt-1 text-gray-700">{guide.bestFor} Model features, prices and specifications can differ by variant and location. Confirm the current details with the manufacturer or an authorised dealer.</p></div>
     <section className="mt-9"><h2 className="text-2xl font-bold">Key specifications</h2><div className="mt-4 grid gap-3 sm:grid-cols-2">{guide.specifications.map((spec) => <div key={spec.label} className="rounded-xl border bg-white p-4"><dt className="text-sm text-gray-500">{spec.label}</dt><dd className="mt-1 font-semibold">{spec.value}</dd></div>)}</div></section>
     <section className="mt-9"><h2 className="text-2xl font-bold">Key highlights</h2><ul className="mt-3 list-disc space-y-2 pl-5 text-gray-700">{guide.highlights.map((item) => <li key={item}>{item}</li>)}</ul></section>
