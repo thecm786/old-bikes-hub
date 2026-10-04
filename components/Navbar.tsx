@@ -52,6 +52,11 @@ function NavbarContent() {
     },
 
     {
+      name: "Blog",
+      href: "/blog",
+    },
+
+    {
       name: "Contact",
       href: "/contact",
     },

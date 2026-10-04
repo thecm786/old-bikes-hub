@@ -194,6 +194,20 @@ export default function Footer() {
               </Link>
 
               <Link
+                href="/blog"
+                className="
+                  w-fit
+                  text-sm
+                  text-gray-400
+                  transition
+                  hover:translate-x-1
+                  hover:text-orange-500
+                "
+              >
+                Bike Guides
+              </Link>
+
+              <Link
                 href="/wishlist"
                 className="
                   w-fit
