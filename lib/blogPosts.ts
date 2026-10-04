@@ -1,11 +1,13 @@
 export type BlogPost = {
   slug: string; title: string; description: string; date: string; readTime: string;
+  coverImage: string; coverAlt: string;
   sections: { heading: string; paragraphs: string[]; bullets?: string[] }[];
 };
 
 export const blogPosts: BlogPost[] = [
   {
     slug: "used-bike-buying-checklist-bihar", date: "2026-10-03", readTime: "6 min read",
+    coverImage: "/blog/used-bike-buying-checklist-bihar.png", coverAlt: "Customer inspecting a used motorcycle before buying",
     title: "Used Bike Buying Checklist for Bihar Buyers",
     description: "A practical checklist for checking a second hand bike’s condition, documents, price and location before you buy.",
     sections: [
@@ -17,6 +19,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "best-used-bikes-under-50000-bihar", date: "2026-10-03", readTime: "5 min read",
+    coverImage: "/blog/best-used-bikes-under-50000-bihar.png", coverAlt: "Affordable used commuter bikes in a showroom",
     title: "How to Choose a Used Bike Under ₹50,000 in Bihar",
     description: "How to choose a reliable second hand motorcycle or scooter within a ₹50,000 budget in Bihar.",
     sections: [
@@ -27,6 +30,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "used-royal-enfield-classic-350-buying-guide", date: "2026-10-03", readTime: "6 min read",
+    coverImage: "/blog/used-royal-enfield-classic-350-buying-guide.png", coverAlt: "Classic style used motorcycle in a showroom",
     title: "Used Royal Enfield Classic 350 Buying Guide",
     description: "What to inspect before buying a used Royal Enfield Classic 350 in Bihar: condition, service history, documents and price comparison.",
     sections: [
@@ -37,6 +41,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "used-bike-ownership-transfer-documents-india", date: "2026-10-03", readTime: "4 min read",
+    coverImage: "/blog/used-bike-ownership-transfer-documents-india.png", coverAlt: "Used bike ownership transfer documents and keys",
     title: "Used Bike Ownership Transfer: What to Check Before You Buy",
     description: "A simple guide to preparing for used bike ownership transfer and verifying the key registration details.",
     sections: [
