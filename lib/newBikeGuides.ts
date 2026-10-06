@@ -104,6 +104,7 @@ const verifiedGuideImages: Record<string, string> = {
   "honda-activa-6g": "/new-bikes/honda-activa-6g.png",
   "bajaj-pulsar-150": "/new-bikes/bajaj-pulsar-150.png",
   "bajaj-pulsar-ns200": "/new-bikes/bajaj-pulsar-ns200.png",
+  "yamaha-mt-15-v2": "/new-bikes/yamaha-mt-15-v2.png",
 };
 
 const guidesWithoutVerifiedPhoto = new Set<string>();
