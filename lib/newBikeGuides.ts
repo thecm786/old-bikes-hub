@@ -107,6 +107,7 @@ const verifiedGuideImages: Record<string, string> = {
   "yamaha-mt-15-v2": "/new-bikes/yamaha-mt-15-v2.png",
   "royal-enfield-hunter-350": "/new-bikes/royal-enfield-hunter-350.png",
   "royal-enfield-meteor-350": "/new-bikes/royal-enfield-meteor-350.png",
+  "suzuki-access-125": "/new-bikes/suzuki-access-125.png",
 };
 
 const guidesWithoutVerifiedPhoto = new Set<string>();
