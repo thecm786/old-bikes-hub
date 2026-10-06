@@ -9,7 +9,10 @@ type Props = { params: Promise<{ slug: string }> };
 export function generateStaticParams() { return newBikeGuides.map((guide) => ({ slug: guide.slug })); }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const guide = getNewBikeGuide((await params).slug);
-  return guide ? pageMetadata(`${guide.brand} ${guide.model} Guide India | Specs and Used-Bike Checks`, guide.description, `/new-bikes-india/${guide.slug}`) : {};
+  return guide ? {
+    ...pageMetadata(`${guide.brand} ${guide.model} India Guide | Specs, Features & Used Options`, guide.description, `/new-bikes-india/${guide.slug}`),
+    keywords: [`${guide.brand} ${guide.model}`, `${guide.brand} ${guide.model} specifications`, `${guide.brand} ${guide.model} India`, `${guide.brand} bikes Bihar`, `used ${guide.brand} bikes Bihar`],
+  } : {};
 }
 
 export default async function NewBikeGuidePage({ params }: Props) {
@@ -17,9 +20,20 @@ export default async function NewBikeGuidePage({ params }: Props) {
   if (!guide) notFound();
   const image = getNewBikeGuideImage(guide);
   const url = `${SITE_URL}/new-bikes-india/${guide.slug}`;
-  const schema = { "@context": "https://schema.org", "@type": "Article", headline: `${guide.brand} ${guide.model} Guide India`, description: guide.description, mainEntityOfPage: url, author: { "@type": "Organization", name: "Old Bikes Hub" }, publisher: { "@type": "Organization", name: "Old Bikes Hub", url: SITE_URL } };
+  const imageUrl = image ? (image.startsWith("/") ? `${SITE_URL}${image}` : image) : undefined;
+  const faqItems = [
+    { question: `Who should consider the ${guide.brand} ${guide.model}?`, answer: guide.bestFor },
+    { question: `Where can I find used ${guide.brand} bikes in Bihar?`, answer: `Old Bikes Hub lists available used ${guide.brand} bikes and accepts enquiries from buyers across Bihar. Availability depends on current listings.` },
+    { question: `How should I confirm ${guide.brand} ${guide.model} specifications?`, answer: `Features, prices and specifications can vary by variant and location. Confirm current information from the official ${guide.brand} page or an authorised dealer.` },
+  ];
+  const schema = { "@context": "https://schema.org", "@graph": [
+    { "@type": "Article", headline: `${guide.brand} ${guide.model} Guide India`, description: guide.description, mainEntityOfPage: url, image: imageUrl, author: { "@type": "Organization", name: "Old Bikes Hub" }, publisher: { "@type": "Organization", name: "Old Bikes Hub", url: SITE_URL } },
+    { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: SITE_URL }, { "@type": "ListItem", position: 2, name: "New Bikes India", item: `${SITE_URL}/new-bikes-india` }, { "@type": "ListItem", position: 3, name: `${guide.brand} ${guide.model}`, item: url }] },
+    { "@type": "FAQPage", mainEntity: faqItems.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) },
+  ] };
   return <article className="bg-gray-100 py-10"><div className="mx-auto max-w-4xl px-4">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
+    <nav aria-label="Breadcrumb" className="mb-4 text-sm font-semibold text-gray-600"><Link href="/" className="hover:text-orange-700">Home</Link><span className="mx-2">/</span><Link href="/new-bikes-india" className="hover:text-orange-700">New Bikes India</Link><span className="mx-2">/</span><span>{guide.brand} {guide.model}</span></nav>
     <div className="overflow-hidden rounded-3xl bg-black p-7 shadow-xl"><p className="text-sm font-bold uppercase tracking-wide text-orange-400">{guide.brand} · {guide.category}</p><h1 className="mt-2 text-3xl font-black text-white">{guide.brand} {guide.model}: India guide</h1><p className="mt-4 text-lg text-gray-300">{guide.description}</p></div>
     <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-lg"><NewBikeGuideImage src={image} brand={guide.brand} model={guide.model} className="h-72 w-full p-6 sm:h-96" /></div>
     <div className="mt-6 rounded-3xl bg-white p-5 shadow-lg"><h2 className="font-black text-gray-900">Before you decide</h2><p className="mt-1 text-gray-700">{guide.bestFor} Model features, prices and specifications can differ by variant and location. Confirm the current details with the manufacturer or an authorised dealer.</p></div>
@@ -27,6 +41,7 @@ export default async function NewBikeGuidePage({ params }: Props) {
     <section className="mt-9"><h2 className="text-2xl font-bold">Key highlights</h2><ul className="mt-3 list-disc space-y-2 pl-5 text-gray-700">{guide.highlights.map((item) => <li key={item}>{item}</li>)}</ul></section>
     <section className="mt-9"><h2 className="text-2xl font-bold">If you are buying this model used</h2><ul className="mt-3 list-disc space-y-2 pl-5 text-gray-700">{guide.usedChecks.map((item) => <li key={item}>{item}</li>)}</ul></section>
     <section className="mt-9 rounded-2xl bg-gray-900 p-6 text-white"><h2 className="text-xl font-bold">Find used {guide.brand} bikes in Bihar</h2><p className="mt-2 text-gray-200">Old Bikes Hub shows the actual listed location. Buyers from any Bihar city can enquire and confirm inspection, transfer and delivery arrangements.</p><Link href={guide.usedCollection} className="mt-4 inline-block rounded-lg bg-orange-500 px-4 py-2 font-semibold text-white">View used {guide.brand} bikes</Link></section>
+    <section className="mt-9 rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">{guide.brand} {guide.model} FAQs</h2><div className="mt-4 space-y-4">{faqItems.map((item) => <div key={item.question}><h3 className="font-bold text-gray-900">{item.question}</h3><p className="mt-1 text-gray-700">{item.answer}</p></div>)}</div></section>
     <p className="mt-7 text-sm text-gray-600">Specification source: <a className="font-semibold text-orange-700 underline" href={guide.officialUrl} target="_blank" rel="noopener noreferrer">official {guide.brand} model page</a>.</p>
   </div></article>;
 }
