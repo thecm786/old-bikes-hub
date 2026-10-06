@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Sparkles } from "lucide-react";
+import { ArrowRight, Bike, Search, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import NewBikeGuideImage from "@/components/NewBikeGuideImage";
 import type { NewBikeGuide } from "@/lib/newBikeGuides";
 
@@ -14,6 +15,9 @@ export default function NewBikeExplorer({ guides }: { guides: GuideWithImage[] }
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState("All brands");
   const [type, setType] = useState("All");
+  const [finderMode, setFinderMode] = useState<"new" | "used">("new");
+  const [selectedSlug, setSelectedSlug] = useState("");
+  const router = useRouter();
   const brands = [...new Set(guides.map((guide) => guide.brand))];
   const results = useMemo(() => guides.filter((guide) => {
     const matchesQuery = `${guide.brand} ${guide.model} ${guide.category}`.toLowerCase().includes(query.trim().toLowerCase());
@@ -21,34 +25,38 @@ export default function NewBikeExplorer({ guides }: { guides: GuideWithImage[] }
     const matchesType = type === "All" || (type === "Scooters" ? isScooter(guide) : !isScooter(guide));
     return matchesQuery && matchesBrand && matchesType;
   }), [brand, guides, query, type]);
+  const findRide = () => {
+    const selectedGuide = guides.find((guide) => guide.slug === selectedSlug);
+    if (selectedGuide) {
+      router.push(finderMode === "new" ? `/new-bikes-india/${selectedGuide.slug}` : selectedGuide.usedCollection);
+      return;
+    }
+    if (finderMode === "used") {
+      const brandGuide = guides.find((guide) => guide.brand === brand);
+      router.push(brandGuide?.usedCollection ?? "/buy-bikes");
+      return;
+    }
+    setQuery(brand === "All brands" ? "" : brand);
+  };
 
   return <>
-    <section className="mt-8 overflow-hidden rounded-3xl bg-white shadow-lg">
-      <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-400 px-6 py-7 text-white sm:px-8">
-        <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-orange-100"><Sparkles className="h-4 w-4" /> Find your next bike</p>
-        <h2 className="mt-2 text-2xl font-black">Search by model, brand or bike type</h2>
-        <p className="mt-2 max-w-2xl text-sm text-orange-50">Compare popular new bikes, then check similar verified used-bike options available across Bihar.</p>
-        <div className="mt-5 flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-xl sm:flex-row">
-          <label className="flex flex-1 items-center gap-3 rounded-xl bg-gray-100 px-4 py-3 text-gray-600">
-            <Search className="h-5 w-5 shrink-0 text-orange-600" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-gray-500" placeholder="Search Pulsar, Activa, Royal Enfield…" />
-          </label>
-          <select value={brand} onChange={(event) => setBrand(event.target.value)} className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-800 outline-none">
-            <option>All brands</option>
-            {brands.map((item) => <option key={item}>{item}</option>)}
-          </select>
+    <section className="relative mt-8 min-h-[560px] overflow-hidden rounded-3xl bg-slate-950 shadow-2xl lg:min-h-[500px]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(249,115,22,0.5),transparent_24%),radial-gradient(circle_at_65%_80%,rgba(234,88,12,0.34),transparent_32%)]" />
+      <div className="absolute inset-y-0 right-0 hidden w-3/5 lg:block"><NewBikeGuideImage src="/new-bikes/royal-enfield-hunter-350.png" brand="Royal Enfield" model="Hunter 350" className="absolute inset-0 h-full w-full bg-transparent p-0" /><div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent" /></div>
+      <div className="relative z-10 max-w-md p-5 sm:p-8">
+        <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-orange-300"><Sparkles className="h-4 w-4" /> Old Bikes Hub finder</p>
+        <h2 className="mt-2 text-3xl font-black leading-tight text-white sm:text-4xl">Find a bike that fits your ride</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-300">Explore new-model guides or jump straight to used bike options available for buyers across Bihar.</p>
+        <div className="mt-6 rounded-2xl bg-white p-4 shadow-2xl sm:p-5">
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1"><button type="button" onClick={() => setFinderMode("new")} className={`rounded-lg px-3 py-2 text-sm font-black ${finderMode === "new" ? "bg-slate-950 text-white" : "text-gray-600"}`}>New bike guide</button><button type="button" onClick={() => setFinderMode("used")} className={`rounded-lg px-3 py-2 text-sm font-black ${finderMode === "used" ? "bg-orange-500 text-white" : "text-gray-600"}`}>Used bike options</button></div>
+          <label className="mt-4 block text-xs font-bold uppercase tracking-wide text-gray-500">Choose brand</label><select value={brand} onChange={(event) => { setBrand(event.target.value); setSelectedSlug(""); }} className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none focus:border-orange-500"><option>All brands</option>{brands.map((item) => <option key={item}>{item}</option>)}</select>
+          <label className="mt-3 block text-xs font-bold uppercase tracking-wide text-gray-500">Choose model</label><select value={selectedSlug} onChange={(event) => setSelectedSlug(event.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm font-bold text-gray-800 outline-none focus:border-orange-500"><option value="">Any model</option>{guides.filter((guide) => brand === "All brands" || guide.brand === brand).map((guide) => <option value={guide.slug} key={guide.slug}>{guide.brand} {guide.model}</option>)}</select>
+          <button type="button" onClick={findRide} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black text-white transition hover:bg-orange-600">{finderMode === "new" ? "Explore model" : "Find used bikes"}<ArrowRight className="h-4 w-4" /></button>
         </div>
       </div>
-      <div className="p-5 sm:p-6">
-        <div className="flex flex-wrap gap-2">
-          {["All", "Bikes", "Scooters"].map((item) => <button type="button" key={item} onClick={() => setType(item)} className={`rounded-full px-4 py-2 text-sm font-bold transition ${type === item ? "bg-black text-white" : "bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-700"}`}>{item}</button>)}
-        </div>
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-          <p className="font-bold text-gray-900"><span className="text-orange-600">{results.length}</span> model guides available</p>
-          {(query || brand !== "All brands" || type !== "All") && <button type="button" onClick={() => { setQuery(""); setBrand("All brands"); setType("All"); }} className="text-sm font-bold text-orange-700 hover:underline">Clear filters</button>}
-        </div>
-      </div>
+      <div className="absolute bottom-5 right-5 z-10 hidden rounded-2xl border border-white/15 bg-slate-950/80 px-4 py-3 text-white backdrop-blur lg:block"><p className="text-xs font-bold uppercase tracking-wide text-orange-300">Featured ride</p><p className="mt-1 flex items-center gap-2 font-black"><Bike className="h-4 w-4 text-orange-400" /> Royal Enfield Hunter 350</p></div>
     </section>
+    <section className="mt-5 rounded-2xl bg-white p-5 shadow-lg sm:p-6"><div className="flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap gap-2">{["All", "Bikes", "Scooters"].map((item) => <button type="button" key={item} onClick={() => setType(item)} className={`rounded-full px-4 py-2 text-sm font-bold transition ${type === item ? "bg-black text-white" : "bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-700"}`}>{item}</button>)}</div><label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl bg-gray-100 px-3 py-2 text-gray-600 sm:max-w-sm"><Search className="h-4 w-4 text-orange-600" /><input value={query} onChange={(event) => setQuery(event.target.value)} className="w-full bg-transparent text-sm font-medium outline-none" placeholder="Filter models…" /></label><p className="font-bold text-gray-900"><span className="text-orange-600">{results.length}</span> guides</p>{(query || brand !== "All brands" || type !== "All") && <button type="button" onClick={() => { setQuery(""); setBrand("All brands"); setType("All"); setSelectedSlug(""); }} className="text-sm font-bold text-orange-700 hover:underline">Clear</button>}</div></section>
 
     <section className="mt-8">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-bold uppercase tracking-wide text-orange-700">Bikes in spotlight</p><h2 className="text-2xl font-black text-gray-950">Popular new bikes & scooters</h2></div><p className="text-sm text-gray-600">Official-reference guides with Bihar used-bike options</p></div>
