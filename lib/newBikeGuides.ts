@@ -101,6 +101,7 @@ const verifiedGuideImages: Record<string, string> = {
   "tvs-jupiter-110": "/new-bikes/tvs-jupiter-110.png",
   "tvs-ntorq-125": "/new-bikes/tvs-ntorq-125.png",
   "honda-sp-125": "/new-bikes/honda-sp-125.png",
+  "honda-activa-6g": "/new-bikes/honda-activa-6g.png",
 };
 
 const guidesWithoutVerifiedPhoto = new Set<string>();
