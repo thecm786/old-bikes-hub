@@ -10,6 +10,8 @@ import type { NewBikeGuide } from "@/lib/newBikeGuides";
 type GuideWithImage = NewBikeGuide & { imageSrc?: string };
 
 const isScooter = (guide: NewBikeGuide) => guide.category.toLowerCase().includes("scooter");
+const allIndianBrands = ["Honda", "Royal Enfield", "TVS", "Yamaha", "Hero", "Bajaj", "KTM", "Kawasaki", "BMW", "Suzuki", "Jawa", "Triumph", "Harley-Davidson", "Aprilia", "Ducati", "Ola Electric", "Keeway", "Revolt", "Vida", "Oben Electric", "Benelli", "Indian", "Ultraviolette", "PURE EV", "Komaki", "Joy e-bike", "Moto Guzzi", "ABZO", "ADMS", "Atumobile", "Avore", "BSA", "Brixton Motorcycles", "CFMoto", "Hop Electric", "Husqvarna Motorcycles", "JHEV", "Kabira Mobility", "MX Moto", "Maruthisan", "Matter", "Moto Morini", "OPG Mobility", "Odysse Electric", "One Electric Motorcycle", "Orxa Energies", "QJ Motor", "Raptee Motors", "SVITCH BIKE", "Seeka", "Srivaru Motors", "Yezdi", "Zontes"];
+const brandMark = (brand: string) => brand.split(/[\s-]/).filter(Boolean).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
 
 export default function NewBikeExplorer({ guides }: { guides: GuideWithImage[] }) {
   const [query, setQuery] = useState("");
@@ -17,8 +19,9 @@ export default function NewBikeExplorer({ guides }: { guides: GuideWithImage[] }
   const [type, setType] = useState("All");
   const [finderMode, setFinderMode] = useState<"new" | "used">("new");
   const [selectedSlug, setSelectedSlug] = useState("");
+  const [showAllBrands, setShowAllBrands] = useState(false);
   const router = useRouter();
-  const brands = [...new Set(guides.map((guide) => guide.brand))];
+  const brands = [...new Set([...allIndianBrands, ...guides.map((guide) => guide.brand)])];
   const results = useMemo(() => guides.filter((guide) => {
     const matchesQuery = `${guide.brand} ${guide.model} ${guide.category}`.toLowerCase().includes(query.trim().toLowerCase());
     const matchesBrand = brand === "All brands" || guide.brand === brand;
@@ -37,6 +40,13 @@ export default function NewBikeExplorer({ guides }: { guides: GuideWithImage[] }
       return;
     }
     setQuery(brand === "All brands" ? "" : brand);
+  };
+  const selectBrand = (selectedBrand: string) => {
+    setBrand(selectedBrand);
+    setSelectedSlug("");
+    setQuery("");
+    setType("All");
+    document.getElementById("model-guides")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return <>
@@ -58,7 +68,9 @@ export default function NewBikeExplorer({ guides }: { guides: GuideWithImage[] }
     </section>
     <section className="mt-5 rounded-2xl bg-white p-5 shadow-lg sm:p-6"><div className="flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap gap-2">{["All", "Bikes", "Scooters"].map((item) => <button type="button" key={item} onClick={() => setType(item)} className={`rounded-full px-4 py-2 text-sm font-bold transition ${type === item ? "bg-black text-white" : "bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-700"}`}>{item}</button>)}</div><label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl bg-gray-100 px-3 py-2 text-gray-600 sm:max-w-sm"><Search className="h-4 w-4 text-orange-600" /><input value={query} onChange={(event) => setQuery(event.target.value)} className="w-full bg-transparent text-sm font-medium outline-none" placeholder="Filter models…" /></label><p className="font-bold text-gray-900"><span className="text-orange-600">{results.length}</span> guides</p>{(query || brand !== "All brands" || type !== "All") && <button type="button" onClick={() => { setQuery(""); setBrand("All brands"); setType("All"); setSelectedSlug(""); }} className="text-sm font-bold text-orange-700 hover:underline">Clear</button>}</div></section>
 
-    <section className="mt-8">
+    <section className="mt-8 rounded-3xl bg-white p-5 shadow-lg sm:p-7"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-bold uppercase tracking-wide text-orange-700">Browse by brand</p><h2 className="text-2xl font-black text-gray-950">Search new bikes by brand</h2></div><p className="text-sm text-gray-600">{brands.length} brands in the finder</p></div><div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{brands.slice(0, showAllBrands ? brands.length : 18).map((item) => <button type="button" key={item} onClick={() => selectBrand(item)} className={`group min-h-28 rounded-2xl border p-3 text-center transition hover:-translate-y-0.5 hover:border-orange-400 hover:shadow-md ${brand === item ? "border-orange-500 bg-orange-50" : "border-gray-200 bg-white"}`}><span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-slate-950 text-sm font-black text-orange-400 transition group-hover:bg-orange-500 group-hover:text-white">{brandMark(item)}</span><span className="mt-3 block text-sm font-bold leading-tight text-gray-800">{item}</span></button>)}</div>{brands.length > 18 && <button type="button" onClick={() => setShowAllBrands((value) => !value)} className="mt-5 font-bold text-orange-700 hover:underline">{showAllBrands ? "Show fewer brands" : `View all ${brands.length} brands`}</button>}</section>
+
+    <section id="model-guides" className="mt-8 scroll-mt-6">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-bold uppercase tracking-wide text-orange-700">Bikes in spotlight</p><h2 className="text-2xl font-black text-gray-950">Popular new bikes & scooters</h2></div><p className="text-sm text-gray-600">Official-reference guides with Bihar used-bike options</p></div>
       {results.length ? <div className="grid gap-6 md:grid-cols-2">{results.map((guide) => <article key={guide.slug} className="group overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
         <NewBikeGuideImage src={guide.imageSrc} brand={guide.brand} model={guide.model} className="h-56 w-full p-4" />
