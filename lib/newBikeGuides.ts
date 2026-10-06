@@ -97,7 +97,7 @@ const verifiedGuideImages: Record<string, string> = {
   "tvs-raider": "https://www.tvsmotor.com/tvs-raider/-/media/TVSv2/Brand-Pages/Raider2/360View/Bike_Yellow/1.png",
 };
 
-const guidesWithoutVerifiedPhoto = new Set(["hero-splendor-plus"]);
+const guidesWithoutVerifiedPhoto = new Set(["hero-splendor-plus", "bajaj-pulsar-n160"]);
 
 export function getNewBikeGuideImage(guide: NewBikeGuide) {
   if (guidesWithoutVerifiedPhoto.has(guide.slug)) return undefined;
