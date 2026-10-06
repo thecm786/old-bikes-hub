@@ -98,6 +98,7 @@ const verifiedGuideImages: Record<string, string> = {
   "hero-hf-deluxe": "https://www.heromotocorp.com/content/dam/hero-commerce/in/en/products/practical/content-fragments/hf-deluxe/assets/hf-deluxe-mobile-banner_720x564pxl.jpg",
   "tvs-raider": "https://www.tvsmotor.com/tvs-raider/-/media/TVSv2/Brand-Pages/Raider2/360View/Bike_Yellow/1.png",
   "tvs-apache-rtr-200-4v": "/new-bikes/tvs-apache-rtr-200-4v.png",
+  "tvs-jupiter-110": "/new-bikes/tvs-jupiter-110.png",
 };
 
 const guidesWithoutVerifiedPhoto = new Set<string>();
