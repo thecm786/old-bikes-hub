@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 import NewBikeExplorer from "@/components/NewBikeExplorer";
 import { getNewBikeGuideImage, newBikeGuides } from "@/lib/newBikeGuides";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
