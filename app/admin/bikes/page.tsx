@@ -80,6 +80,12 @@ const filterKey = JSON.stringify([search, registrationSearch, brand, status, sor
 
 const bikesPerPage=12;
 
+// Keep the inventory result in sync when the global topbar search changes.
+useEffect(() => {
+  const syncSearch = window.setTimeout(() => setSearch(topbarSearch), 0);
+  return () => window.clearTimeout(syncSearch);
+}, [topbarSearch]);
+
 
 
 const [deleteModal,setDeleteModal]=
