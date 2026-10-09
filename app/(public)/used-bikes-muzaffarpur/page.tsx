@@ -3,6 +3,7 @@ import SiteImage from "@/components/SiteImage";
 import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
+import { bikeFullName } from "@/lib/bikeDisplay";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata("Used Bikes & Second Hand Bikes in Muzaffarpur, Bihar", "Buy used bikes and second hand bikes in Muzaffarpur, Bihar. Browse real prices, photos, kilometres and locations from Old Bikes Hub before you enquire.", "/used-bikes-muzaffarpur");
@@ -35,8 +36,8 @@ export default async function UsedBikesMuzaffarpur() {
     <h2 className="mt-10 text-2xl font-black text-gray-900">Available used bikes for Muzaffarpur buyers</h2>
     <p className="mt-2 text-gray-700">{bikes.length} available listings. The location shown on each card is the bike&apos;s true location.</p>
     <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{bikes.map((bike) => <article key={bike.id} className="group overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
-      <Link href={bikePath(bike)}><div className="relative h-56"><SiteImage src={bike.images[0] || bike.image || "/bike-placeholder.svg"} alt={`${bike.brand} ${bike.name} ${bike.year}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" /></div>
-        <div className="p-5"><h3 className="text-xl font-black text-gray-900">{bike.brand} {bike.name} · {bike.year}</h3><p className="mt-2 text-xl font-black text-orange-500">{String(bike.price).includes("₹") ? bike.price : `₹${Number(bike.price).toLocaleString("en-IN")}`}</p><p className="mt-2 text-gray-600">{bike.km} km · Location: {bike.location || "Confirm with seller"}</p><span className="mt-4 inline-block rounded-xl bg-black px-4 py-2 font-bold text-white transition group-hover:bg-orange-500">View bike details</span></div>
+      <Link href={bikePath(bike)}><div className="relative h-56"><SiteImage src={bike.images[0] || bike.image || "/bike-placeholder.svg"} alt={`${bikeFullName(bike.brand, bike.name)} ${bike.year}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" /></div>
+        <div className="p-5"><h3 className="text-xl font-black text-gray-900">{bikeFullName(bike.brand, bike.name)} · {bike.year}</h3><p className="mt-2 text-xl font-black text-orange-500">{String(bike.price).includes("₹") ? bike.price : `₹${Number(bike.price).toLocaleString("en-IN")}`}</p><p className="mt-2 text-gray-600">{bike.km} km · Location: {bike.location || "Confirm with seller"}</p><span className="mt-4 inline-block rounded-xl bg-black px-4 py-2 font-bold text-white transition group-hover:bg-orange-500">View bike details</span></div>
       </Link>
     </article>)}</div>
     {!bikes.length && <p className="mt-5">No available listings at the moment. Contact us for upcoming bikes.</p>}

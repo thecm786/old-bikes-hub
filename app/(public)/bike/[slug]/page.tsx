@@ -3,6 +3,7 @@ import BikeDetailsClient from "./BikeDetailsClient";
 import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath, resolveListing } from "@/lib/bikeUrls";
 import { pageMetadata, jsonLd, SITE_URL } from "@/lib/seo";
+import { bikeFullName } from "@/lib/bikeDisplay";
 
 type Props = { params: Promise<{ slug: string }> };
 export const dynamic = "force-dynamic";
@@ -12,8 +13,8 @@ export async function generateMetadata({ params }: Props) {
   const bike = resolveListing(await getPublicInventory(), slug);
   if (!bike) return { title: "Bike not found", robots: { index: false } };
   return pageMetadata(
-    `${bike.year} ${bike.brand} ${bike.name} | Used Bike in Bihar`,
-    `${bike.brand} ${bike.name}, ${bike.year}, ${bike.km} km. Listed in ${bike.location || "Bihar"}. Buyers from all Bihar cities can enquire. Confirm price, availability and inspection.`,
+    `${bike.year} ${bikeFullName(bike.brand, bike.name)} | Used Bike in Bihar`,
+    `${bikeFullName(bike.brand, bike.name)}, ${bike.year}, ${bike.km} km. Listed in ${bike.location || "Bihar"}. Buyers from all Bihar cities can enquire. Confirm price, availability and inspection.`,
     bikePath(bike), bike.images[0] || bike.image || "/icon.png"
   );
 }
@@ -27,7 +28,7 @@ export default async function BikePage({ params }: Props) {
   const price = Number(String(bike.price).replace(/[^\d.]/g, ""));
   const product = {
     "@context": "https://schema.org", "@type": "Product",
-    name: `${bike.brand} ${bike.name} ${bike.year}`, sku: bike.id,
+    name: `${bikeFullName(bike.brand, bike.name)} ${bike.year}`, sku: bike.id,
     description: bike.description || `${bike.name} listed in ${bike.location || "Bihar"}. Enquiries welcome from all Bihar cities.`,
     image: bike.images.length ? bike.images : bike.image ? [bike.image] : undefined,
     brand: { "@type": "Brand", name: bike.brand },

@@ -3,6 +3,7 @@ import SiteImage from "@/components/SiteImage";
 import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
+import { bikeFullName } from "@/lib/bikeDisplay";
 
 const collections = [
   ["royal-enfield", "Used Royal Enfield Bikes"], ["tvs", "Used TVS Bikes"],
@@ -34,8 +35,8 @@ export default async function BiharInventory() {
     <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {bikes.map(bike => <article key={bike.id} className="group overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
         <Link href={bikePath(bike)}>
-          <div className="relative h-56"><SiteImage src={bike.images[0] || bike.image || "/bike-placeholder.svg"} alt={`${bike.brand} ${bike.name} ${bike.year}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" /></div>
-          <div className="p-5"><h3 className="text-xl font-black text-gray-900">{bike.brand} {bike.name} · {bike.year}</h3>
+          <div className="relative h-56"><SiteImage src={bike.images[0] || bike.image || "/bike-placeholder.svg"} alt={`${bikeFullName(bike.brand, bike.name)} ${bike.year}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" /></div>
+          <div className="p-5"><h3 className="text-xl font-black text-gray-900">{bikeFullName(bike.brand, bike.name)} · {bike.year}</h3>
             <p className="mt-2 text-xl font-black text-orange-500">{String(bike.price).includes("₹") ? bike.price : `₹${Number(bike.price).toLocaleString("en-IN")}`}</p>
             <p className="mt-2 text-gray-600">{bike.km} km · Location: {bike.location || "Confirm with seller"}</p>
             <p className="mt-2 text-sm text-gray-600">Enquiries welcome from every Bihar city</p>

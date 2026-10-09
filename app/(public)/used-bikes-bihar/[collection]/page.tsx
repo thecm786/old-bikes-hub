@@ -5,6 +5,7 @@ import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
 import { getDistrict } from "@/lib/biharDistricts";
+import { bikeFullName } from "@/lib/bikeDisplay";
 
 const collections = {
   "royal-enfield": { brand: "Royal Enfield", title: "Used Royal Enfield Bikes for Sale in Bihar" },
@@ -76,8 +77,8 @@ export default async function CollectionPage({ params }: Props) {
     <h2 className="mt-8 text-2xl font-black text-gray-900">{bikes.length} live listings {district ? `for ${district} buyers` : ""}</h2>
     <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {bikes.map(bike => <article key={bike.id} className="group overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
-        <Link href={bikePath(bike)}><div className="relative h-56"><SiteImage src={bike.images[0] || bike.image || "/bike-placeholder.svg"} alt={`${bike.brand} ${bike.name} ${bike.year}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" /></div>
-          <div className="p-5"><h2 className="text-xl font-black text-gray-900">{bike.brand} {bike.name} · {bike.year}</h2><p className="mt-2 text-xl font-black text-orange-500">{String(bike.price).includes("₹") ? bike.price : `₹${priceNumber(bike.price).toLocaleString("en-IN")}`}</p><p className="mt-2 text-gray-600">{bike.km} km · {bike.location || "Location on enquiry"}</p><span className="mt-4 inline-block rounded-xl bg-black px-4 py-2 font-bold text-white transition group-hover:bg-orange-500">View bike details</span></div>
+        <Link href={bikePath(bike)}><div className="relative h-56"><SiteImage src={bike.images[0] || bike.image || "/bike-placeholder.svg"} alt={`${bikeFullName(bike.brand, bike.name)} ${bike.year}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" /></div>
+          <div className="p-5"><h2 className="text-xl font-black text-gray-900">{bikeFullName(bike.brand, bike.name)} · {bike.year}</h2><p className="mt-2 text-xl font-black text-orange-500">{String(bike.price).includes("₹") ? bike.price : `₹${priceNumber(bike.price).toLocaleString("en-IN")}`}</p><p className="mt-2 text-gray-600">{bike.km} km · {bike.location || "Location on enquiry"}</p><span className="mt-4 inline-block rounded-xl bg-black px-4 py-2 font-bold text-white transition group-hover:bg-orange-500">View bike details</span></div>
         </Link>
       </article>)}
     </div>
