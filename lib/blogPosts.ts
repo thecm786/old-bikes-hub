@@ -6,6 +6,18 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "tvs-victor-second-hand-price-bihar", date: "2026-10-09", readTime: "5 min read",
+    coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Used commuter motorcycle ready for inspection",
+    title: "TVS Victor Second Hand Price in Bihar: What to Check",
+    description: "A practical guide to comparing a used TVS Victor’s price, condition, documents and running costs before buying in Bihar.",
+    sections: [
+      { heading: "Why TVS Victor second hand prices vary", paragraphs: ["A used TVS Victor does not have one fixed market price. The year, kilometres, service history, tyre condition, insurance validity, location and ownership record all affect the value. Compare listings with a similar year and condition before treating an asking price as fair."] },
+      { heading: "Compare the full cost, not only the bike price", paragraphs: ["Keep room in your budget for a service, insurance renewal, RC transfer and any wear items found during inspection. A lower-priced bike can cost more after purchase if tyres, battery, chain-sprocket set or brakes need attention."] },
+      { heading: "Inspect a used TVS Victor before buying", paragraphs: ["Start the motorcycle from cold, listen for unusual engine noise and test the clutch, gears, brakes, lights and indicators. Check the frame, fork area, tyres and chain for damage or heavy wear. Match the engine and chassis numbers with the RC before paying."], bullets: ["Confirm the model year and odometer reading.", "Ask for service records and insurance details where available.", "Arrange an in-person inspection before travel or payment."] },
+      { heading: "Buying from Muzaffarpur or another Bihar city", paragraphs: ["Old Bikes Hub listings show the bike's actual location. Whether you are buying from Muzaffarpur, Patna, Gaya, Darbhanga or another Bihar city, confirm the bike is available and agree inspection, documents and ownership-transfer arrangements before making a payment."] },
+    ],
+  },
+  {
     slug: "used-bike-buying-checklist-bihar", date: "2026-10-03", readTime: "6 min read",
     coverImage: "/blog/used-bike-buying-checklist-bihar.png", coverAlt: "Customer inspecting a used motorcycle before buying",
     title: "Used Bike Buying Checklist for Bihar Buyers",
