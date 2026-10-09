@@ -4,6 +4,7 @@ import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
 import { bikeFullName } from "@/lib/bikeDisplay";
+import { biharDistricts, districtSlug } from "@/lib/biharDistricts";
 
 const collections = [
   ["royal-enfield", "Used Royal Enfield Bikes"], ["tvs", "Used TVS Bikes"],
@@ -31,6 +32,13 @@ export default async function BiharInventory() {
     <nav className="mt-5 flex flex-wrap gap-3" aria-label="Popular used bike collections">
       {collections.map(([slug, label]) => <Link key={slug} href={`/used-bikes-bihar/${slug}`} className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-800">{label}</Link>)}
     </nav>
+    <section className="mt-8 rounded-3xl bg-white p-6 shadow-lg" aria-labelledby="district-links-heading">
+      <h2 id="district-links-heading" className="text-2xl font-black text-gray-900">Browse used bikes for every Bihar district</h2>
+      <p className="mt-3 max-w-4xl leading-7 text-gray-700">Choose your district to view available second hand bikes and practical buying guidance. Every card shows the bike&apos;s actual location, so confirm inspection and collection details before travelling.</p>
+      <div className="mt-5 flex flex-wrap gap-x-4 gap-y-3">
+        {biharDistricts.map((district) => <Link key={district} href={`/used-bikes-bihar/${districtSlug(district)}`} className="font-semibold text-orange-700 underline underline-offset-4">Used bikes in {district}</Link>)}
+      </div>
+    </section>
     <h2 className="mt-8 text-2xl font-black text-gray-900">{bikes.length} available bikes</h2>
     <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {bikes.map(bike => <article key={bike.id} className="group overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
