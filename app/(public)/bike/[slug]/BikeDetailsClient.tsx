@@ -1,6 +1,8 @@
 "use client";
 import SiteImage from "@/components/SiteImage";
 import RelatedBikes from "@/components/RelatedBikes";
+import { bikeFullName } from "@/lib/bikeDisplay";
+import { bikeListingSummary } from "@/lib/bikeListingSummary";
 
 
 import { useState } from "react";
@@ -351,7 +353,7 @@ ${url}`;
             ========================= */}
 
             <h1 className="mt-6 text-3xl font-black leading-tight sm:text-4xl">
-              {bike.name}
+              {bikeFullName(bike.brand, bike.name)}
             </h1>
 
             {/* =========================
@@ -607,8 +609,7 @@ ${url}`;
             </h2>
 
             <p className="mt-3 whitespace-pre-line leading-7 text-gray-600">
-              {bike.description ||
-                "No description available."}
+              {bike.description || bikeListingSummary(bike)}
             </p>
 
             <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold">

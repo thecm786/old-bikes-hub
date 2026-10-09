@@ -4,6 +4,7 @@ import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath, resolveListing } from "@/lib/bikeUrls";
 import { pageMetadata, jsonLd, SITE_URL } from "@/lib/seo";
 import { bikeFullName } from "@/lib/bikeDisplay";
+import { bikeListingSummary } from "@/lib/bikeListingSummary";
 
 type Props = { params: Promise<{ slug: string }> };
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export default async function BikePage({ params }: Props) {
   const product = {
     "@context": "https://schema.org", "@type": "Product",
     name: `${bikeFullName(bike.brand, bike.name)} ${bike.year}`, sku: bike.id,
-    description: bike.description || `${bike.name} listed in ${bike.location || "Bihar"}. Enquiries welcome from all Bihar cities.`,
+    description: bike.description || bikeListingSummary(bike),
     image: bike.images.length ? bike.images : bike.image ? [bike.image] : undefined,
     brand: { "@type": "Brand", name: bike.brand },
     ...(price > 0 ? { offers: {
