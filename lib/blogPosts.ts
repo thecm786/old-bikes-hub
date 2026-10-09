@@ -6,6 +6,19 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "hero-splendor-second-hand-price-bihar", date: "2026-10-09", readTime: "5 min read",
+    coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Used Hero commuter motorcycle checked before purchase",
+    title: "Hero Splendor Second Hand Price in Bihar: Buyer’s Guide",
+    description: "Learn how Bihar buyers can compare a used Hero Splendor’s price, condition, running costs and documents before purchase.",
+    sections: [
+      { heading: "How to compare a used Hero Splendor price", paragraphs: ["Second hand Hero Splendor prices vary by model year, kilometres, owner history, servicing, tyres, insurance and overall condition. Compare examples with a similar year and condition instead of relying only on the asking price. A bike with a clear history can offer better value than a cheaper listing that needs immediate repairs."] },
+      { heading: "What to inspect on a daily-use Splendor", paragraphs: ["Start the bike from cold and listen for unusual engine noise. Check clutch operation, gear shifts, chain condition, brakes, tyres, forks, lights and indicators. Look for oil leaks, heavy rust or signs of accident repair. Take a test ride only after the owner or dealer agrees."] },
+      { heading: "Plan the complete buying budget", paragraphs: ["Keep money aside for ownership transfer, insurance, an initial service and normal replacement parts if required. Confirm whether the battery, tyres, brake shoes or chain-sprocket set will need attention soon. This makes price comparisons between available used bikes more realistic."] },
+      { heading: "Verify RC and insurance details", paragraphs: ["Match the engine and chassis numbers with the RC before paying. Review the available insurance details and clarify any loan or hypothecation status. Agree the handover and ownership-transfer process in writing, especially if the bike is located in another Bihar city."] },
+      { heading: "Browse used Hero bikes in Bihar", paragraphs: ["Old Bikes Hub lists available used bikes with photos, year, kilometres, price and actual location. Buyers in Patna, Muzaffarpur, Gaya, Darbhanga and across Bihar can enquire before arranging an inspection."] },
+    ],
+  },
+  {
     slug: "honda-shine-second-hand-price-bihar", date: "2026-10-09", readTime: "5 min read",
     coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Used Honda commuter motorcycle for sale inspection",
     title: "Honda Shine Second Hand Price in Bihar: What Buyers Should Check",
