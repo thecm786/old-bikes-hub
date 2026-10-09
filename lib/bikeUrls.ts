@@ -1,5 +1,10 @@
 export function bikePath(bike: { id?: string; slug: string }) {
-  const key = bike.id ? `${bike.slug}--${bike.id}` : bike.slug;
+  const id = bike.id ? String(bike.id) : "";
+  // Older listings already include their Firestore id in the stored slug.
+  // Do not append it twice in canonical links or the sitemap.
+  const key = id && !bike.slug.endsWith(`--${id}`)
+    ? `${bike.slug}--${id}`
+    : bike.slug;
   return `/bike/${encodeURIComponent(key)}`;
 }
 
