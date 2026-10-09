@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { jsonLd } from "@/lib/seo";
 
 const Hero = dynamic(
@@ -42,7 +43,7 @@ export default function Home() {
     <main className="bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({
         "@context": "https://schema.org", "@graph": [
-          { "@type": "AutoDealer", "@id": "https://www.oldbikeshub.com/#business", name: "Old Bikes Hub", url: "https://www.oldbikeshub.com", description: "Buy and sell verified used bikes across Bihar and India.", areaServed: ["Bihar", "India"], telephone: "+918789192394", email: "admin@oldbikeshub.com", priceRange: "₹₹", address: { "@type": "PostalAddress", streetAddress: "Pakri Chowk, Rewa Road", addressLocality: "Muzaffarpur", postalCode: "843113", addressRegion: "Bihar", addressCountry: "IN" }, openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: "08:00", closes: "19:00" }] },
+          { "@type": "AutoDealer", "@id": "https://www.oldbikeshub.com/#business", name: "Old Bikes Hub", url: "https://www.oldbikeshub.com", description: "Buy and sell verified used bikes across Bihar and India.", areaServed: ["Bihar", "India"], telephone: "+918789192394", email: "admin@oldbikeshub.com", priceRange: "₹₹", sameAs: ["https://www.facebook.com/61590314896647/"], address: { "@type": "PostalAddress", streetAddress: "Pakri Chowk, Rewa Road", addressLocality: "Muzaffarpur", postalCode: "843113", addressRegion: "Bihar", addressCountry: "IN" }, openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: "08:00", closes: "19:00" }] },
           { "@type": "WebSite", "@id": "https://www.oldbikeshub.com/#website", url: "https://www.oldbikeshub.com", name: "Old Bikes Hub", publisher: { "@id": "https://www.oldbikeshub.com/#business" }, potentialAction: { "@type": "SearchAction", target: "https://www.oldbikeshub.com/buy-bikes?search={search_term_string}", "query-input": "required name=search_term_string" } },
           { "@type": "FAQPage", mainEntity: [
             { "@type": "Question", name: "Where can I find used bikes in Muzaffarpur?", acceptedAnswer: { "@type": "Answer", text: "Browse available listings on Old Bikes Hub and contact us to confirm the bike location, documents and inspection options." } },
@@ -214,6 +215,10 @@ export default function Home() {
             </div>
           </div>
           <p className="mt-6 text-sm text-gray-600">Serving buyers and sellers across Bihar, including Muzaffarpur and nearby districts.</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/used-bikes-bihar" className="font-semibold text-orange-700 underline">Browse used bikes across Bihar</Link>
+            <Link href="/used-bikes-muzaffarpur" className="font-semibold text-orange-700 underline">Second hand bikes in Muzaffarpur</Link>
+          </div>
           <div className="mt-10 border-t border-gray-200 pt-8">
             <h2 className="text-xl font-black text-gray-900">Common questions about buying a used bike</h2>
             <dl className="mt-5 space-y-5">
