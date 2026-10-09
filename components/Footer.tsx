@@ -455,6 +455,15 @@ export default function Footer() {
 
               </a>
 
+              <a
+                href="https://search.google.com/local/writereview?placeid=ChIJweZiu8kX7TkRhDd2EzI7ixY"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 rounded-xl border border-orange-500 px-4 py-3 text-sm font-black text-orange-400 transition hover:bg-orange-500 hover:text-white"
+              >
+                Share your Google review
+              </a>
+
             </div>
 
           </div>
