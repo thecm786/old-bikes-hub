@@ -1,6 +1,7 @@
 "use client";
 
 import { Bike } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 
 type Props = {
@@ -20,5 +21,13 @@ export default function NewBikeGuideImage({ src, brand, model, className = "" }:
     </div>;
   }
 
-  return <img src={src} alt={`${brand} ${model}`} onError={() => setFailed(true)} className={`bg-gray-100 object-contain ${className}`} />;
+  return <Image
+    src={src}
+    alt={`${brand} ${model}`}
+    width={1200}
+    height={675}
+    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 600px"
+    onError={() => setFailed(true)}
+    className={`bg-gray-100 object-contain ${className}`}
+  />;
 }
