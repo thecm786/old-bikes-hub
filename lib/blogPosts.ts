@@ -6,6 +6,19 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "honda-shine-second-hand-price-bihar", date: "2026-10-09", readTime: "5 min read",
+    coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Used Honda commuter motorcycle for sale inspection",
+    title: "Honda Shine Second Hand Price in Bihar: What Buyers Should Check",
+    description: "Compare a used Honda Shine’s year, kilometres, condition and documents before deciding whether the listed price is fair in Bihar.",
+    sections: [
+      { heading: "Why used Honda Shine prices differ", paragraphs: ["A Honda Shine does not have one fixed second hand price. The model year, variant, kilometres, service history, tyre condition, insurance validity, ownership record and bike location all affect the asking price. Compare similar listings before judging whether a price is reasonable."] },
+      { heading: "Check the commuter-bike basics", paragraphs: ["For a daily-use Honda Shine, check a cold start, engine response, clutch, gearbox, chain, brakes, tyres, suspension and electrical functions. Look carefully for oil leaks, accident repairs and non-standard wiring. A clean-looking bike still needs an in-person inspection."] },
+      { heading: "Compare the cost after purchase", paragraphs: ["Keep money aside for the RC transfer, insurance, a service and wear items. If the tyres, battery, chain-sprocket set or brake pads need replacement, include that in your comparison. A lower listing price is only a good deal when the bike is mechanically sound and the documents are clear."] },
+      { heading: "Documents to verify before paying", paragraphs: ["Match the chassis and engine numbers with the RC, ask for the available insurance details and confirm the ownership-transfer plan. Check for any active loan or hypothecation before committing. Keep written details of the agreed price and handover arrangement."] },
+      { heading: "Find a used Honda Shine in Bihar", paragraphs: ["Old Bikes Hub shows live second hand bike listings with photos, price, year, kilometres and location. Buyers from Patna, Muzaffarpur, Gaya, Darbhanga and other Bihar cities can enquire about availability before arranging inspection."] },
+    ],
+  },
+  {
     slug: "best-second-hand-bikes-daily-use-bihar", date: "2026-10-09", readTime: "6 min read",
     coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Reliable used commuter motorcycle for daily riding",
     title: "Best Second Hand Bikes for Daily Use in Bihar: How to Choose",
