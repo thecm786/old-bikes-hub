@@ -3,7 +3,7 @@ import Link from "next/link";
 import SiteImage from "@/components/SiteImage";
 import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
-import { pageMetadata } from "@/lib/seo";
+import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
 import { getDistrict } from "@/lib/biharDistricts";
 
 const collections = {
@@ -43,7 +43,32 @@ export default async function CollectionPage({ params }: Props) {
   ));
   if (!bikes.length) notFound();
   const title = district ? `Second Hand Bikes in ${district}` : item.title;
+  const pagePath = `/used-bikes-bihar/${collection}`;
+  const focus = district ? `${district}, Bihar` : item.title.toLowerCase();
+  const faqItems = [
+    {
+      question: `How do I buy ${focus}?`,
+      answer: `Compare the listed price, model year, kilometres and actual bike location. Contact Old Bikes Hub to confirm availability, documents and a suitable inspection arrangement before making a payment.`,
+    },
+    {
+      question: "What should I check before buying a used bike?",
+      answer: "Check the RC, insurance, chassis and engine numbers, service condition, tyres, brakes and ownership-transfer process. Always inspect the bike in person before completing a deal.",
+    },
+  ];
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "CollectionPage", name: title, url: SITE_URL + pagePath, description: `Live used bike listings for ${focus} buyers from Old Bikes Hub.` },
+      { "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+        { "@type": "ListItem", position: 2, name: "Used Bikes Bihar", item: SITE_URL + "/used-bikes-bihar" },
+        { "@type": "ListItem", position: 3, name: title, item: SITE_URL + pagePath },
+      ] },
+      { "@type": "FAQPage", mainEntity: faqItems.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) },
+    ],
+  };
   return <section className="bg-gray-100 py-10"><div className="mx-auto max-w-7xl px-4">
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
     <div className="relative overflow-hidden rounded-3xl bg-black px-6 py-9 shadow-xl sm:px-10"><div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-orange-500/20 blur-3xl" />
     <nav aria-label="Breadcrumb" className="relative text-sm text-gray-300"><Link href="/used-bikes-bihar" className="text-orange-400 underline">Used bikes across Bihar</Link> / {title}</nav>
     <h1 className="relative mt-4 text-3xl font-black text-white sm:text-4xl">{title}</h1>
@@ -57,6 +82,12 @@ export default async function CollectionPage({ params }: Props) {
       </article>)}
     </div>
     {district && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">Buying a used bike from {district}</h2><p className="mt-3 text-gray-700">Compare price, year, kilometres and the bike&apos;s actual location. Before payment, inspect the bike, verify RC and insurance, match chassis and engine numbers, and agree the ownership-transfer process.</p><Link href="/contact" className="mt-4 inline-block font-semibold text-orange-700 underline">Contact Old Bikes Hub for an enquiry</Link></section>}
+    <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg">
+      <h2 className="text-2xl font-black text-gray-900">Questions about {title.toLowerCase()}</h2>
+      <div className="mt-5 space-y-5">
+        {faqItems.map((item) => <article key={item.question}><h3 className="font-bold text-gray-900">{item.question}</h3><p className="mt-2 leading-7 text-gray-700">{item.answer}</p></article>)}
+      </div>
+    </section>
     <Link href="/used-bikes-bihar" className="mt-8 inline-block font-semibold text-orange-700 underline">View all used bikes across Bihar</Link>
   </div></section>;
 }
