@@ -6,6 +6,19 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "tvs-apache-second-hand-price-bihar", date: "2026-10-09", readTime: "5 min read",
+    coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Used TVS Apache street motorcycle inspected before purchase",
+    title: "TVS Apache Second Hand Price in Bihar: What to Check Before Buying",
+    description: "A buyer guide for comparing a used TVS Apache’s price, tyres, forks, brakes, service history and documents in Bihar.",
+    sections: [
+      { heading: "Compare the exact Apache model and variant", paragraphs: ["TVS Apache prices can vary significantly between RTR models, engine sizes, ABS variants and model years. Compare listings with the same or similar variant before deciding whether the asking price is fair. The year, kilometres, condition, servicing and insurance validity also affect value."] },
+      { heading: "Inspect the parts that show hard use", paragraphs: ["A used street motorcycle may have been ridden in heavy traffic, on rough roads or enthusiastically. Check fork seals, wheel alignment, tyres, brake discs, pads, chain, sprockets and clutch operation. Look closely for crash damage around the handlebar ends, levers, tank, exhaust and foot pegs."] },
+      { heading: "Check modifications and electrical work", paragraphs: ["Ask about aftermarket exhausts, lights, indicators, tyres or wiring. Poor electrical modifications can create reliability issues, while missing original parts can affect future maintenance. Test the headlight, indicators, horn, meter, starter and charging system during inspection."] },
+      { heading: "Verify documents before the deal", paragraphs: ["Match the RC with the engine and chassis numbers, check available insurance and ask about service records. Confirm any loan or hypothecation has been resolved and agree the ownership-transfer process before payment. Keep written details of the price and handover plan."] },
+      { heading: "Find used TVS Apache bikes in Bihar", paragraphs: ["Old Bikes Hub shows available used bike listings with photos, year, kilometres, asking price and actual location. Buyers from Patna, Muzaffarpur and other Bihar cities can confirm availability before arranging an inspection."] },
+    ],
+  },
+  {
     slug: "hero-splendor-second-hand-price-bihar", date: "2026-10-09", readTime: "5 min read",
     coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Used Hero commuter motorcycle checked before purchase",
     title: "Hero Splendor Second Hand Price in Bihar: Buyer’s Guide",
