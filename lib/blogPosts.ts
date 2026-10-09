@@ -95,10 +95,10 @@ export const blogPosts: BlogPost[] = [
   {
     slug: "used-royal-enfield-classic-350-buying-guide", date: "2026-10-03", readTime: "6 min read",
     coverImage: "/blog/used-royal-enfield-classic-350-buying-guide.png", coverAlt: "Classic style used motorcycle in a showroom",
-    title: "Used Royal Enfield Classic 350 Buying Guide",
-    description: "What to inspect before buying a used Royal Enfield Classic 350 in Bihar: condition, service history, documents and price comparison.",
+    title: "Royal Enfield Classic 350 Second Hand Price in Bihar: Buying Guide",
+    description: "Compare a used Royal Enfield Classic 350’s second hand price, condition, service history and documents before buying in Bihar.",
     sections: [
-      { heading: "Compare more than the asking price", paragraphs: ["Classic 350 prices differ by model year, variant, kilometres, condition and service history. Compare several listings with the same year range before you decide. Photos help, but an in-person inspection is essential."] },
+      { heading: "Why Classic 350 second hand prices vary", paragraphs: ["A Royal Enfield Classic 350 does not have one fixed second hand price in Bihar. Prices differ by model year, variant, kilometres, condition, service history, tyres, insurance and ownership record. Compare several listings with the same year range and condition before you decide. Photos help, but an in-person inspection is essential."] },
       { heading: "Check condition carefully", paragraphs: ["Look at the engine start, clutch, gearbox shifts, brake feel, tyres, chain, suspension and electrical functions. Check for oil leaks, unusual sounds and signs of accident repair. A test ride can reveal issues that photos cannot show."] },
       { heading: "Documents and transfer", paragraphs: ["Verify the RC and insurance details with the seller. Confirm the chassis number matches the documentation and that there is no unresolved loan. Agree the ownership-transfer process before payment."] },
     ],
