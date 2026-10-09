@@ -19,6 +19,7 @@ import {
 } from "@/firebase/firebase";
 
 import SellBikeImageUploader from "@/components/SellBikeImageUploader";
+import { BIKE_BRANDS, isSupportedBikeBrand, normalizeBikeBrand } from "@/lib/bikeBrands";
 
 
 export default function SellBikePage() {
@@ -56,7 +57,7 @@ export default function SellBikePage() {
   const handleChange = (
 
     e:React.ChangeEvent<
-    HTMLInputElement | HTMLTextAreaElement
+    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
 
   )=>{
@@ -89,7 +90,11 @@ export default function SellBikePage() {
 
     e.preventDefault();
     if (loading || uploading) return;
-    const cleaned = Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim()])) as typeof form;
+    if (!isSupportedBikeBrand(form.brand)) { alert("Please select a brand from the list"); return; }
+    const cleaned = {
+      ...Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim()])),
+      brand: normalizeBikeBrand(form.brand),
+    } as typeof form;
     const validationError = validateSellRequest(cleaned, images);
     if (validationError) { alert(validationError); return; }
     setSuccess(false);
@@ -416,26 +421,16 @@ ${images.length} uploaded
 
 
 
-      <input
-
-      required
-
-      name="brand"
-
-      value={form.brand}
-
-      onChange={handleChange}
-
-      placeholder="Bike Brand"
-
-      className="
-      w-full
-      rounded-xl
-      border
-      p-4
-      "
-
-      />
+      <select
+        required
+        name="brand"
+        value={form.brand}
+        onChange={handleChange}
+        className="w-full rounded-xl border bg-white p-4"
+      >
+        <option value="">Select bike brand</option>
+        {BIKE_BRANDS.map((brand) => <option key={brand} value={brand}>{brand}</option>)}
+      </select>
 
 
 

@@ -40,6 +40,7 @@ import {
 } from "@/lib/bikes";
 
 import type { BikeType } from "@/types/bike";
+import { normalizeBikeBrand } from "@/lib/bikeBrands";
 
 const BIHAR_SERVICE_AREAS = new Set(["araria", "arwal", "aurangabad", "banka", "begusarai", "bhagalpur", "bhojpur", "buxar", "darbhanga", "east champaran", "motihari", "gaya", "gopalganj", "jamui", "jehanabad", "kaimur", "katihar", "khagaria", "kishanganj", "lakhisarai", "madhepura", "madhubani", "munger", "muzaffarpur", "nalanda", "nawada", "patna", "purnia", "rohtas", "saharsa", "samastipur", "saran", "sheikhpura", "sheohar", "sitamarhi", "siwan", "supaul", "vaishali", "west champaran", "bettiah"]);
 
@@ -104,16 +105,16 @@ function BuyBikesContent() {
     const bikesQuery = query(collection(db, "bikes"), orderBy("createdAt", "desc"), limit(20));
     getDocs(bikesQuery).then((snapshot) => {
       if (!active) return;
-      const data = snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<BikeType, "id">) }));
+      const data = snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<BikeType, "id">), brand: normalizeBikeBrand(String(item.data().brand || "")) }));
       setBikes(data);
       setLastDoc(snapshot.docs.at(-1) || null);
       setHasMore(snapshot.size === 20);
-      setAllBrands(["All", ...Array.from(new Set([...defaultBikes, ...data].map((bike) => bike.brand))).sort()]);
+      setAllBrands(["All", ...Array.from(new Set([...defaultBikes, ...data].map((bike) => normalizeBikeBrand(bike.brand || "")))).filter(Boolean).sort()]);
     }).catch((error: unknown) => {
       if (!active) return;
       console.error(error);
       setBikes(defaultBikes.map((bike) => ({ ...bike, id: String(bike.id) })));
-      setAllBrands(["All", ...Array.from(new Set(defaultBikes.map((bike) => bike.brand))).sort()]);
+      setAllBrands(["All", ...Array.from(new Set(defaultBikes.map((bike) => normalizeBikeBrand(bike.brand || "")))).filter(Boolean).sort()]);
       setHasMore(false);
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -182,6 +183,7 @@ function BuyBikesContent() {
                 BikeType,
                 "id"
               >),
+              brand: normalizeBikeBrand(String(doc.data().brand || "")),
             })
           );
 
@@ -364,7 +366,7 @@ function BuyBikesContent() {
 
             ||
 
-            bike.brand ===
+            normalizeBikeBrand(bike.brand || "") ===
               brand;
 
           let priceMatch =

@@ -15,6 +15,7 @@ updateDoc,
 onSnapshot,
 
 } from "firebase/firestore";
+import { normalizeBikeBrand } from "@/lib/bikeBrands";
 
 import {
 
@@ -104,6 +105,8 @@ id:item.id,
 
 ...(bike as Omit<BikeType,"id">),
 
+brand: normalizeBikeBrand(bike.brand || ""),
+
 status:
 bike.status || "Pending",
 
@@ -185,7 +188,7 @@ const brands = useMemo(() => {
 
     ...new Set(
 
-      bikes.map((bike) => bike.brand)
+      bikes.map((bike) => normalizeBikeBrand(bike.brand || "")).filter(Boolean)
 
     ),
 
@@ -227,7 +230,7 @@ const filteredBikes = useMemo(() => {
 
       brand === "All" ||
 
-      bike.brand === brand;
+      normalizeBikeBrand(bike.brand || "") === brand;
 
     const statusMatch =
 
@@ -2067,4 +2070,3 @@ deleteLoading
 );
 
 }
-

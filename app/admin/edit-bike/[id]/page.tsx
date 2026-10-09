@@ -19,6 +19,7 @@ import {
 import { db } from "@/firebase/firebase";
 
 import MultiImageUploader from "@/components/MultiImageUploader";
+import { BIKE_BRANDS, isSupportedBikeBrand, normalizeBikeBrand } from "@/lib/bikeBrands";
 
 import {
   Bike,
@@ -101,7 +102,7 @@ useEffect(() => {
 
         setForm({
 
-          brand: data.brand || "",
+          brand: normalizeBikeBrand(data.brand || ""),
 
           name: data.name || "",
 
@@ -177,6 +178,11 @@ const handleUpdate = async (
     return;
   }
 
+  if (!isSupportedBikeBrand(form.brand)) {
+    alert("Please select a brand from the list");
+    return;
+  }
+
   const registration = form.registrationNumber
     .trim()
     .toUpperCase();
@@ -223,7 +229,7 @@ const handleUpdate = async (
       doc(db, "bikes", id),
       {
 
-        brand: form.brand,
+        brand: normalizeBikeBrand(form.brand),
 
         name: form.name,
 
@@ -490,13 +496,19 @@ return (
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
 
-          <Input
-            icon={<Bike />}
-            name="brand"
-            value={form.brand}
-            placeholder="Brand"
-            onChange={handleChange}
-          />
+          <div className="relative">
+            <Bike className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-orange-500" />
+            <select
+              required
+              name="brand"
+              value={form.brand}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-gray-200 bg-white py-4 pl-12 pr-4 font-medium outline-none transition focus:border-orange-500"
+            >
+              <option value="">Select bike brand</option>
+              {BIKE_BRANDS.map((brand) => <option key={brand} value={brand}>{brand}</option>)}
+            </select>
+          </div>
 
           <Input
             icon={<Bike />}
