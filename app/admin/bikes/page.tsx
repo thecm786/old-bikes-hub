@@ -3,6 +3,7 @@ import SiteImage from "@/components/SiteImage";
 
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
 
@@ -44,6 +45,9 @@ import AdminFilters from "@/components/AdminFilters";
 
 export default function AllBikesPage() {
 
+const searchParams = useSearchParams();
+const topbarSearch = searchParams.get("search") || "";
+
 const [bikes,setBikes]=
 useState<BikeType[]>([]);
 
@@ -54,7 +58,7 @@ const [refreshing,setRefreshing]=
 useState(false);
 
 const [search,setSearch]=
-useState("");
+useState(topbarSearch);
 
 const [registrationSearch,setRegistrationSearch]=
 useState("");

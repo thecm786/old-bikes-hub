@@ -18,6 +18,7 @@ import {
 import {
   useRouter,
 } from "next/navigation";
+import { useState } from "react";
 
 
 
@@ -25,6 +26,14 @@ export default function AdminTopbar(){
 
 
   const router = useRouter();
+  const [search, setSearch] = useState("");
+
+  const submitSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    const query = search.trim();
+    if (!query) return;
+    router.push(`/admin/bikes?search=${encodeURIComponent(query)}`);
+  };
 
 
  
@@ -85,7 +94,9 @@ export default function AdminTopbar(){
       {/* Search */}
 
 
-      <div className="
+      <form
+      onSubmit={submitSearch}
+      className="
       flex
       max-w-xl
       flex-1
@@ -94,7 +105,6 @@ export default function AdminTopbar(){
       rounded-2xl
       border
       bg-gray-100
-      opacity-70
       px-4
       py-3
       ">
@@ -108,18 +118,18 @@ export default function AdminTopbar(){
 
         <input
   type="text"
-  placeholder="Search coming soon..."
-  disabled
+  value={search}
+  onChange={(event) => setSearch(event.target.value)}
+  placeholder="Search bikes, brands, registration or city..."
   className="
     w-full
-    cursor-not-allowed
     bg-transparent
-    text-gray-400
+    text-gray-700
     outline-none
   "
 />
 
-      </div>
+      </form>
 
 
 
