@@ -4,6 +4,7 @@ import { memo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { trackBuyerEvent } from "@/lib/analytics";
 
 import {
   Search,
@@ -19,6 +20,11 @@ function Hero() {
 
   const handleSearch = () => {
     const value = search.trim();
+
+    trackBuyerEvent("used_bike_search", {
+      search_source: "home_hero",
+      query_length: value.length || 0,
+    });
 
     if (!value) {
       router.push("/buy-bikes");
@@ -134,6 +140,10 @@ function Hero() {
                 key={brand}
                 type="button"
                 onClick={() => {
+                  trackBuyerEvent("used_bike_brand_select", {
+                    brand,
+                    search_source: "home_hero",
+                  });
                   router.push(
                     `/buy-bikes?search=${encodeURIComponent(brand)}`
                   );
@@ -185,6 +195,7 @@ function Hero() {
 
             <Link
               href="/buy-bikes"
+              onClick={() => trackBuyerEvent("used_bike_browse", { source: "home_hero" })}
               className="rounded-xl bg-orange-500 px-8 py-3 font-black text-white transition hover:bg-orange-600 active:scale-95"
             >
               Browse Bikes
