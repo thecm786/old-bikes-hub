@@ -6,6 +6,19 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "best-second-hand-bikes-daily-use-bihar", date: "2026-10-09", readTime: "6 min read",
+    coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Reliable used commuter motorcycle for daily riding",
+    title: "Best Second Hand Bikes for Daily Use in Bihar: How to Choose",
+    description: "A practical guide for Bihar buyers comparing reliable used commuter bikes, their condition, running costs and documents.",
+    sections: [
+      { heading: "Choose the bike for your daily route", paragraphs: ["For regular commuting, focus on comfort, fuel use, parts availability and a model that local workshops understand. A commuter bike can suit office travel, college routes and everyday family use when it has been maintained well. Consider your usual distance, road condition, pillion use and whether you need a motorcycle or a scooter."] },
+      { heading: "Compare condition before comparing brand", paragraphs: ["A Honda, Hero, TVS or Bajaj commuter with clear service history can be a better purchase than a newer-looking bike with neglected maintenance. Compare similar model years, kilometres, tyre condition, brake wear, battery health and insurance status. The bike's actual condition matters more than a low asking price alone."] },
+      { heading: "Check the total cost after purchase", paragraphs: ["Keep a part of your budget aside for insurance renewal, ownership transfer, a basic service and wear items such as tyres, chain-sprocket set or battery. Ask about recent maintenance and check whether the quoted price includes any accessories. This helps you compare two listings fairly."] },
+      { heading: "Inspect before buying a second hand bike", paragraphs: ["See the bike in person before payment. Start it from cold, test the clutch, gearbox, brakes, lights and indicators, and look for oil leaks or accident repairs. Match the engine and chassis numbers with the RC, check the available insurance and agree the ownership-transfer process before finalising the deal."], bullets: ["Confirm the bike is available before travelling.", "Check the actual location shown on the listing.", "Take a trusted mechanic if you are unsure about the condition."] },
+      { heading: "Find available used bikes across Bihar", paragraphs: ["Old Bikes Hub shows the year, kilometres, price, photos and actual location for available listings. Buyers from Patna, Muzaffarpur, Gaya, Darbhanga and other Bihar cities can compare options and enquire before arranging an inspection."] },
+    ],
+  },
+  {
     slug: "tvs-victor-second-hand-price-bihar", date: "2026-10-09", readTime: "5 min read",
     coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Used commuter motorcycle ready for inspection",
     title: "TVS Victor Second Hand Price in Bihar: What to Check",
