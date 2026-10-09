@@ -18,6 +18,28 @@ const collections = {
   "bikes-under-100000": { maxPrice: 100000, title: "Used Bikes Under ₹1 Lakh in Bihar" },
 } as const;
 
+const collectionGuides: Record<string, { heading: string; text: string }> = {
+  "bikes-under-50000": {
+    heading: "Buying a used bike under ₹50,000 in Bihar",
+    text: "At this budget, compare the model year, kilometres, tyres, battery, chain and brake condition before focusing on cosmetic upgrades. Verify the RC, insurance and engine and chassis numbers, then inspect the bike in person before paying.",
+  },
+  "bikes-under-100000": {
+    heading: "Choosing a used bike under ₹1 lakh in Bihar",
+    text: "A higher budget can open up newer commuter bikes, premium models and better-maintained examples. Compare the service record, ownership history, remaining insurance and the total transfer cost alongside the listed price.",
+  },
+};
+
+const districtGuides: Record<string, { heading: string; text: string }> = {
+  Patna: {
+    heading: "Buying a second hand bike for Patna",
+    text: "Patna buyers can compare every available Old Bikes Hub listing from one place. Check the bike's actual location on its card and confirm inspection timing, documents and collection plans before travelling or arranging transport.",
+  },
+  Muzaffarpur: {
+    heading: "Buying a second hand bike for Muzaffarpur",
+    text: "Compare price, year, kilometres and service condition before shortlisting. Confirm the actual bike location, RC and insurance details, then inspect the motorcycle in person before completing payment or ownership transfer.",
+  },
+};
+
 type Props = { params: Promise<{ collection: string }> };
 export const dynamic = "force-dynamic";
 
@@ -46,6 +68,7 @@ export default async function CollectionPage({ params }: Props) {
   const title = district ? `Second Hand Bikes in ${district}` : item.title;
   const pagePath = `/used-bikes-bihar/${collection}`;
   const focus = district ? `${district}, Bihar` : item.title.toLowerCase();
+  const buyerGuide = district ? districtGuides[district] : collectionGuides[collection];
   const faqItems = [
     {
       question: `How do I buy ${focus}?`,
@@ -83,6 +106,7 @@ export default async function CollectionPage({ params }: Props) {
       </article>)}
     </div>
     {district && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">Buying a used bike from {district}</h2><p className="mt-3 text-gray-700">Compare price, year, kilometres and the bike&apos;s actual location. Before payment, inspect the bike, verify RC and insurance, match chassis and engine numbers, and agree the ownership-transfer process.</p><Link href="/contact" className="mt-4 inline-block font-semibold text-orange-700 underline">Contact Old Bikes Hub for an enquiry</Link></section>}
+    {buyerGuide && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">{buyerGuide.heading}</h2><p className="mt-3 leading-7 text-gray-700">{buyerGuide.text}</p><div className="mt-5 flex flex-wrap gap-4"><Link href="/used-bikes-bihar/bikes-under-50000" className="font-semibold text-orange-700 underline">Used bikes under ₹50,000</Link><Link href="/used-bikes-bihar" className="font-semibold text-orange-700 underline">All used bikes across Bihar</Link><Link href="/sell-bike" className="font-semibold text-orange-700 underline">Sell your old bike</Link></div></section>}
     <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg">
       <h2 className="text-2xl font-black text-gray-900">Questions about {title.toLowerCase()}</h2>
       <div className="mt-5 space-y-5">
