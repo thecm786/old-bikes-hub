@@ -1,5 +1,6 @@
 "use client";
 import SiteImage from "@/components/SiteImage";
+import RelatedBikes from "@/components/RelatedBikes";
 
 
 import { useState } from "react";
@@ -52,7 +53,7 @@ interface BikeType {
 
 }
 
-export default function BikeDetailsClient({ bike }: { bike: BikeType }) {
+export default function BikeDetailsClient({ bike, relatedBikes }: { bike: BikeType; relatedBikes: BikeType[] }) {
   const [activeImage, setActiveImage] = useState(bike.images?.[0] || bike.image || "");
   const [copied, setCopied] = useState(false);
   const gallery =
@@ -610,10 +611,17 @@ ${url}`;
                 "No description available."}
             </p>
 
+            <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold">
+              <Link href={`/buy-bikes?brand=${encodeURIComponent(bike.brand)}`} className="text-orange-700 underline">More used {bike.brand} bikes</Link>
+              <Link href="/used-bikes-bihar" className="text-orange-700 underline">Browse all used bikes in Bihar</Link>
+            </div>
+
 
           </div>
 
         </div>
+
+        <RelatedBikes bikes={relatedBikes} currentBikeId={bike.id} brand={bike.brand} />
       </div>
     </main>
   );

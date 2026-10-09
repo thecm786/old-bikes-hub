@@ -10,7 +10,7 @@ interface Bike {
   slug: string;
   name: string;
   brand: string;
-  price: string;
+  price: string | number;
   year: string;
   km: string;
   location: string;

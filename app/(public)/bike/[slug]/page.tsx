@@ -21,7 +21,8 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function BikePage({ params }: Props) {
   const { slug } = await params;
-  const bike = resolveListing(await getPublicInventory(), slug);
+  const inventory = await getPublicInventory();
+  const bike = resolveListing(inventory, slug);
   if (!bike) notFound();
   const path = bikePath(bike);
   if (decodeURIComponent(path.slice(6)) !== slug) permanentRedirect(path);
@@ -39,5 +40,6 @@ export default async function BikePage({ params }: Props) {
       seller: { "@type": "Organization", name: "Old Bikes Hub" },
     } } : {}),
   };
-  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(product) }} /><BikeDetailsClient key={bike.id} bike={bike} /></>;
+  const relatedBikes = inventory.filter((listing) => listing.status === "Available" && listing.id !== bike.id && listing.brand.trim().toLowerCase() === bike.brand.trim().toLowerCase()).slice(0, 6);
+  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(product) }} /><BikeDetailsClient key={bike.id} bike={bike} relatedBikes={relatedBikes} /></>;
 }
