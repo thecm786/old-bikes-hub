@@ -27,12 +27,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
 
   title: {
-    default: "Old Bikes Hub | Buy & Sell Used Bikes in India",
+    default: "Old Bikes Hub | Used & Second Hand Bikes in Bihar",
     template: "%s | Old Bikes Hub",
   },
 
   description:
-    "Buy verified second hand bikes and sell your old bike with Old Bikes Hub. Find used motorcycles at the best prices in Muzaffarpur, Bihar and across India.",
+    "Buy and sell verified used bikes in Muzaffarpur and across Bihar. Compare second hand bike prices, photos, kilometres and locations with Old Bikes Hub.",
 
   applicationName: "Old Bikes Hub",
 
@@ -50,6 +50,7 @@ export const metadata: Metadata = {
     "second hand bikes in India",
     "used bikes in Bihar",
     "second hand bikes in Bihar",
+    "used bike price in Bihar",
     "used bikes in Muzaffarpur",
     "second hand bikes in Muzaffarpur",
     "buy used bikes in Muzaffarpur",
@@ -100,10 +101,10 @@ export const metadata: Metadata = {
 
     siteName: "Old Bikes Hub",
 
-    title: "Old Bikes Hub | Buy & Sell Used Bikes in India",
+    title: "Old Bikes Hub | Used & Second Hand Bikes in Bihar",
 
     description:
-      "Buy verified second hand bikes and sell your old bike with Old Bikes Hub. Find trusted used motorcycles at the best prices.",
+      "Buy and sell verified used bikes in Muzaffarpur and across Bihar. Compare prices, photos, kilometres and locations before you enquire.",
 
     images: [
       {
