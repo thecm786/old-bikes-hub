@@ -2,7 +2,7 @@ import Link from "next/link";
 import SiteImage from "@/components/SiteImage";
 import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
-import { pageMetadata } from "@/lib/seo";
+import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
 
 const collections = [
   ["royal-enfield", "Used Royal Enfield Bikes"], ["tvs", "Used TVS Bikes"],
@@ -12,11 +12,16 @@ const collections = [
 ];
 
 export const dynamic = "force-dynamic";
-export const metadata = pageMetadata("Second Hand Bikes for Sale Across Bihar", "Browse available used bikes across Bihar with actual prices, photos, kilometres and locations. Enquire from any Bihar city with Old Bikes Hub.", "/used-bikes-bihar");
+export const metadata = pageMetadata("Used Bikes & Second Hand Bikes for Sale Across Bihar", "Buy used bikes and second hand bikes across Bihar. Compare real prices, photos, kilometres and locations, then enquire with Old Bikes Hub in Muzaffarpur.", "/used-bikes-bihar");
 
 export default async function BiharInventory() {
   const bikes = (await getPublicInventory()).filter(bike => bike.status === "Available");
+  const schema = { "@context": "https://schema.org", "@graph": [
+    { "@type": "CollectionPage", name: "Used Bikes and Second Hand Bikes for Sale Across Bihar", url: SITE_URL + "/used-bikes-bihar", description: "Available used motorcycles and scooters for buyers across Bihar." },
+    { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: SITE_URL }, { "@type": "ListItem", position: 2, name: "Used Bikes Bihar", item: SITE_URL + "/used-bikes-bihar" }] },
+  ] };
   return <section className="bg-gray-100 py-10"><div className="mx-auto max-w-7xl px-4">
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
     <div className="relative overflow-hidden rounded-3xl bg-black px-6 py-10 shadow-xl sm:px-10"><div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-orange-500/20 blur-3xl" /><h1 className="relative text-3xl font-black text-white sm:text-4xl">Second Hand Bikes for Sale Across Bihar</h1>
     <p className="relative mt-4 text-gray-300">Buyers from every city in Bihar can enquire about any listed bike. Each listing shows the bike’s actual location. Contact Old Bikes Hub to confirm availability, documents, inspection and transport arrangements before purchase.</p>
     <p className="relative mt-3 text-gray-300">Whether you are in Patna, Motihari, Gaya, Darbhanga, Bhagalpur, Purnia or another Bihar city, you can browse the same complete available inventory here.</p>
