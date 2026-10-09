@@ -34,6 +34,7 @@ import {
 import { db } from "@/firebase/firebase";
 
 import BikeCard from "@/components/BikeCard";
+import BuyerRequirementForm from "@/components/BuyerRequirementForm";
 
 import {
   bikes as defaultBikes,
@@ -521,6 +522,8 @@ function BuyBikesContent() {
           ))}
         </nav>
       </section>
+
+      <BuyerRequirementForm brands={allBrands} />
 
       {/* HEADER */}
 
