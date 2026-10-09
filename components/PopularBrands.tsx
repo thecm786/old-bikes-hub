@@ -81,12 +81,10 @@ Kawasaki:
 const BrandLogo = memo(
 function BrandLogo({
 
-brand,
-index
+brand
 
 }:{
 brand:string;
-index:number;
 
 }){
 
@@ -136,7 +134,7 @@ width={110}
 
 height={110}
 
-priority={index < 4}
+sizes="96px"
 
 className="
 h-24
@@ -582,7 +580,7 @@ lg:grid-cols-4
 
 
 brands.map(
-([brand,count],index)=>(
+([brand,count])=>(
 
 
 <Link
@@ -610,8 +608,6 @@ hover:shadow-2xl
 <BrandLogo
 
 brand={brand}
-
-index={index}
 
 />
 
