@@ -29,6 +29,7 @@ import SectionTitle from "./SectionTitle";
 import WishlistButton from "./WishlistButton";
 
 import type { BikeType } from "@/types/bike";
+import { bikePath } from "@/lib/bikeUrls";
 
 
 
@@ -652,7 +653,7 @@ bike.brand
 <Link
 
 href={
-`/bike/${bike.slug}`
+bikePath(bike)
 }
 
 className="

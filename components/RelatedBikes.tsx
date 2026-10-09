@@ -3,6 +3,7 @@ import SiteImage from "@/components/SiteImage";
 
 
 import Link from "next/link";
+import { bikePath } from "@/lib/bikeUrls";
 
 interface Bike {
   id: string;
@@ -81,7 +82,7 @@ export default function RelatedBikes({
               </div>
 
               <Link
-                href={`/bike/${bike.slug}`}
+                href={bikePath(bike)}
                 className="mt-6 block rounded-xl bg-black py-3 text-center font-bold text-white transition hover:bg-gray-800"
               >
                 View Details

@@ -31,6 +31,7 @@ import SectionTitle from "./SectionTitle";
 import WishlistButton from "./WishlistButton";
 
 import type { BikeType } from "@/types/bike";
+import { bikePath } from "@/lib/bikeUrls";
 
 
 type StoredBike = BikeType & {
@@ -468,7 +469,7 @@ text-orange-600
 
 <Link
 
-href={`/bike/${bike.slug}`}
+href={bikePath(bike)}
 
 className="
 mt-6

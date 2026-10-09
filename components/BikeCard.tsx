@@ -23,6 +23,7 @@ import {
 import {
   toggleWishlist,
 } from "@/lib/wishlist";
+import { bikePath } from "@/lib/bikeUrls";
 
 
 
@@ -716,7 +717,7 @@ Call
 
 <Link
 
-href={`/bike/${slug}`}
+href={bikePath({ id, slug })}
 
 className="
 mt-5

@@ -9,6 +9,7 @@ import { collection, getDocs } from "firebase/firestore";
 import type { BikeType } from "@/types/bike";
 import { db } from "@/firebase/firebase";
 import { getWishlist } from "@/lib/wishlist";
+import { bikePath } from "@/lib/bikeUrls";
 
 export default function WishlistPage() {
   const [bikes, setBikes] = useState<BikeType[]>([]);
@@ -119,7 +120,7 @@ export default function WishlistPage() {
                   </p>
 
                   <Link
-                    href={`/bike/${bike.slug}`}
+                    href={bikePath(bike)}
                     className="mt-6 block rounded-xl bg-black py-4 text-center font-bold text-white hover:bg-orange-500"
                   >
                     View Details
