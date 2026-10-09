@@ -12,7 +12,7 @@ const collections = [
 ];
 
 export const dynamic = "force-dynamic";
-export const metadata = pageMetadata("Used Bikes & Second Hand Bikes for Sale Across Bihar", "Buy used bikes and second hand bikes across Bihar. Compare real prices, photos, kilometres and locations, then enquire with Old Bikes Hub in Muzaffarpur.", "/used-bikes-bihar");
+export const metadata = pageMetadata("Used Bikes Across Bihar | Second Hand Bike Prices & Photos", "Browse available used bikes and second hand bikes across Bihar. Compare real prices, photos, year, kilometres and location, then enquire with Old Bikes Hub.", "/used-bikes-bihar");
 
 export default async function BiharInventory() {
   const bikes = (await getPublicInventory()).filter(bike => bike.status === "Available");
