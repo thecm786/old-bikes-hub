@@ -26,7 +26,10 @@ export default function AdminTopbar(){
 
 
   const router = useRouter();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("search") || "";
+  });
 
   const submitSearch = (event: React.FormEvent) => {
     event.preventDefault();
