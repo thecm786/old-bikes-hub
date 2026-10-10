@@ -54,10 +54,10 @@ export async function generateMetadata({ params }: Props) {
   if (!item && !district) return { robots: { index: false } };
   if (district) {
     const title = `Used Bikes in ${district}, Bihar | Old Bikes Hub`;
-    const description = `Find used bikes and second hand bikes for ${district}, Bihar buyers. Compare real prices, photos, kilometres and each bike's actual location before you enquire.`;
+    const description = `Buy used bikes and second hand bikes in ${district}, Bihar from Old Bikes Hub. Browse live inventory from Muzaffarpur and across Bihar, with real prices, photos and locations.`;
     return {
       ...pageMetadata(title, description, `/used-bikes-bihar/${collection}`),
-      keywords: [`used bikes in ${district}`, `second hand bikes in ${district}`, `old bike in ${district}`, `used bikes ${district} Bihar`],
+      keywords: [`used bikes in ${district}`, `second hand bikes in ${district}`, `buy old bike in ${district}`, `used bikes ${district} Bihar`, `used bike sale ${district}`],
     };
   }
   return pageMetadata(item.title, `Browse live ${item.title.toLowerCase()}. View actual price, year, kilometres and location, then enquire from any Bihar city with Old Bikes Hub.`, `/used-bikes-bihar/${collection}`);
@@ -84,6 +84,9 @@ export default async function CollectionPage({ params }: Props) {
     ...(district ? [{
       question: `Can I buy a second hand bike in ${district} through Old Bikes Hub?`,
       answer: `Yes. Old Bikes Hub serves buyers across Bihar, including ${district}. A bike may be listed in Muzaffarpur or another city, so contact us to confirm its actual location, inspection plan, RC, insurance and ownership-transfer details before purchase.`,
+    }, {
+      question: `Are these bikes only for Muzaffarpur buyers?`,
+      answer: `No. Old Bikes Hub can sell to buyers in ${district} and across Bihar. The listing shows where the bike is currently located; confirm inspection and collection arrangements with our team before payment.`,
     }] : []),
     {
       question: "What should I check before buying a used bike?",
@@ -94,6 +97,7 @@ export default async function CollectionPage({ params }: Props) {
     "@context": "https://schema.org",
     "@graph": [
       { "@type": "CollectionPage", name: title, url: SITE_URL + pagePath, description: `Live used bike listings for ${focus} buyers from Old Bikes Hub.`, about: district ? { "@type": "Thing", name: `Used and second hand bikes for ${district}, Bihar buyers` } : undefined },
+      ...(district ? [{ "@type": "Service", name: `Used bike sales for ${district}, Bihar buyers`, provider: { "@id": "https://www.oldbikeshub.com/#business" }, areaServed: { "@type": "AdministrativeArea", name: `${district}, Bihar` } }] : []),
       { "@type": "BreadcrumbList", itemListElement: [
         { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
         { "@type": "ListItem", position: 2, name: "Used Bikes Bihar", item: SITE_URL + "/used-bikes-bihar" },
