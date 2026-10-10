@@ -88,6 +88,7 @@ export default async function CollectionPage({ params }: Props) {
         { "@type": "ListItem", position: 2, name: "Used Bikes Bihar", item: SITE_URL + "/used-bikes-bihar" },
         { "@type": "ListItem", position: 3, name: title, item: SITE_URL + pagePath },
       ] },
+      { "@type": "ItemList", name: title, numberOfItems: bikes.length, itemListElement: bikes.slice(0, 24).map((bike, index) => ({ "@type": "ListItem", position: index + 1, name: `${bikeFullName(bike.brand, bike.name)} ${bike.year}`, url: SITE_URL + bikePath(bike) })) },
       { "@type": "FAQPage", mainEntity: faqItems.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) },
     ],
   };

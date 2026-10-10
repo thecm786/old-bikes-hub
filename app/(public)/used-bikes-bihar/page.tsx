@@ -21,6 +21,7 @@ export default async function BiharInventory() {
   const schema = { "@context": "https://schema.org", "@graph": [
     { "@type": "CollectionPage", name: "Used Bikes and Second Hand Bikes for Sale Across Bihar", url: SITE_URL + "/used-bikes-bihar", description: "Available used motorcycles and scooters for buyers across Bihar." },
     { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: SITE_URL }, { "@type": "ListItem", position: 2, name: "Used Bikes Bihar", item: SITE_URL + "/used-bikes-bihar" }] },
+    { "@type": "ItemList", name: "Available used bikes in Bihar", numberOfItems: bikes.length, itemListElement: bikes.slice(0, 24).map((bike, index) => ({ "@type": "ListItem", position: index + 1, name: `${bikeFullName(bike.brand, bike.name)} ${bike.year}`, url: SITE_URL + bikePath(bike) })) },
   ] };
   return <section className="bg-gray-100 py-10"><div className="mx-auto max-w-7xl px-4">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
