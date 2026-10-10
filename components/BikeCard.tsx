@@ -24,7 +24,7 @@ import {
   toggleWishlist,
 } from "@/lib/wishlist";
 import { bikePath } from "@/lib/bikeUrls";
-import { trackBuyerEvent } from "@/lib/analytics";
+import { trackBuyerEnquiry } from "@/lib/analytics";
 
 
 
@@ -655,7 +655,7 @@ target="_blank"
 
 rel="noopener noreferrer"
 
-onClick={() => trackBuyerEvent("used_bike_enquiry", { contact_method: "whatsapp" })}
+onClick={() => trackBuyerEnquiry("whatsapp")}
 
 className="
 flex
@@ -687,7 +687,7 @@ WhatsApp
 
 href={callLink}
 
-onClick={() => trackBuyerEvent("used_bike_enquiry", { contact_method: "phone" })}
+onClick={() => trackBuyerEnquiry("phone")}
 
 className="
 flex

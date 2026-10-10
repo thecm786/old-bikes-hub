@@ -3,7 +3,7 @@ import SiteImage from "@/components/SiteImage";
 import RelatedBikes from "@/components/RelatedBikes";
 import { bikeFullName } from "@/lib/bikeDisplay";
 import { bikeListingSummary } from "@/lib/bikeListingSummary";
-import { trackBuyerEvent } from "@/lib/analytics";
+import { trackBuyerEnquiry } from "@/lib/analytics";
 
 
 import { useState } from "react";
@@ -582,7 +582,7 @@ ${url}`;
       href={whatsapp}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={() => trackBuyerEvent("used_bike_enquiry", { contact_method: "whatsapp" })}
+      onClick={() => trackBuyerEnquiry("whatsapp")}
       className="flex items-center justify-center gap-2 rounded-xl bg-green-500 py-4 font-bold text-white transition hover:bg-green-600 active:scale-95"
     >
       <MessageCircle size={22} />
@@ -593,7 +593,7 @@ ${url}`;
 
     <a
       href={call}
-      onClick={() => trackBuyerEvent("used_bike_enquiry", { contact_method: "phone" })}
+      onClick={() => trackBuyerEnquiry("phone")}
       className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-bold text-white transition hover:bg-blue-700 active:scale-95"
     >
       <Phone size={22} />
