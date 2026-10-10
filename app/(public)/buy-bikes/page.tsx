@@ -46,6 +46,10 @@ import { normalizeBikeBrand } from "@/lib/bikeBrands";
 const BIHAR_SERVICE_AREAS = new Set(["araria", "arwal", "aurangabad", "banka", "begusarai", "bhagalpur", "bhojpur", "buxar", "darbhanga", "east champaran", "motihari", "gaya", "gopalganj", "jamui", "jehanabad", "kaimur", "katihar", "khagaria", "kishanganj", "lakhisarai", "madhepura", "madhubani", "munger", "muzaffarpur", "nalanda", "nawada", "patna", "purnia", "rohtas", "saharsa", "samastipur", "saran", "sheikhpura", "sheohar", "sitamarhi", "siwan", "supaul", "vaishali", "west champaran", "bettiah"]);
 const INVENTORY_PAGE_SIZE = 200;
 
+function numericValue(value: string | number) {
+  return Number(String(value).replace(/[^\d.]/g, ""));
+}
+
 function BuyBikesContent() {
 
 
@@ -80,6 +84,9 @@ function BuyBikesContent() {
 
   const [year, setYear] =
     useState("All");
+
+  const [sort, setSort] =
+    useState("latest");
 
   const [filterOpen, setFilterOpen] =
     useState(false);
@@ -336,7 +343,7 @@ function BuyBikesContent() {
   const filteredBikes =
     useMemo(() => {
 
-      return bikes.filter(
+      const matches = bikes.filter(
         (bike) => {
 
           const text =
@@ -380,9 +387,7 @@ function BuyBikesContent() {
           ) {
 
             priceMatch =
-              Number(
-                bike.price
-              ) < 100000;
+              numericValue(bike.price) < 100000;
 
           }
 
@@ -393,14 +398,10 @@ function BuyBikesContent() {
 
             priceMatch =
 
-              Number(
-                bike.price
-              ) >=
+              numericValue(bike.price) >=
                 100000 &&
 
-              Number(
-                bike.price
-              ) <=
+              numericValue(bike.price) <=
                 200000;
 
           }
@@ -411,9 +412,7 @@ function BuyBikesContent() {
           ) {
 
             priceMatch =
-              Number(
-                bike.price
-              ) > 200000;
+              numericValue(bike.price) > 200000;
 
           }
 
@@ -450,6 +449,11 @@ function BuyBikesContent() {
 
       );
 
+      if (sort === "price-low") return [...matches].sort((a, b) => numericValue(a.price) - numericValue(b.price));
+      if (sort === "price-high") return [...matches].sort((a, b) => numericValue(b.price) - numericValue(a.price));
+      if (sort === "km-low") return [...matches].sort((a, b) => numericValue(a.km) - numericValue(b.km));
+      return matches;
+
     }, [
 
       bikes,
@@ -461,6 +465,8 @@ function BuyBikesContent() {
       price,
 
       year,
+
+      sort,
 
     ]);
 
@@ -860,6 +866,16 @@ function BuyBikesContent() {
 
           </div>
 
+          <div className="mt-5">
+            <label className="font-bold">Sort by</label>
+            <select value={sort} onChange={(e) => setSort(e.target.value)} className="mt-2 w-full rounded-xl border p-3">
+              <option value="latest">Latest listed</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="km-low">Lowest kilometres</option>
+            </select>
+          </div>
+
           {/* RESET */}
 
           <button
@@ -872,6 +888,8 @@ function BuyBikesContent() {
               setPrice("All");
 
               setYear("All");
+
+              setSort("latest");
 
             }}
             className="
