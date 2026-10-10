@@ -44,6 +44,7 @@ import type { BikeType } from "@/types/bike";
 import { normalizeBikeBrand } from "@/lib/bikeBrands";
 
 const BIHAR_SERVICE_AREAS = new Set(["araria", "arwal", "aurangabad", "banka", "begusarai", "bhagalpur", "bhojpur", "buxar", "darbhanga", "east champaran", "motihari", "gaya", "gopalganj", "jamui", "jehanabad", "kaimur", "katihar", "khagaria", "kishanganj", "lakhisarai", "madhepura", "madhubani", "munger", "muzaffarpur", "nalanda", "nawada", "patna", "purnia", "rohtas", "saharsa", "samastipur", "saran", "sheikhpura", "sheohar", "sitamarhi", "siwan", "supaul", "vaishali", "west champaran", "bettiah"]);
+const INVENTORY_PAGE_SIZE = 200;
 
 function BuyBikesContent() {
 
@@ -103,13 +104,13 @@ function BuyBikesContent() {
 
   useEffect(() => {
     let active = true;
-    const bikesQuery = query(collection(db, "bikes"), orderBy("createdAt", "desc"), limit(20));
+    const bikesQuery = query(collection(db, "bikes"), orderBy("createdAt", "desc"), limit(INVENTORY_PAGE_SIZE));
     getDocs(bikesQuery).then((snapshot) => {
       if (!active) return;
       const data = snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<BikeType, "id">), brand: normalizeBikeBrand(String(item.data().brand || "")) }));
       setBikes(data);
       setLastDoc(snapshot.docs.at(-1) || null);
-      setHasMore(snapshot.size === 20);
+      setHasMore(snapshot.size === INVENTORY_PAGE_SIZE);
       setAllBrands(["All", ...Array.from(new Set([...defaultBikes, ...data].map((bike) => normalizeBikeBrand(bike.brand || "")))).filter(Boolean).sort()]);
     }).catch((error: unknown) => {
       if (!active) return;
@@ -157,7 +158,7 @@ function BuyBikesContent() {
               lastDoc
             ),
 
-            limit(20)
+            limit(INVENTORY_PAGE_SIZE)
 
           );
 
@@ -233,7 +234,7 @@ function BuyBikesContent() {
         );
 
         if (
-          snapshot.docs.length < 20
+          snapshot.docs.length < INVENTORY_PAGE_SIZE
         ) {
 
           setHasMore(false);
