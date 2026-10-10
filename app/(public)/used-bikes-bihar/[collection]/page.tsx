@@ -52,7 +52,14 @@ export async function generateMetadata({ params }: Props) {
   const item = collections[collection as keyof typeof collections];
   const district = getDistrict(collection);
   if (!item && !district) return { robots: { index: false } };
-  if (district) return pageMetadata(`Second Hand Bikes in ${district} | Used Bikes for Sale`, `Browse available second hand bikes for ${district}, Bihar buyers. View real prices, photos, kilometres and each bike's actual location on Old Bikes Hub.`, `/used-bikes-bihar/${collection}`);
+  if (district) {
+    const title = `Used Bikes in ${district}, Bihar | Old Bikes Hub`;
+    const description = `Find used bikes and second hand bikes for ${district}, Bihar buyers. Compare real prices, photos, kilometres and each bike's actual location before you enquire.`;
+    return {
+      ...pageMetadata(title, description, `/used-bikes-bihar/${collection}`),
+      keywords: [`used bikes in ${district}`, `second hand bikes in ${district}`, `old bike in ${district}`, `used bikes ${district} Bihar`],
+    };
+  }
   return pageMetadata(item.title, `Browse live ${item.title.toLowerCase()}. View actual price, year, kilometres and location, then enquire from any Bihar city with Old Bikes Hub.`, `/used-bikes-bihar/${collection}`);
 }
 
@@ -65,7 +72,7 @@ export default async function CollectionPage({ params }: Props) {
     district || ("brand" in item ? bike.brand.trim().toLowerCase() === item.brand.toLowerCase() : priceNumber(bike.price) > 0 && priceNumber(bike.price) <= item.maxPrice)
   ));
   if (!bikes.length) notFound();
-  const title = district ? `Second Hand Bikes in ${district}` : item.title;
+  const title = district ? `Used Bikes in ${district}, Bihar` : item.title;
   const pagePath = `/used-bikes-bihar/${collection}`;
   const focus = district ? `${district}, Bihar` : item.title.toLowerCase();
   const buyerGuide = district ? districtGuides[district] : collectionGuides[collection];
@@ -74,6 +81,10 @@ export default async function CollectionPage({ params }: Props) {
       question: `How do I buy ${focus}?`,
       answer: `Compare the listed price, model year, kilometres and actual bike location. Contact Old Bikes Hub to confirm availability, documents and a suitable inspection arrangement before making a payment.`,
     },
+    ...(district ? [{
+      question: `Can I buy a second hand bike in ${district} through Old Bikes Hub?`,
+      answer: `Yes. Buyers in ${district} can browse the available inventory, then contact Old Bikes Hub to confirm the bike's actual location, inspection plan, RC, insurance and ownership-transfer details before purchase.`,
+    }] : []),
     {
       question: "What should I check before buying a used bike?",
       answer: "Check the RC, insurance, chassis and engine numbers, service condition, tyres, brakes and ownership-transfer process. Always inspect the bike in person before completing a deal.",
@@ -82,7 +93,7 @@ export default async function CollectionPage({ params }: Props) {
   const schema = {
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "CollectionPage", name: title, url: SITE_URL + pagePath, description: `Live used bike listings for ${focus} buyers from Old Bikes Hub.` },
+      { "@type": "CollectionPage", name: title, url: SITE_URL + pagePath, description: `Live used bike listings for ${focus} buyers from Old Bikes Hub.`, about: district ? { "@type": "Thing", name: `Used and second hand bikes for ${district}, Bihar buyers` } : undefined },
       { "@type": "BreadcrumbList", itemListElement: [
         { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
         { "@type": "ListItem", position: 2, name: "Used Bikes Bihar", item: SITE_URL + "/used-bikes-bihar" },
@@ -97,8 +108,8 @@ export default async function CollectionPage({ params }: Props) {
     <div className="relative overflow-hidden rounded-3xl bg-black px-6 py-9 shadow-xl sm:px-10"><div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-orange-500/20 blur-3xl" />
     <nav aria-label="Breadcrumb" className="relative text-sm text-gray-300"><Link href="/used-bikes-bihar" className="text-orange-400 underline">Used bikes across Bihar</Link> / {title}</nav>
     <h1 className="relative mt-4 text-3xl font-black text-white sm:text-4xl">{title}</h1>
-    <p className="relative mt-4 max-w-4xl leading-7 text-gray-300">{district ? `Buyers in ${district}, Bihar can enquire about every available Old Bikes Hub listing. The card shows the bike’s actual location, so confirm inspection, documents, ownership transfer and delivery arrangements before purchase.` : "These are currently available listings from Old Bikes Hub. Buyers anywhere in Bihar can enquire about any bike. The card shows the bike’s actual location; contact us to confirm documents, inspection and transport arrangements."}</p></div>
-    <h2 className="mt-8 text-2xl font-black text-gray-900">{bikes.length} live listings {district ? `for ${district} buyers` : ""}</h2>
+    <p className="relative mt-4 max-w-4xl leading-7 text-gray-300">{district ? `Find second hand bikes for ${district}, Bihar buyers from the available Old Bikes Hub inventory. Every card shows the bike’s real location, so confirm inspection, documents, ownership transfer and collection arrangements before purchase.` : "These are currently available listings from Old Bikes Hub. Buyers anywhere in Bihar can enquire about any bike. The card shows the bike’s actual location; contact us to confirm documents, inspection and transport arrangements."}</p></div>
+    <h2 className="mt-8 text-2xl font-black text-gray-900">{bikes.length} live used bikes {district ? `for ${district} buyers` : ""}</h2>
     <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {bikes.map(bike => <article key={bike.id} className="group overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
         <Link href={bikePath(bike)}><div className="relative h-56"><SiteImage src={bike.images[0] || bike.image || "/bike-placeholder.svg"} alt={`${bikeFullName(bike.brand, bike.name)} ${bike.year}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" /></div>
