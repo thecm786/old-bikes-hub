@@ -83,7 +83,7 @@ export default async function CollectionPage({ params }: Props) {
     },
     ...(district ? [{
       question: `Can I buy a second hand bike in ${district} through Old Bikes Hub?`,
-      answer: `Yes. Buyers in ${district} can browse the available inventory, then contact Old Bikes Hub to confirm the bike's actual location, inspection plan, RC, insurance and ownership-transfer details before purchase.`,
+      answer: `Yes. Old Bikes Hub serves buyers across Bihar, including ${district}. A bike may be listed in Muzaffarpur or another city, so contact us to confirm its actual location, inspection plan, RC, insurance and ownership-transfer details before purchase.`,
     }] : []),
     {
       question: "What should I check before buying a used bike?",
@@ -108,7 +108,7 @@ export default async function CollectionPage({ params }: Props) {
     <div className="relative overflow-hidden rounded-3xl bg-black px-6 py-9 shadow-xl sm:px-10"><div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-orange-500/20 blur-3xl" />
     <nav aria-label="Breadcrumb" className="relative text-sm text-gray-300"><Link href="/used-bikes-bihar" className="text-orange-400 underline">Used bikes across Bihar</Link> / {title}</nav>
     <h1 className="relative mt-4 text-3xl font-black text-white sm:text-4xl">{title}</h1>
-    <p className="relative mt-4 max-w-4xl leading-7 text-gray-300">{district ? `Find second hand bikes for ${district}, Bihar buyers from the available Old Bikes Hub inventory. Every card shows the bike’s real location, so confirm inspection, documents, ownership transfer and collection arrangements before purchase.` : "These are currently available listings from Old Bikes Hub. Buyers anywhere in Bihar can enquire about any bike. The card shows the bike’s actual location; contact us to confirm documents, inspection and transport arrangements."}</p></div>
+    <p className="relative mt-4 max-w-4xl leading-7 text-gray-300">{district ? `Old Bikes Hub sells used bikes to buyers across Bihar, including ${district}. A bike may be listed in Muzaffarpur or another city; every card shows its real location, so confirm inspection, documents, ownership transfer and collection arrangements before purchase.` : "These are currently available listings from Old Bikes Hub. Buyers anywhere in Bihar can enquire about any bike. The card shows the bike’s actual location; contact us to confirm documents, inspection and transport arrangements."}</p></div>
     <h2 className="mt-8 text-2xl font-black text-gray-900">{bikes.length} live used bikes {district ? `for ${district} buyers` : ""}</h2>
     <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {bikes.map(bike => <article key={bike.id} className="group overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
