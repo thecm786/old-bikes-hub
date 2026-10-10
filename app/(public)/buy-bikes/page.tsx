@@ -346,6 +346,8 @@ function BuyBikesContent() {
       const matches = bikes.filter(
         (bike) => {
 
+          if (bike.status && bike.status !== "Available") return false;
+
           const text =
             search.toLowerCase();
 
