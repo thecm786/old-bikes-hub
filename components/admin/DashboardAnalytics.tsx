@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import type { Bike as BikeType } from "@/types/bike";
+import { normalizeBikeBrand } from "@/lib/bikeBrands";
 
 
 interface DashboardAnalyticsProps {
@@ -63,9 +64,13 @@ export default function DashboardAnalytics({
         (acc: Record<string, number>,bike)=>{
 
 
-          acc[bike.brand] =
+          const brand = normalizeBikeBrand(bike.brand || "");
 
-            (acc[bike.brand] || 0) + 1;
+          if (!brand) return acc;
+
+          acc[brand] =
+
+            (acc[brand] || 0) + 1;
 
 
           return acc;

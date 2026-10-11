@@ -22,6 +22,7 @@ import {
 
 import { db } from "@/firebase/firebase";
 import { bikes as defaultBikes } from "@/lib/bikes";
+import { normalizeBikeBrand } from "@/lib/bikeBrands";
 
 
 
@@ -342,9 +343,12 @@ return;
 
 
 
-count[bike.brand]=
+const brand = normalizeBikeBrand(bike.brand);
 
-(count[bike.brand] || 0)+1;
+
+count[brand]=
+
+(count[brand] || 0)+1;
 
 
 
