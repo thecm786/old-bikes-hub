@@ -18,8 +18,6 @@ import {
 import {
   collection,
   getDocs,
-  limit,
-  query,
 } from "firebase/firestore";
 
 import { db } from "@/firebase/firebase";
@@ -245,22 +243,8 @@ const loadBrands=async()=>{
 try{
 
 
-const q =
-query(
-
-collection(
-db,
-"bikes"
-),
-
-limit(100)
-
-);
-
-
-
 const snapshot =
-await getDocs(q);
+await getDocs(collection(db, "bikes"));
 
 
 
@@ -278,37 +262,7 @@ id:doc.id,
 
 ));
 
-
-
-
-const localBikes:BikeData[] =
-
-defaultBikes.map(
-bike=>(
-
-{
-
-...bike,
-
-id:String(bike.id)
-
-}
-
-)
-
-);
-
-
-
-
-
-setBikes([
-
-...localBikes,
-
-...firebaseBikes
-
-]);
+setBikes(firebaseBikes);
 
 
 
@@ -652,7 +606,7 @@ text-orange-600
 
 </span>
 
- Bikes Available
+ Bikes Listed
 
 
 </p>
