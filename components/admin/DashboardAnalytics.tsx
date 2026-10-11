@@ -54,11 +54,11 @@ export default function DashboardAnalytics({
 
 
 
-  const brandData =
+  const availableBrandData =
 
     Object.entries(
 
-      bikes.reduce(
+      bikes.filter((bike) => bike.status === "Available").reduce(
 
         (acc: Record<string, number>,bike)=>{
 
@@ -369,7 +369,7 @@ export default function DashboardAnalytics({
             font-black
             ">
 
-              Top Brands
+              Available Bikes by Brand
 
             </h3>
 
@@ -386,7 +386,7 @@ export default function DashboardAnalytics({
 
 
             {
-              brandData.map(
+              availableBrandData.map(
 
                 ([brand,count])=>(
 
