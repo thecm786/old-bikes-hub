@@ -516,22 +516,6 @@ function BuyBikesContent() {
       "
     >
 
-      <section className="mx-auto mb-8 max-w-7xl" aria-labelledby="bihar-bikes-heading">
-        <h1 id="bihar-bikes-heading" className="text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
-          Buy Used Bikes Across Bihar
-        </h1>
-        <p className="mt-3 max-w-3xl leading-7 text-gray-600">
-          Explore available second hand motorcycles from Old Bikes Hub. Filter by brand, compare prices and kilometres, and contact us to confirm documents and inspection details before buying.
-        </p>
-        <nav className="mt-4 flex flex-wrap gap-2" aria-label="Popular used bike brands">
-          {["Royal Enfield", "TVS", "Honda", "Hero", "Yamaha", "Bajaj", "KTM"].map((brand) => (
-            <a key={brand} href={`/buy-bikes?brand=${encodeURIComponent(brand)}`} className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-orange-500 hover:text-white">
-              Used {brand} bikes
-            </a>
-          ))}
-        </nav>
-      </section>
-
       <BuyerRequirementForm brands={allBrands} />
 
       {/* HEADER */}
@@ -583,7 +567,7 @@ function BuyBikesContent() {
 
             </div>
 
-            <h2
+            <h1
               className="
                 mt-2
                 text-3xl
@@ -591,8 +575,8 @@ function BuyBikesContent() {
                 md:text-4xl
               "
             >
-              Explore Used Bikes
-            </h2>
+              Buy Used Bikes Across Bihar
+            </h1>
 
             <p
               className="
@@ -1027,6 +1011,22 @@ function BuyBikesContent() {
           </div>
 
         )}
+
+      <section className="mx-auto mt-14 max-w-7xl" aria-labelledby="bihar-bikes-heading">
+        <h2 id="bihar-bikes-heading" className="text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
+          Browse used bikes by brand
+        </h2>
+        <p className="mt-3 max-w-3xl leading-7 text-gray-600">
+          Explore available second hand motorcycles from Old Bikes Hub. Filter by brand, compare prices and kilometres, and contact us to confirm documents and inspection details before buying.
+        </p>
+        <nav className="mt-4 flex flex-wrap gap-2" aria-label="Popular used bike brands">
+          {["Royal Enfield", "TVS", "Honda", "Hero", "Yamaha", "Bajaj", "KTM"].map((brand) => (
+            <a key={brand} href={`/buy-bikes?brand=${encodeURIComponent(brand)}`} className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-orange-500 hover:text-white">
+              Used {brand} bikes
+            </a>
+          ))}
+        </nav>
+      </section>
 
     </main>
 
