@@ -500,6 +500,12 @@ export default function Footer() {
             India&apos;s Trusted Used Bike Marketplace
           </p>
 
+          <nav aria-label="Legal links" className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-gray-400 sm:justify-end">
+            <Link href="/about" className="hover:text-orange-400">About</Link>
+            <Link href="/privacy-policy" className="hover:text-orange-400">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-orange-400">Terms of Use</Link>
+          </nav>
+
         </div>
 
       </div>
