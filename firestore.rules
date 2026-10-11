@@ -81,6 +81,23 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Visitors can opt in to new-bike alerts; subscriber details stay private.
+    match /newBikeAlertSubscribers/{subscriberId} {
+      allow create: if request.resource.data.keys().hasOnly([
+          'phone', 'whatsappOptIn', 'websitePushOptIn', 'consent', 'status', 'createdAt'
+        ])
+        && request.resource.data.phone is string
+        && (request.resource.data.phone == '' || request.resource.data.phone.matches('[0-9]{10,15}'))
+        && request.resource.data.whatsappOptIn is bool
+        && request.resource.data.websitePushOptIn is bool
+        && request.resource.data.consent == true
+        && request.resource.data.status == 'Active'
+        && request.resource.data.createdAt == request.time
+        && (request.resource.data.whatsappOptIn || request.resource.data.websitePushOptIn)
+        && (!request.resource.data.whatsappOptIn || request.resource.data.phone.matches('[0-9]{10,15}'));
+      allow read, update, delete: if isAdmin();
+    }
+
     // Deny every collection that has not been explicitly authorized above.
     match /{document=**} {
       allow read, write: if false;

@@ -2,6 +2,8 @@ import { SiteConfigProvider } from "@/providers/SiteConfigProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import NewBikeAlerts from "@/components/NewBikeAlerts";
+import NewBikeAlertListener from "@/components/NewBikeAlertListener";
 
 export default function PublicLayout({
   children,
@@ -17,8 +19,10 @@ export default function PublicLayout({
         {children}
       </main>
 
+      <NewBikeAlerts />
       <Footer />
       <GoogleAnalytics />
+      <NewBikeAlertListener />
 
     </div></SiteConfigProvider>
   );
