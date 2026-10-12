@@ -18,3 +18,9 @@ export function resolveListing<T extends { id: string; slug: string }>(bikes: T[
   return bikes.find(bike => `${bike.slug}--${bike.id}` === key)
     ?? bikes.find(bike => bike.slug === key);
 }
+
+export function listingIdFromKey(key: string): string | undefined {
+  const separator = key.lastIndexOf("--");
+  const id = separator === -1 ? "" : key.slice(separator + 2);
+  return /^[A-Za-z0-9_-]{10,}$/.test(id) ? id : undefined;
+}

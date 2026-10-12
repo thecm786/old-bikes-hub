@@ -9,6 +9,36 @@ export type PublicBike = {
   updatedAt?: string; createdAt: string;
 };
 
+function toPublicBike(doc: Document): PublicBike | undefined {
+  const f = doc.fields ?? {};
+  const text = (key: string) => f[key]?.stringValue ?? f[key]?.integerValue ?? "";
+  const id = doc.name.split("/").at(-1);
+  if (!id || !text("name") || !text("slug")) return undefined;
+
+  return {
+    id, slug: text("slug"), name: text("name"), brand: text("brand"),
+    price: f.price?.doubleValue ?? text("price"), year: text("year"), km: text("km"),
+    location: text("location"), owner: text("owner"), description: text("description"),
+    image: text("image"), images: (f.images?.arrayValue?.values ?? []).map(value => value.stringValue ?? "").filter(Boolean),
+    status: text("status") || "Available", verified: f.verified?.booleanValue ?? false,
+    featured: f.featured?.booleanValue ?? false, updatedAt: doc.updateTime,
+    createdAt: f.createdAt?.timestampValue ?? "",
+  };
+}
+
+// Detail pages load one public document instead of reading the whole inventory.
+export const getPublicBikeById = cache(async (id: string): Promise<PublicBike | undefined> => {
+  if (!/^[A-Za-z0-9_-]{10,}$/.test(id)) return undefined;
+  const url = `https://firestore.googleapis.com/v1/projects/old-bikes-hub/databases/(default)/documents/bikes/${encodeURIComponent(id)}`;
+  try {
+    const response = await fetch(url, { next: { revalidate: 3600 }, signal: AbortSignal.timeout(15000) });
+    if (!response.ok) return undefined;
+    return toPublicBike(await response.json() as Document);
+  } catch {
+    return undefined;
+  }
+});
+
 // Uses public Firestore read rules; no admin credentials or private collections.
 export const getPublicInventory = cache(async (): Promise<PublicBike[]> => {
   const bikes: PublicBike[] = [];
@@ -26,19 +56,8 @@ export const getPublicInventory = cache(async (): Promise<PublicBike[]> => {
     if (!response.ok) return bikes;
     const page: { documents?: Document[]; nextPageToken?: string } = await response.json();
     for (const doc of page.documents ?? []) {
-      const f = doc.fields ?? {};
-      const text = (key: string) => f[key]?.stringValue ?? f[key]?.integerValue ?? "";
-      const id = doc.name.split("/").at(-1)!;
-      if (!text("name") || !text("slug")) continue;
-      bikes.push({
-        id, slug: text("slug"), name: text("name"), brand: text("brand"),
-        price: f.price?.doubleValue ?? text("price"), year: text("year"), km: text("km"),
-        location: text("location"), owner: text("owner"), description: text("description"),
-        image: text("image"), images: (f.images?.arrayValue?.values ?? []).map(v => v.stringValue ?? "").filter(Boolean),
-        status: text("status") || "Available", verified: f.verified?.booleanValue ?? false,
-        featured: f.featured?.booleanValue ?? false, updatedAt: doc.updateTime,
-        createdAt: f.createdAt?.timestampValue ?? "",
-      });
+      const bike = toPublicBike(doc);
+      if (bike) bikes.push(bike);
     }
     token = page.nextPageToken ?? "";
   } while (token);
