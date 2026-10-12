@@ -7,8 +7,6 @@ import {
 
 import "./globals.css";
 
-import { AuthProvider } from "@/providers/AuthProvider";
-
 import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
@@ -164,21 +162,19 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-screen">
-        <AuthProvider>
-          {children}
+        {children}
 
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                borderRadius: "12px",
-                background: "#111827",
-                color: "#ffffff",
-              },
-            }}
-          />
-        </AuthProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              borderRadius: "12px",
+              background: "#111827",
+              color: "#ffffff",
+            },
+          }}
+        />
       </body>
     </html>
   );
