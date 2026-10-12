@@ -6,6 +6,19 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "how-to-check-used-bike-price-bihar", date: "2026-10-12", readTime: "6 min read",
+    coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Buyer comparing a used motorcycle's condition and price",
+    title: "How to Check a Used Bike Price in Bihar Before You Buy",
+    description: "A practical way to compare a second hand bike's asking price, condition, documents and likely post-purchase costs in Bihar.",
+    sections: [
+      { heading: "Compare like with like", paragraphs: ["A used bike price only makes sense when you compare similar examples. Start with the exact model or variant, model year, kilometres and overall condition. A newer bike with clear service history can be better value than a cheaper listing that needs immediate work.", "Use more than one available listing as a reference. The asking price is a starting point for comparison, not proof of the final value."] },
+      { heading: "Add the costs after purchase", paragraphs: ["Keep room in your budget for ownership transfer, insurance, an initial service and items that may need replacement. Tyres, battery, chain-sprocket set, brake parts and routine servicing can change the real cost of a lower-priced bike.", "Ask what maintenance was recently completed and inspect the condition yourself. This makes it easier to compare two listings fairly."] },
+      { heading: "Inspect the condition before discussing the deal", paragraphs: ["Confirm the bike is available before travelling. During inspection, check a cold start, engine response, clutch, gearbox, brakes, tyres, suspension, lights and indicators. Look for oil leaks, accident repair and non-standard wiring.", "A test ride can help reveal issues that photos cannot show. If you are unsure about a mechanical point, take a trusted mechanic with you."], bullets: ["Match the engine and chassis numbers with the RC.", "Review available insurance and service information.", "Ask whether any loan or hypothecation must be cleared."] },
+      { heading: "Check the bike's true location", paragraphs: ["Old Bikes Hub shows the actual location on every available listing. A buyer in Patna, Muzaffarpur or another Bihar city can enquire about a bike, but should confirm inspection, collection and ownership-transfer arrangements before paying any amount."] },
+      { heading: "Browse live used bikes across Bihar", paragraphs: ["Use the live inventory to compare price, year, kilometres, photos and location. When you find a suitable option, contact Old Bikes Hub to confirm availability and arrange an inspection."] },
+    ],
+  },
+  {
     slug: "tvs-apache-second-hand-price-bihar", date: "2026-10-09", readTime: "5 min read",
     coverImage: "/blog/used-bike-guide-cover.png", coverAlt: "Used TVS Apache street motorcycle inspected before purchase",
     title: "TVS Apache Second Hand Price in Bihar: What to Check Before Buying",
