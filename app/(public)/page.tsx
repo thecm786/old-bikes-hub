@@ -47,6 +47,7 @@ export default function Home() {
           { "@type": "WebSite", "@id": "https://www.oldbikeshub.com/#website", url: "https://www.oldbikeshub.com", name: "Old Bikes Hub", alternateName: "OldBikesHub", publisher: { "@id": "https://www.oldbikeshub.com/#business" }, potentialAction: { "@type": "SearchAction", target: "https://www.oldbikeshub.com/buy-bikes?search={search_term_string}", "query-input": "required name=search_term_string" } },
           { "@type": "FAQPage", mainEntity: [
             { "@type": "Question", name: "Where can I find used bikes in Muzaffarpur?", acceptedAnswer: { "@type": "Answer", text: "Browse available listings on Old Bikes Hub and contact us to confirm the bike location, documents and inspection options." } },
+            { "@type": "Question", name: "Where can I find used bikes in Patna?", acceptedAnswer: { "@type": "Answer", text: "Patna buyers can browse the available Old Bikes Hub listings, compare the actual bike location and arrange an inspection before purchase." } },
             { "@type": "Question", name: "How do I sell my old bike in Bihar?", acceptedAnswer: { "@type": "Answer", text: "Use the sell-bike form to share your model, year, kilometres, expected price and photos. Our team reviews the request before contacting you." } },
             { "@type": "Question", name: "Can I check a bike before buying?", acceptedAnswer: { "@type": "Answer", text: "Confirm availability with Old Bikes Hub and arrange an in-person inspection before making any payment or ownership decision." } },
           ] },
@@ -214,10 +215,11 @@ export default function Home() {
               <p className="mt-2 text-sm leading-6 text-gray-600">Share your bike details and clear photos through our sell form. Our team will review the request and contact you.</p>
             </div>
           </div>
-          <p className="mt-6 text-sm text-gray-600">Serving buyers and sellers across Bihar, including Muzaffarpur and nearby districts.</p>
+          <p className="mt-6 text-sm text-gray-600">Serving buyers and sellers across Bihar, including Muzaffarpur, Patna and nearby districts.</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/used-bikes-bihar" className="font-semibold text-orange-700 underline">Browse used bikes across Bihar</Link>
             <Link href="/used-bikes-muzaffarpur" className="font-semibold text-orange-700 underline">Second hand bikes in Muzaffarpur</Link>
+            <Link href="/used-bikes-bihar/patna" className="font-semibold text-orange-700 underline">Second hand bikes in Patna</Link>
           </div>
           <div className="mt-10 border-t border-gray-200 pt-8">
             <h2 className="text-xl font-black text-gray-900">Common questions about buying a used bike</h2>
@@ -225,6 +227,10 @@ export default function Home() {
               <div>
                 <dt className="font-bold text-gray-900">Where can I find used bikes in Muzaffarpur?</dt>
                 <dd className="mt-1 text-sm leading-6 text-gray-600">Browse the available listings on Old Bikes Hub, then contact us to confirm the bike location, documents and inspection options.</dd>
+              </div>
+              <div>
+                <dt className="font-bold text-gray-900">Where can I find used bikes in Patna?</dt>
+                <dd className="mt-1 text-sm leading-6 text-gray-600">Patna buyers can compare available listings, check each bike&apos;s actual location and arrange an inspection before purchase.</dd>
               </div>
               <div>
                 <dt className="font-bold text-gray-900">How do I sell my old bike in Bihar?</dt>
