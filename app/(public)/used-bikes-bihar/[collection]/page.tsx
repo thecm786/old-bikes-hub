@@ -19,42 +19,52 @@ const collections = {
   "bikes-under-100000": { maxPrice: 100000, title: "Used Bikes Under ₹1 Lakh in Bihar" },
 } as const;
 
-const collectionGuides: Record<string, { heading: string; text: string }> = {
+type BuyerGuide = { heading: string; text: string; article?: { href: string; label: string } };
+
+const collectionGuides: Record<string, BuyerGuide> = {
   "royal-enfield": {
     heading: "Choosing a used Royal Enfield in Bihar",
     text: "Check the exact model, service history, tyres, battery, clutch and suspension before deciding. During an inspection, listen for unusual engine noise, compare the chassis and engine numbers with the RC, and include ownership-transfer costs in the total budget.",
+    article: { href: "/blog/used-royal-enfield-classic-350-buying-guide", label: "Read the Classic 350 buying guide" },
   },
   tvs: {
     heading: "Choosing a used TVS bike in Bihar",
     text: "Compare the model year, kilometres, service condition and the work likely due next. Inspect the tyres, brakes, chain set, battery and electrical controls, then verify the RC, insurance and engine and chassis numbers before payment.",
+    article: { href: "/blog/tvs-apache-second-hand-price-bihar", label: "Read the TVS Apache price guide" },
   },
   hero: {
     heading: "Choosing a used Hero bike in Bihar",
     text: "For a commuter bike, focus on its daily running condition: engine response, clutch, brakes, tyres, battery and service record. Match the engine and chassis numbers with the RC and confirm the ownership-transfer process before finalising a deal.",
+    article: { href: "/blog/hero-splendor-second-hand-price-bihar", label: "Read the Hero Splendor price guide" },
   },
   yamaha: {
     heading: "Choosing a used Yamaha bike in Bihar",
     text: "Check the motorcycle's service history and test the clutch, brakes, suspension, tyres and electrical equipment during inspection. Compare the actual condition with the year and kilometres shown, then verify the RC, insurance and ownership details before payment.",
+    article: { href: "/blog/how-to-check-used-bike-price-bihar", label: "Learn how to compare a used bike price" },
   },
   honda: {
     heading: "Choosing a used Honda bike in Bihar",
     text: "Compare the year, kilometres, service condition and price across available listings. Before purchase, inspect the engine, brakes, tyres, chain, battery and documents, and match the chassis and engine numbers with the RC.",
+    article: { href: "/blog/honda-shine-second-hand-price-bihar", label: "Read the Honda Shine price guide" },
   },
   bajaj: {
     heading: "Choosing a used Bajaj bike in Bihar",
     text: "Compare the bike's model year, kilometres and condition before shortlisting. Check the chain set, clutch, brakes, tyres, suspension and service record, then verify the RC, insurance and ownership-transfer details before paying.",
+    article: { href: "/blog/how-to-check-used-bike-price-bihar", label: "Learn how to compare a used bike price" },
   },
   "bikes-under-50000": {
     heading: "Buying a used bike under ₹50,000 in Bihar",
     text: "At this budget, compare the model year, kilometres, tyres, battery, chain and brake condition before focusing on cosmetic upgrades. Verify the RC, insurance and engine and chassis numbers, then inspect the bike in person before paying.",
+    article: { href: "/blog/best-used-bikes-under-50000-bihar", label: "Read the under ₹50,000 buying guide" },
   },
   "bikes-under-100000": {
     heading: "Choosing a used bike under ₹1 lakh in Bihar",
     text: "A higher budget can open up newer commuter bikes, premium models and better-maintained examples. Compare the service record, ownership history, remaining insurance and the total transfer cost alongside the listed price.",
+    article: { href: "/blog/how-to-check-used-bike-price-bihar", label: "Learn how to compare a used bike price" },
   },
 };
 
-const districtGuides: Record<string, { heading: string; text: string }> = {
+const districtGuides: Record<string, BuyerGuide> = {
   Patna: {
     heading: "Buying a second hand bike for Patna",
     text: "Patna buyers can compare every available Old Bikes Hub listing from one place. Start with the model, year, kilometres and price, then check the bike's actual location on its card. Before travelling or arranging transport, confirm inspection timing, RC, insurance, any active loan and the ownership-transfer plan.",
@@ -146,7 +156,7 @@ export default async function CollectionPage({ params }: Props) {
       </article>)}
     </div>
     {district && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">Buying a used bike from {district}</h2><p className="mt-3 text-gray-700">Compare price, year, kilometres and the bike&apos;s actual location. Before payment, inspect the bike, verify RC and insurance, match chassis and engine numbers, and agree the ownership-transfer process.</p><Link href="/contact" className="mt-4 inline-block font-semibold text-orange-700 underline">Contact Old Bikes Hub for an enquiry</Link></section>}
-    {buyerGuide && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">{buyerGuide.heading}</h2><p className="mt-3 leading-7 text-gray-700">{buyerGuide.text}</p><div className="mt-5 flex flex-wrap gap-4"><Link href="/used-bikes-bihar/bikes-under-50000" className="font-semibold text-orange-700 underline">Used bikes under ₹50,000</Link><Link href="/used-bikes-bihar" className="font-semibold text-orange-700 underline">All used bikes across Bihar</Link><Link href="/sell-bike" className="font-semibold text-orange-700 underline">Sell your old bike</Link></div></section>}
+    {buyerGuide && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">{buyerGuide.heading}</h2><p className="mt-3 leading-7 text-gray-700">{buyerGuide.text}</p><div className="mt-5 flex flex-wrap gap-4">{buyerGuide.article && <Link href={buyerGuide.article.href} className="font-semibold text-orange-700 underline">{buyerGuide.article.label}</Link>}<Link href="/used-bikes-bihar/bikes-under-50000" className="font-semibold text-orange-700 underline">Used bikes under ₹50,000</Link><Link href="/used-bikes-bihar" className="font-semibold text-orange-700 underline">All used bikes across Bihar</Link><Link href="/sell-bike" className="font-semibold text-orange-700 underline">Sell your old bike</Link></div></section>}
     <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg">
       <h2 className="text-2xl font-black text-gray-900">Questions about {title.toLowerCase()}</h2>
       <div className="mt-5 space-y-5">
