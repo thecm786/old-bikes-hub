@@ -3,7 +3,6 @@ import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
 import { newBikeGuides } from "@/lib/newBikeGuides";
 import { blogPosts } from "@/lib/blogPosts";
-import { biharDistricts, districtSlug } from "@/lib/biharDistricts";
 const baseUrl = "https://www.oldbikeshub.com";
 const seoCollections = [
   "royal-enfield", "tvs", "hero", "yamaha", "honda", "bajaj",
@@ -28,7 +27,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.65,
   }));
   const newBikePages = newBikeGuides.map(guide => ({ url: `${baseUrl}/new-bikes-india/${guide.slug}`, changeFrequency: "monthly" as const, priority: 0.65 }));
-  const districtPages = biharDistricts.map(district => ({ url: `${baseUrl}/used-bikes-bihar/${districtSlug(district)}`, changeFrequency: "weekly" as const, priority: 0.6 }));
+  // Only include location pages with dedicated, useful local information.
+  // The remaining district routes are still available to visitors, but are not
+  // submitted as near-duplicate pages that all show the same state-wide stock.
+  const districtPages = ["patna"].map(slug => ({ url: `${baseUrl}/used-bikes-bihar/${slug}`, changeFrequency: "weekly" as const, priority: 0.6 }));
   return [...pages, ...collectionPages, ...blogPages, ...newBikePages, ...districtPages, ...bikes.filter(bike => bike.status === "Available").map(bike => ({
     url: baseUrl + bikePath(bike), lastModified: bike.updatedAt,
     changeFrequency: "weekly" as const, priority: 0.7,

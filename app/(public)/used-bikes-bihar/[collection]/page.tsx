@@ -32,7 +32,7 @@ const collectionGuides: Record<string, { heading: string; text: string }> = {
 const districtGuides: Record<string, { heading: string; text: string }> = {
   Patna: {
     heading: "Buying a second hand bike for Patna",
-    text: "Patna buyers can compare every available Old Bikes Hub listing from one place. Check the bike's actual location on its card and confirm inspection timing, documents and collection plans before travelling or arranging transport.",
+    text: "Patna buyers can compare every available Old Bikes Hub listing from one place. Start with the model, year, kilometres and price, then check the bike's actual location on its card. Before travelling or arranging transport, confirm inspection timing, RC, insurance, any active loan and the ownership-transfer plan.",
   },
   Muzaffarpur: {
     heading: "Buying a second hand bike for Muzaffarpur",
@@ -58,6 +58,10 @@ export async function generateMetadata({ params }: Props) {
     return {
       ...pageMetadata(title, description, `/used-bikes-bihar/${collection}`),
       keywords: [`used bikes in ${district}`, `second hand bikes in ${district}`, `buy old bike in ${district}`, `used bikes ${district} Bihar`, `used bike sale ${district}`],
+      // Only Patna has a dedicated search landing page in this route. Other
+      // district routes use the same state-wide inventory and should not
+      // compete with one another in Google as thin, duplicate pages.
+      robots: { index: district === "Patna", follow: true },
     };
   }
   return pageMetadata(item.title, `Browse live ${item.title.toLowerCase()}. View actual price, year, kilometres and location, then enquire from any Bihar city with Old Bikes Hub.`, `/used-bikes-bihar/${collection}`);
