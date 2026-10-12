@@ -13,7 +13,7 @@ const collections = [
   ["bikes-under-50000", "Bikes Under ₹50,000"], ["bikes-under-100000", "Bikes Under ₹1 Lakh"],
 ];
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 export const metadata = pageMetadata("Used Bikes Across Bihar | Second Hand Bike Prices & Photos", "Browse available used bikes and second hand bikes across Bihar. Compare real prices, photos, year, kilometres and location, then enquire with Old Bikes Hub.", "/used-bikes-bihar");
 
 export default async function BiharInventory() {

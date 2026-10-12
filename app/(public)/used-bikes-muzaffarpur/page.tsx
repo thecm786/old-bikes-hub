@@ -5,7 +5,7 @@ import { bikePath } from "@/lib/bikeUrls";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
 import { bikeFullName } from "@/lib/bikeDisplay";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 export const metadata = pageMetadata("Used Bikes & Second Hand Bikes in Muzaffarpur, Bihar", "Buy used bikes and second hand bikes in Muzaffarpur, Bihar. Browse real prices, photos, kilometres and locations from Old Bikes Hub before you enquire.", "/used-bikes-muzaffarpur");
 
 export default async function UsedBikesMuzaffarpur() {

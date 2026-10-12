@@ -9,7 +9,7 @@ const seoCollections = [
   "royal-enfield", "tvs", "hero", "yamaha", "honda", "bajaj",
   "bikes-under-50000", "bikes-under-100000",
 ];
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const bikes = await getPublicInventory();
   const pages: MetadataRoute.Sitemap = ["", "/buy-bikes", "/used-bikes-bihar", "/used-bikes-muzaffarpur", "/new-bikes-india", "/blog", "/sell-bike", "/contact", "/about", "/privacy-policy", "/terms"].map(path => ({

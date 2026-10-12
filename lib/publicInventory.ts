@@ -17,8 +17,13 @@ export const getPublicInventory = cache(async (): Promise<PublicBike[]> => {
     const url = new URL("https://firestore.googleapis.com/v1/projects/old-bikes-hub/databases/(default)/documents/bikes");
     url.searchParams.set("pageSize", "300");
     if (token) url.searchParams.set("pageToken", token);
-    const response = await fetch(url, { next: { revalidate: 300 }, signal: AbortSignal.timeout(15000) });
-    if (!response.ok) throw new Error(`Public inventory unavailable (${response.status})`);
+    let response: Response;
+    try {
+      response = await fetch(url, { next: { revalidate: 3600 }, signal: AbortSignal.timeout(15000) });
+    } catch {
+      return bikes;
+    }
+    if (!response.ok) return bikes;
     const page: { documents?: Document[]; nextPageToken?: string } = await response.json();
     for (const doc of page.documents ?? []) {
       const f = doc.fields ?? {};

@@ -41,7 +41,7 @@ const districtGuides: Record<string, { heading: string; text: string }> = {
 };
 
 type Props = { params: Promise<{ collection: string }> };
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 function priceNumber(value: string | number) {
   return Number(String(value).replace(/[^\d.]/g, ""));
@@ -71,7 +71,6 @@ export default async function CollectionPage({ params }: Props) {
   const bikes = (await getPublicInventory()).filter(bike => bike.status === "Available" && (
     district || ("brand" in item ? bike.brand.trim().toLowerCase() === item.brand.toLowerCase() : priceNumber(bike.price) > 0 && priceNumber(bike.price) <= item.maxPrice)
   ));
-  if (!bikes.length) notFound();
   const title = district ? `Used Bikes in ${district}, Bihar` : item.title;
   const pagePath = `/used-bikes-bihar/${collection}`;
   const focus = district ? `${district}, Bihar` : item.title.toLowerCase();
