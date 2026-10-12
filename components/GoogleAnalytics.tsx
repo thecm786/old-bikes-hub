@@ -27,7 +27,7 @@ export default function GoogleAnalytics() {
   useEffect(recordPage, [recordPage]);
 
   return (
-    <Script id="google-analytics" strategy="afterInteractive" onReady={recordPage}>
+    <Script id="google-analytics" strategy="lazyOnload" onReady={recordPage}>
       {`
         if (["oldbikeshub.com", "www.oldbikeshub.com"].includes(window.location.hostname)) {
           window.dataLayer = window.dataLayer || [];
