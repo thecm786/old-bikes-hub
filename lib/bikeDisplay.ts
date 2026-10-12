@@ -1,5 +1,7 @@
+import { normalizeBikeBrand } from "@/lib/bikeBrands";
+
 export function bikeDisplayName(brand: string, name: string) {
-  const cleanBrand = brand.trim();
+  const cleanBrand = normalizeBikeBrand(brand);
   const cleanName = name.trim().replace(/\s+/g, " ");
   const brandPrefix = `${cleanBrand} `.toLocaleLowerCase("en-IN");
 
@@ -9,5 +11,6 @@ export function bikeDisplayName(brand: string, name: string) {
 }
 
 export function bikeFullName(brand: string, name: string) {
-  return `${brand.trim()} ${bikeDisplayName(brand, name)}`.trim();
+  const cleanBrand = normalizeBikeBrand(brand);
+  return `${cleanBrand} ${bikeDisplayName(cleanBrand, name)}`.trim();
 }

@@ -34,7 +34,7 @@ export default async function BikePage({ params }: Props) {
     name: `${bikeFullName(bike.brand, bike.name)} ${bike.year}`, sku: bike.id,
     description: bike.description || bikeListingSummary(bike),
     image: bike.images.length ? bike.images : bike.image ? [bike.image] : undefined,
-    brand: { "@type": "Brand", name: bike.brand },
+    brand: { "@type": "Brand", name: normalizeBikeBrand(bike.brand) },
     ...(price > 0 ? { offers: {
       "@type": "Offer", url: SITE_URL + path, priceCurrency: "INR", price,
       itemCondition: "https://schema.org/UsedCondition",
