@@ -9,9 +9,9 @@ export function imageSource(value?: string) {
     const url = new URL(source.startsWith("//") ? `https:${source}` : source);
     if (!["https:", "http:"].includes(url.protocol)) throw new Error("Unsupported image URL");
     const optimized = url.protocol === "https:" && !url.port &&
-      ["res.cloudinary.com", "images.unsplash.com"].includes(url.hostname);
-    // Older listings may use other hosts or signed Firebase Storage URLs.
-    // Preserve direct delivery for those instead of rejecting existing photos.
+      url.hostname === "images.unsplash.com";
+    // Cloudinary generates the card-sized image itself, so bypass Vercel's
+    // per-request optimizer. Older listings may also use other direct hosts.
     return { src: url.href, unoptimized: !optimized };
   } catch {
     return { src: IMAGE_PLACEHOLDER, unoptimized: false };

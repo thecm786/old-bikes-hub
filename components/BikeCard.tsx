@@ -214,6 +214,7 @@ image ?
   }
   alt={name}
   fill
+  unoptimized={image.includes("res.cloudinary.com")}
   loading="lazy"
   placeholder="blur"
   blurDataURL="/placeholder-bike.webp"

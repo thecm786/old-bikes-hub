@@ -199,6 +199,8 @@ alt={bike.name}
 
 fill
 
+unoptimized={imageUrl.includes("res.cloudinary.com")}
+
 quality={75}
 
 sizes="

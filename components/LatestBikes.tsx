@@ -336,6 +336,8 @@ bike.name
 
 fill
 
+unoptimized={bike.image.includes("res.cloudinary.com")}
+
 loading="lazy"
 
 quality={
