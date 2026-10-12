@@ -109,7 +109,12 @@ export default async function CollectionPage({ params }: Props) {
   const title = district ? `Used Bikes in ${district}, Bihar` : item.title;
   const pagePath = `/used-bikes-bihar/${collection}`;
   const focus = district ? `${district}, Bihar` : item.title.toLowerCase();
-  const buyerGuide = district ? districtGuides[district] : collectionGuides[collection];
+  const buyerGuide = district
+    ? districtGuides[district] ?? {
+      heading: `Buying a second hand bike for ${district}`,
+      text: `${district} buyers can compare the live Old Bikes Hub inventory by model, year, kilometres and price. Each card shows the bike's actual location. Before travelling, confirm availability, inspection timing, RC, insurance and the ownership-transfer process with the team.`,
+    }
+    : collectionGuides[collection];
   const faqItems = [
     {
       question: `How do I buy ${focus}?`,
@@ -156,7 +161,7 @@ export default async function CollectionPage({ params }: Props) {
       </article>)}
     </div>
     {district && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">Buying a used bike from {district}</h2><p className="mt-3 text-gray-700">Compare price, year, kilometres and the bike&apos;s actual location. Before payment, inspect the bike, verify RC and insurance, match chassis and engine numbers, and agree the ownership-transfer process.</p><Link href="/contact" className="mt-4 inline-block font-semibold text-orange-700 underline">Contact Old Bikes Hub for an enquiry</Link></section>}
-    {buyerGuide && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">{buyerGuide.heading}</h2><p className="mt-3 leading-7 text-gray-700">{buyerGuide.text}</p><div className="mt-5 flex flex-wrap gap-4">{buyerGuide.article && <Link href={buyerGuide.article.href} className="font-semibold text-orange-700 underline">{buyerGuide.article.label}</Link>}<Link href="/used-bikes-bihar/bikes-under-50000" className="font-semibold text-orange-700 underline">Used bikes under ₹50,000</Link><Link href="/used-bikes-bihar" className="font-semibold text-orange-700 underline">All used bikes across Bihar</Link><Link href="/sell-bike" className="font-semibold text-orange-700 underline">Sell your old bike</Link></div></section>}
+    {buyerGuide && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">{buyerGuide.heading}</h2><p className="mt-3 leading-7 text-gray-700">{buyerGuide.text}</p><div className="mt-5 flex flex-wrap gap-4">{buyerGuide.article && <Link href={buyerGuide.article.href} className="font-semibold text-orange-700 underline">{buyerGuide.article.label}</Link>}<Link href="/used-bikes-bihar/bikes-under-50000" className="font-semibold text-orange-700 underline">Used bikes under ₹50,000</Link><Link href="/used-bikes-bihar/bikes-under-100000" className="font-semibold text-orange-700 underline">Used bikes under ₹1 lakh</Link><Link href="/used-bikes-bihar/royal-enfield" className="font-semibold text-orange-700 underline">Used Royal Enfield bikes</Link><Link href="/used-bikes-bihar/honda" className="font-semibold text-orange-700 underline">Used Honda bikes</Link><Link href="/used-bikes-bihar" className="font-semibold text-orange-700 underline">All used bikes across Bihar</Link><Link href="/sell-bike" className="font-semibold text-orange-700 underline">Sell your old bike</Link></div></section>}
     <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg">
       <h2 className="text-2xl font-black text-gray-900">Questions about {title.toLowerCase()}</h2>
       <div className="mt-5 space-y-5">

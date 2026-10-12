@@ -12,7 +12,7 @@ const seoCollections = [
 export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const bikes = await getPublicInventory();
-  const pages: MetadataRoute.Sitemap = ["", "/buy-bikes", "/used-bikes-bihar", "/used-bikes-muzaffarpur", "/new-bikes-india", "/blog", "/sell-bike", "/contact", "/about", "/privacy-policy", "/terms"].map(path => ({
+  const pages: MetadataRoute.Sitemap = ["", "/buy-bikes", "/used-bikes-bihar", "/used-bikes-muzaffarpur", "/used-royal-enfield-muzaffarpur", "/new-bikes-india", "/blog", "/sell-bike", "/contact", "/about", "/privacy-policy", "/terms"].map(path => ({
     url: `${baseUrl}${path}`,
     changeFrequency: path === "" || path === "/buy-bikes" ? "daily" : "weekly",
     priority: path === "" ? 1 : 0.8,
