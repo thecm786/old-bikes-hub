@@ -28,7 +28,9 @@ export const metadata: Metadata = {
 
   title: {
     default: "Old Bikes Hub | Used & Second Hand Bikes in Bihar",
-    template: "%s | Old Bikes Hub",
+    // Page metadata already contains the full search title. Adding the site
+    // name here produced titles such as “... | Old Bikes Hub | Old Bikes Hub”.
+    template: "%s",
   },
 
   description:
