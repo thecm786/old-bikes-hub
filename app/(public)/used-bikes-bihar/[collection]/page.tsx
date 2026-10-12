@@ -6,6 +6,7 @@ import { bikePath } from "@/lib/bikeUrls";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
 import { getDistrict } from "@/lib/biharDistricts";
 import { bikeFullName } from "@/lib/bikeDisplay";
+import { normalizeBikeBrand } from "@/lib/bikeBrands";
 
 const collections = {
   "royal-enfield": { brand: "Royal Enfield", title: "Used Royal Enfield Bikes for Sale in Bihar" },
@@ -19,6 +20,30 @@ const collections = {
 } as const;
 
 const collectionGuides: Record<string, { heading: string; text: string }> = {
+  "royal-enfield": {
+    heading: "Choosing a used Royal Enfield in Bihar",
+    text: "Check the exact model, service history, tyres, battery, clutch and suspension before deciding. During an inspection, listen for unusual engine noise, compare the chassis and engine numbers with the RC, and include ownership-transfer costs in the total budget.",
+  },
+  tvs: {
+    heading: "Choosing a used TVS bike in Bihar",
+    text: "Compare the model year, kilometres, service condition and the work likely due next. Inspect the tyres, brakes, chain set, battery and electrical controls, then verify the RC, insurance and engine and chassis numbers before payment.",
+  },
+  hero: {
+    heading: "Choosing a used Hero bike in Bihar",
+    text: "For a commuter bike, focus on its daily running condition: engine response, clutch, brakes, tyres, battery and service record. Match the engine and chassis numbers with the RC and confirm the ownership-transfer process before finalising a deal.",
+  },
+  yamaha: {
+    heading: "Choosing a used Yamaha bike in Bihar",
+    text: "Check the motorcycle's service history and test the clutch, brakes, suspension, tyres and electrical equipment during inspection. Compare the actual condition with the year and kilometres shown, then verify the RC, insurance and ownership details before payment.",
+  },
+  honda: {
+    heading: "Choosing a used Honda bike in Bihar",
+    text: "Compare the year, kilometres, service condition and price across available listings. Before purchase, inspect the engine, brakes, tyres, chain, battery and documents, and match the chassis and engine numbers with the RC.",
+  },
+  bajaj: {
+    heading: "Choosing a used Bajaj bike in Bihar",
+    text: "Compare the bike's model year, kilometres and condition before shortlisting. Check the chain set, clutch, brakes, tyres, suspension and service record, then verify the RC, insurance and ownership-transfer details before paying.",
+  },
   "bikes-under-50000": {
     heading: "Buying a used bike under ₹50,000 in Bihar",
     text: "At this budget, compare the model year, kilometres, tyres, battery, chain and brake condition before focusing on cosmetic upgrades. Verify the RC, insurance and engine and chassis numbers, then inspect the bike in person before paying.",
@@ -69,7 +94,7 @@ export default async function CollectionPage({ params }: Props) {
   const district = getDistrict(collection);
   if (!item && !district) notFound();
   const bikes = (await getPublicInventory()).filter(bike => bike.status === "Available" && (
-    district || ("brand" in item ? bike.brand.trim().toLowerCase() === item.brand.toLowerCase() : priceNumber(bike.price) > 0 && priceNumber(bike.price) <= item.maxPrice)
+    district || ("brand" in item ? normalizeBikeBrand(bike.brand) === item.brand : priceNumber(bike.price) > 0 && priceNumber(bike.price) <= item.maxPrice)
   ));
   const title = district ? `Used Bikes in ${district}, Bihar` : item.title;
   const pagePath = `/used-bikes-bihar/${collection}`;
