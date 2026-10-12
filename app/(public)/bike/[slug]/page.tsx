@@ -5,9 +5,10 @@ import { bikePath, resolveListing } from "@/lib/bikeUrls";
 import { pageMetadata, jsonLd, SITE_URL } from "@/lib/seo";
 import { bikeFullName } from "@/lib/bikeDisplay";
 import { bikeListingSummary } from "@/lib/bikeListingSummary";
+import { normalizeBikeBrand } from "@/lib/bikeBrands";
 
 type Props = { params: Promise<{ slug: string }> };
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
@@ -41,6 +42,6 @@ export default async function BikePage({ params }: Props) {
       seller: { "@type": "Organization", name: "Old Bikes Hub" },
     } } : {}),
   };
-  const relatedBikes = inventory.filter((listing) => listing.status === "Available" && listing.id !== bike.id && listing.brand.trim().toLowerCase() === bike.brand.trim().toLowerCase()).slice(0, 6);
+  const relatedBikes = inventory.filter((listing) => listing.status === "Available" && listing.id !== bike.id && normalizeBikeBrand(listing.brand) === normalizeBikeBrand(bike.brand)).slice(0, 6);
   return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(product) }} /><BikeDetailsClient key={bike.id} bike={bike} relatedBikes={relatedBikes} /></>;
 }
