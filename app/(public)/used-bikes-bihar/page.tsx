@@ -4,7 +4,7 @@ import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
 import { bikeFullName } from "@/lib/bikeDisplay";
-import { biharDistricts, districtSlug } from "@/lib/biharDistricts";
+import { biharDistricts, districtSlug, locationMatchesDistrict } from "@/lib/biharDistricts";
 
 const collections = [
   ["royal-enfield", "Used Royal Enfield Bikes"], ["tvs", "Used TVS Bikes"],
@@ -18,6 +18,7 @@ export const metadata = pageMetadata("Used Bikes Across Bihar | Second Hand Bike
 
 export default async function BiharInventory() {
   const bikes = (await getPublicInventory()).filter(bike => bike.status === "Available");
+  const districtsWithInventory = biharDistricts.filter(district => bikes.some(bike => locationMatchesDistrict(bike.location, district)));
   const schema = { "@context": "https://schema.org", "@graph": [
     { "@type": "CollectionPage", name: "Used Bikes and Second Hand Bikes for Sale Across Bihar", url: SITE_URL + "/used-bikes-bihar", description: "Available used motorcycles and scooters for buyers across Bihar." },
     { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: SITE_URL }, { "@type": "ListItem", position: 2, name: "Used Bikes Bihar", item: SITE_URL + "/used-bikes-bihar" }] },
@@ -34,10 +35,10 @@ export default async function BiharInventory() {
       {collections.map(([slug, label]) => <Link key={slug} href={`/used-bikes-bihar/${slug}`} className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-800">{label}</Link>)}
     </nav>
     <section className="mt-8 rounded-3xl bg-white p-6 shadow-lg" aria-labelledby="district-links-heading">
-      <h2 id="district-links-heading" className="text-2xl font-black text-gray-900">Browse used bikes for every Bihar district</h2>
-      <p className="mt-3 max-w-4xl leading-7 text-gray-700">Choose your district to view available second hand bikes and practical buying guidance. Every card shows the bike&apos;s actual location, so confirm inspection and collection details before travelling.</p>
+      <h2 id="district-links-heading" className="text-2xl font-black text-gray-900">Browse verified local stock</h2>
+      <p className="mt-3 max-w-4xl leading-7 text-gray-700">These links only show cities with currently verified local listings. Buyers from every Bihar district can still enquire about any available bike shown above.</p>
       <div className="mt-5 flex flex-wrap gap-x-4 gap-y-3">
-        {biharDistricts.map((district) => <Link key={district} href={`/used-bikes-bihar/${districtSlug(district)}`} className="font-semibold text-orange-700 underline underline-offset-4">Used bikes in {district}</Link>)}
+        {districtsWithInventory.map((district) => <Link key={district} href={district === "Muzaffarpur" ? "/used-bikes-muzaffarpur" : `/used-bikes-bihar/${districtSlug(district)}`} className="font-semibold text-orange-700 underline underline-offset-4">Used bikes in {district}</Link>)}
       </div>
     </section>
     <h2 className="mt-8 text-2xl font-black text-gray-900">{bikes.length} available bikes</h2>

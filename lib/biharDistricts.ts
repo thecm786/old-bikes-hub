@@ -4,3 +4,9 @@ export const biharDistricts = [
 
 export function districtSlug(name: string) { return name.toLowerCase().replace(/\s+/g, "-"); }
 export function getDistrict(slug: string) { return biharDistricts.find((district) => districtSlug(district) === slug); }
+
+export function locationMatchesDistrict(location: string, district: string) {
+  const normalizedLocation = location.trim().toLowerCase().replace(/\s+/g, " ");
+  const normalizedDistrict = district.trim().toLowerCase().replace(/\s+/g, " ");
+  return normalizedLocation.includes(normalizedDistrict);
+}

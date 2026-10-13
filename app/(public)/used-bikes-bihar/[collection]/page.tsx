@@ -1,10 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import SiteImage from "@/components/SiteImage";
 import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
-import { getDistrict } from "@/lib/biharDistricts";
+import { getDistrict, locationMatchesDistrict } from "@/lib/biharDistricts";
 import { bikeFullName } from "@/lib/bikeDisplay";
 import { normalizeBikeBrand } from "@/lib/bikeBrands";
 
@@ -88,8 +88,21 @@ export async function generateMetadata({ params }: Props) {
   const district = getDistrict(collection);
   if (!item && !district) return { robots: { index: false } };
   if (district) {
+    if (district === "Muzaffarpur") {
+      return {
+        ...pageMetadata("Used Bikes & Second Hand Bikes in Muzaffarpur, Bihar", "Browse verified used bikes in Muzaffarpur with real prices, photos, kilometres and locations from Old Bikes Hub.", "/used-bikes-muzaffarpur"),
+        robots: { index: false, follow: true },
+      };
+    }
     const title = `Used Bikes in ${district}, Bihar | Old Bikes Hub`;
-    const description = `Buy used bikes and second hand bikes in ${district}, Bihar from Old Bikes Hub. Browse live inventory from Muzaffarpur and across Bihar, with real prices, photos and locations.`;
+    const hasLocalInventory = (await getPublicInventory()).some(bike => bike.status === "Available" && locationMatchesDistrict(bike.location, district));
+    if (!hasLocalInventory) {
+      return {
+        ...pageMetadata(`Used Bike Buying Help for ${district}, Bihar | Old Bikes Hub`, `Browse current Bihar-wide used bike availability and get practical buying help for ${district}, Bihar. Confirm each bike's true location before arranging an inspection.`, "/used-bikes-bihar"),
+        robots: { index: false, follow: true },
+      };
+    }
+    const description = `Browse verified used bikes and second hand bikes located in ${district}, Bihar. Compare real prices, photos, kilometres and local availability before you enquire.`;
     return {
       ...pageMetadata(title, description, `/used-bikes-bihar/${collection}`),
       keywords: [`used bikes in ${district}`, `second hand bikes in ${district}`, `buy old bike in ${district}`, `used bikes ${district} Bihar`, `used bike sale ${district}`],
@@ -103,9 +116,12 @@ export default async function CollectionPage({ params }: Props) {
   const item = collections[collection as keyof typeof collections];
   const district = getDistrict(collection);
   if (!item && !district) notFound();
-  const bikes = (await getPublicInventory()).filter(bike => bike.status === "Available" && (
-    district || ("brand" in item ? normalizeBikeBrand(bike.brand) === item.brand : priceNumber(bike.price) > 0 && priceNumber(bike.price) <= item.maxPrice)
-  ));
+  if (district === "Muzaffarpur") permanentRedirect("/used-bikes-muzaffarpur");
+  const availableBikes = (await getPublicInventory()).filter(bike => bike.status === "Available");
+  const bikes = district
+    ? availableBikes.filter(bike => locationMatchesDistrict(bike.location, district))
+    : availableBikes.filter(bike => "brand" in item ? normalizeBikeBrand(bike.brand) === item.brand : priceNumber(bike.price) > 0 && priceNumber(bike.price) <= item.maxPrice);
+  const noLocalInventory = Boolean(district && bikes.length === 0);
   const title = district ? `Used Bikes in ${district}, Bihar` : item.title;
   const pagePath = `/used-bikes-bihar/${collection}`;
   const focus = district ? `${district}, Bihar` : item.title.toLowerCase();
@@ -152,14 +168,14 @@ export default async function CollectionPage({ params }: Props) {
     <nav aria-label="Breadcrumb" className="relative text-sm text-gray-300"><Link href="/used-bikes-bihar" className="text-orange-400 underline">Used bikes across Bihar</Link> / {title}</nav>
     <h1 className="relative mt-4 text-3xl font-black text-white sm:text-4xl">{title}</h1>
     <p className="relative mt-4 max-w-4xl leading-7 text-gray-300">{district ? `Old Bikes Hub sells used bikes to buyers across Bihar, including ${district}. A bike may be listed in Muzaffarpur or another city; every card shows its real location, so confirm inspection, documents, ownership transfer and collection arrangements before purchase.` : "These are currently available listings from Old Bikes Hub. Buyers anywhere in Bihar can enquire about any bike. The card shows the bike’s actual location; contact us to confirm documents, inspection and transport arrangements."}</p></div>
-    <h2 className="mt-8 text-2xl font-black text-gray-900">{bikes.length} live used bikes {district ? `for ${district} buyers` : ""}</h2>
+    {noLocalInventory ? <section className="mt-8 max-w-4xl rounded-3xl border border-orange-200 bg-orange-50 p-6 shadow-sm"><h2 className="text-2xl font-black text-gray-900">No verified listings in {district} right now</h2><p className="mt-3 leading-7 text-gray-700">We do not currently show a bike located in {district}. Browse the real Bihar-wide inventory or the verified Muzaffarpur stock, then confirm inspection and transport arrangements before travelling.</p><div className="mt-5 flex flex-wrap gap-4"><Link href="/used-bikes-bihar" className="rounded-xl bg-orange-500 px-4 py-2 font-bold text-white">Browse Bihar-wide bikes</Link><Link href="/used-bikes-muzaffarpur" className="rounded-xl border border-orange-300 px-4 py-2 font-bold text-orange-800">Browse Muzaffarpur stock</Link></div></section> : <><h2 className="mt-8 text-2xl font-black text-gray-900">{bikes.length} live used bikes {district ? `in ${district}` : ""}</h2>
     <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {bikes.map(bike => <article key={bike.id} className="group overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
         <Link href={bikePath(bike)}><div className="relative h-56"><SiteImage src={bike.images[0] || bike.image || "/bike-placeholder.svg"} alt={`${bikeFullName(bike.brand, bike.name)} ${bike.year}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" /></div>
           <div className="p-5"><h2 className="text-xl font-black text-gray-900">{bikeFullName(bike.brand, bike.name)} · {bike.year}</h2><p className="mt-2 text-xl font-black text-orange-500">{String(bike.price).includes("₹") ? bike.price : `₹${priceNumber(bike.price).toLocaleString("en-IN")}`}</p><p className="mt-2 text-gray-600">{bike.km} km · {bike.location || "Location on enquiry"}</p><span className="mt-4 inline-block rounded-xl bg-black px-4 py-2 font-bold text-white transition group-hover:bg-orange-500">View bike details</span></div>
         </Link>
       </article>)}
-    </div>
+    </div></>}
     {district && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">Buying a used bike from {district}</h2><p className="mt-3 text-gray-700">Compare price, year, kilometres and the bike&apos;s actual location. Before payment, inspect the bike, verify RC and insurance, match chassis and engine numbers, and agree the ownership-transfer process.</p><Link href="/contact" className="mt-4 inline-block font-semibold text-orange-700 underline">Contact Old Bikes Hub for an enquiry</Link></section>}
     {buyerGuide && <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg"><h2 className="text-2xl font-black text-gray-900">{buyerGuide.heading}</h2><p className="mt-3 leading-7 text-gray-700">{buyerGuide.text}</p><div className="mt-5 flex flex-wrap gap-4">{buyerGuide.article && <Link href={buyerGuide.article.href} className="font-semibold text-orange-700 underline">{buyerGuide.article.label}</Link>}<Link href="/used-bikes-bihar/bikes-under-50000" className="font-semibold text-orange-700 underline">Used bikes under ₹50,000</Link><Link href="/used-bikes-bihar/bikes-under-100000" className="font-semibold text-orange-700 underline">Used bikes under ₹1 lakh</Link><Link href="/used-bikes-bihar/royal-enfield" className="font-semibold text-orange-700 underline">Used Royal Enfield bikes</Link><Link href="/used-bikes-bihar/honda" className="font-semibold text-orange-700 underline">Used Honda bikes</Link><Link href="/used-bikes-bihar" className="font-semibold text-orange-700 underline">All used bikes across Bihar</Link><Link href="/sell-bike" className="font-semibold text-orange-700 underline">Sell your old bike</Link></div></section>}
     <section className="mt-10 max-w-4xl rounded-3xl bg-white p-6 shadow-lg">
