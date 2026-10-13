@@ -4,7 +4,7 @@ type Value = { stringValue?: string; integerValue?: string; doubleValue?: number
 type Document = { name: string; fields?: Record<string, Value>; updateTime?: string };
 export type PublicBike = {
   id: string; slug: string; name: string; brand: string; price: string | number;
-  year: string; km: string; location: string; owner: string; description: string;
+  year: string; km: string; location: string; owner: string; phone: string; description: string;
   images: string[]; image: string; status: string; verified: boolean; featured: boolean;
   updatedAt?: string; createdAt: string;
 };
@@ -18,7 +18,7 @@ function toPublicBike(doc: Document): PublicBike | undefined {
   return {
     id, slug: text("slug"), name: text("name"), brand: text("brand"),
     price: f.price?.doubleValue ?? text("price"), year: text("year"), km: text("km"),
-    location: text("location"), owner: text("owner"), description: text("description"),
+    location: text("location"), owner: text("owner"), phone: text("phone"), description: text("description"),
     image: text("image"), images: (f.images?.arrayValue?.values ?? []).map(value => value.stringValue ?? "").filter(Boolean),
     status: text("status") || "Available", verified: f.verified?.booleanValue ?? false,
     featured: f.featured?.booleanValue ?? false, updatedAt: doc.updateTime,
