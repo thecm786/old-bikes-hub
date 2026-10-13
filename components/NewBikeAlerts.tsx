@@ -69,7 +69,7 @@ export default function NewBikeAlerts() {
   };
 
   return (
-    <section className="bg-orange-500 px-5 py-10 text-white sm:py-12">
+    <section className="bg-white px-5 py-10 text-white sm:py-12">
       <div className="mx-auto grid max-w-7xl gap-7 rounded-3xl bg-black p-6 shadow-2xl sm:p-8 lg:grid-cols-[1fr_1.25fr] lg:items-center lg:p-10">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-orange-500/20 px-3 py-1 text-sm font-bold text-orange-300"><BellRing size={16} /> Fresh listings</div>
