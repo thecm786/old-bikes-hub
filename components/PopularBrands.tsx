@@ -26,7 +26,7 @@ import { normalizeBikeBrand } from "@/lib/bikeBrands";
 
 
 
-interface BikeData {
+export interface BikeData {
 
   id?: string | number;
 
@@ -215,20 +215,20 @@ animate-pulse
 
 
 
-export default function PopularBrands(){
+export default function PopularBrands({ initialBikes }: { initialBikes?: BikeData[] }){
 
 
 const [
 bikes,
 setBikes
-]=useState<BikeData[]>([]);
+]=useState<BikeData[]>(initialBikes ?? []);
 
 
 
 const [
 loading,
 setLoading
-]=useState(true);
+]=useState(initialBikes === undefined);
 
 
 

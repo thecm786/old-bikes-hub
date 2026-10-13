@@ -34,7 +34,7 @@ import type { BikeType } from "@/types/bike";
 import { bikePath } from "@/lib/bikeUrls";
 
 
-type StoredBike = BikeType & {
+export type StoredBike = BikeType & {
   id: string;
 };
 
@@ -520,20 +520,20 @@ BikeCard.displayName =
 // =======================
 
 
-export default function FeaturedBikes(){
+export default function FeaturedBikes({ initialBikes }: { initialBikes?: StoredBike[] }){
 
 
 const [
 bikes,
 setBikes
-]=useState<StoredBike[]>([]);
+]=useState<StoredBike[]>(initialBikes ?? []);
 
 
 
 const [
 loading,
 setLoading
-]=useState(true);
+]=useState(initialBikes === undefined);
 
 
 

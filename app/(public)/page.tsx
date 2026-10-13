@@ -1,6 +1,30 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { jsonLd } from "@/lib/seo";
+import { getPublicInventory, type PublicBike } from "@/lib/publicInventory";
+import type { StoredBike as FeaturedBike } from "@/components/FeaturedBikes";
+import type { StoredBike as LatestBike } from "@/components/LatestBikes";
+import type { BikeData } from "@/components/PopularBrands";
+
+export const revalidate = 3600;
+
+function toCardBike(bike: PublicBike): FeaturedBike & LatestBike {
+  return {
+    id: bike.id,
+    slug: bike.slug,
+    name: bike.name,
+    brand: bike.brand,
+    price: bike.price,
+    year: bike.year,
+    km: bike.km,
+    location: bike.location,
+    image: bike.image,
+    images: bike.images,
+    featured: bike.featured,
+    verified: bike.verified,
+    status: bike.status,
+  };
+}
 
 const Hero = dynamic(
   () => import("@/components/Hero"),
@@ -38,7 +62,11 @@ const LatestBikes = dynamic(
   }
 );
 
-export default function Home() {
+export default async function Home() {
+  const inventory = await getPublicInventory();
+  const latestBikes = inventory.slice(0, 6).map(toCardBike);
+  const featuredBikes = inventory.filter((bike) => bike.featured).slice(0, 6).map(toCardBike);
+  const brandBikes: BikeData[] = inventory.map(({ id, brand }) => ({ id, brand }));
   return (
     <main className="bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({
@@ -57,13 +85,13 @@ export default function Home() {
       <Hero />
 
       {/* FEATURED BIKES */}
-      <FeaturedBikes />
+      <FeaturedBikes initialBikes={featuredBikes} />
 
       {/* POPULAR BRANDS */}
-      <PopularBrands />
+      <PopularBrands initialBikes={brandBikes} />
 
       {/* LATEST BIKES */}
-      <LatestBikes />
+      <LatestBikes initialBikes={latestBikes} />
 
       {/* =========================
           SELL YOUR BIKE CTA

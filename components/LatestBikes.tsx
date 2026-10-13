@@ -33,7 +33,7 @@ import { bikePath } from "@/lib/bikeUrls";
 
 
 
-type StoredBike =
+export type StoredBike =
   BikeType & {
     id:string;
   };
@@ -123,16 +123,16 @@ bg-gray-200
 
 
 
-export default function LatestBikes(){
+export default function LatestBikes({ initialBikes }: { initialBikes?: StoredBike[] }){
 
 
 
 const [bikes,setBikes] =
-useState<StoredBike[]>([]);
+useState<StoredBike[]>(initialBikes ?? []);
 
 
 const [loading,setLoading] =
-useState(true);
+useState(initialBikes === undefined);
 
 
 
