@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { useSiteConfig } from "@/providers/SiteConfigProvider";
+import { trackBuyerEnquiry } from "@/lib/analytics";
 
 export default function Footer() {
   const siteConfig = useSiteConfig();
@@ -426,6 +427,7 @@ export default function Footer() {
 
               <a
                 href={`https://wa.me/${siteConfig.whatsapp}`}
+                onClick={() => trackBuyerEnquiry("whatsapp", "footer")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="

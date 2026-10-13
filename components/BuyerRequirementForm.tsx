@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { biharDistricts } from "@/lib/biharDistricts";
 import { useSiteConfig } from "@/providers/SiteConfigProvider";
+import { trackBuyerEvent } from "@/lib/analytics";
 
 export default function BuyerRequirementForm({ brands }: { brands: string[] }) {
   const siteConfig = useSiteConfig();
@@ -22,6 +23,16 @@ export default function BuyerRequirementForm({ brands }: { brands: string[] }) {
       `City: ${city || "Bihar"}`,
       "Please share matching available bikes.",
     ].join("\n");
+    trackBuyerEvent("used_bike_requirement", {
+      enquiry_source: "buyer_requirement_form",
+      brand: brand || "any",
+      city: city || "bihar",
+      budget_selected: budget ? 1 : 0,
+    });
+    trackBuyerEvent("generate_lead", {
+      contact_method: "whatsapp",
+      enquiry_source: "buyer_requirement_form",
+    });
     window.open(`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   }
 

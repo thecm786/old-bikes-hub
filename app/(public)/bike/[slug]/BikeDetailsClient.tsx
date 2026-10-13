@@ -582,7 +582,7 @@ ${url}`;
       href={whatsapp}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={() => trackBuyerEnquiry("whatsapp")}
+      onClick={() => trackBuyerEnquiry("whatsapp", "bike_details")}
       className="flex items-center justify-center gap-2 rounded-xl bg-green-500 py-4 font-bold text-white transition hover:bg-green-600 active:scale-95"
     >
       <MessageCircle size={22} />
@@ -593,7 +593,7 @@ ${url}`;
 
     <a
       href={call}
-      onClick={() => trackBuyerEnquiry("phone")}
+      onClick={() => trackBuyerEnquiry("phone", "bike_details")}
       className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-bold text-white transition hover:bg-blue-700 active:scale-95"
     >
       <Phone size={22} />
@@ -630,4 +630,3 @@ ${url}`;
     </main>
   );
 }
-

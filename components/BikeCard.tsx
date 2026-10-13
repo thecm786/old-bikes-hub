@@ -656,7 +656,7 @@ target="_blank"
 
 rel="noopener noreferrer"
 
-onClick={() => trackBuyerEnquiry("whatsapp")}
+onClick={() => trackBuyerEnquiry("whatsapp", "bike_card")}
 
 className="
 flex
@@ -688,7 +688,7 @@ WhatsApp
 
 href={callLink}
 
-onClick={() => trackBuyerEnquiry("phone")}
+onClick={() => trackBuyerEnquiry("phone", "bike_card")}
 
 className="
 flex
