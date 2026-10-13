@@ -122,7 +122,7 @@ export default async function CollectionPage({ params }: Props) {
     ? availableBikes.filter(bike => locationMatchesDistrict(bike.location, district))
     : availableBikes.filter(bike => "brand" in item ? normalizeBikeBrand(bike.brand) === item.brand : priceNumber(bike.price) > 0 && priceNumber(bike.price) <= item.maxPrice);
   const noLocalInventory = Boolean(district && bikes.length === 0);
-  const title = district ? `Used Bikes in ${district}, Bihar` : item.title;
+  const title = district ? (noLocalInventory ? `Used Bike Buying Help for ${district}, Bihar` : `Used Bikes in ${district}, Bihar`) : item.title;
   const pagePath = `/used-bikes-bihar/${collection}`;
   const focus = district ? `${district}, Bihar` : item.title.toLowerCase();
   const buyerGuide = district
@@ -133,7 +133,7 @@ export default async function CollectionPage({ params }: Props) {
     : collectionGuides[collection];
   const faqItems = [
     {
-      question: `How do I buy ${focus}?`,
+      question: `How do I buy a used bike in ${focus}?`,
       answer: `Compare the listed price, model year, kilometres and actual bike location. Contact Old Bikes Hub to confirm availability, documents and a suitable inspection arrangement before making a payment.`,
     },
     ...(district ? [{
