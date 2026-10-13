@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getPublicInventory } from "@/lib/publicInventory";
 import { bikePath } from "@/lib/bikeUrls";
+import { isIndexableListing } from "@/lib/relatedBikes";
 import { newBikeGuides } from "@/lib/newBikeGuides";
 import { blogPosts } from "@/lib/blogPosts";
 import { biharDistricts, districtSlug, locationMatchesDistrict } from "@/lib/biharDistricts";
@@ -33,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const districtPages = biharDistricts
     .filter(district => district !== "Muzaffarpur" && bikes.some(bike => bike.status === "Available" && locationMatchesDistrict(bike.location, district)))
     .map(district => ({ url: `${baseUrl}/used-bikes-bihar/${districtSlug(district)}`, changeFrequency: "weekly" as const, priority: 0.6 }));
-  return [...pages, ...collectionPages, ...blogPages, ...newBikePages, ...districtPages, ...bikes.filter(bike => bike.status === "Available").map(bike => ({
+  return [...pages, ...collectionPages, ...blogPages, ...newBikePages, ...districtPages, ...bikes.filter(isIndexableListing).map(bike => ({
     url: baseUrl + bikePath(bike), lastModified: bike.updatedAt,
     changeFrequency: "weekly" as const, priority: 0.7,
   }))];

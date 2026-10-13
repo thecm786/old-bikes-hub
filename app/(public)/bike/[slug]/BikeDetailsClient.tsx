@@ -1,12 +1,11 @@
 "use client";
 import SiteImage from "@/components/SiteImage";
-import RelatedBikes from "@/components/RelatedBikes";
 import { bikeFullName } from "@/lib/bikeDisplay";
-import { bikeListingSummary } from "@/lib/bikeListingSummary";
+import { bikeListingContent } from "@/lib/bikeListingSummary";
 import { trackBuyerEnquiry } from "@/lib/analytics";
 
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import Link from "next/link";
 
@@ -56,7 +55,7 @@ interface BikeType {
 
 }
 
-export default function BikeDetailsClient({ bike, relatedBikes }: { bike: BikeType; relatedBikes: BikeType[] }) {
+export default function BikeDetailsClient({ bike, children }: { bike: BikeType; children?: ReactNode }) {
   const [activeImage, setActiveImage] = useState(bike.images?.[0] || bike.image || "");
   const [copied, setCopied] = useState(false);
   const gallery =
@@ -66,6 +65,8 @@ export default function BikeDetailsClient({ bike, relatedBikes }: { bike: BikeTy
       : bike.image
       ? [bike.image]
       : [];
+  const bikeImageAlt = `${bikeFullName(bike.brand, bike.name)}${bike.year ? ` ${bike.year}` : ""}${bike.location ? ` in ${bike.location}` : ""}`;
+  const displayPrice = Number(String(bike.price).replace(/[^\d.]/g, ""));
 
   /*
   /* =========================
@@ -273,7 +274,7 @@ ${url}`;
               {activeImage ? (
                 <SiteImage width={1200} height={800} sizes="(max-width: 768px) 100vw, 60vw" loading="eager"
                   src={activeImage}
-                  alt={bike.name}
+                  alt={bikeImageAlt}
                   className="h-[350px] w-full object-cover sm:h-[500px]"
                 />
               ) : (
@@ -307,9 +308,7 @@ ${url}`;
                     >
                       <SiteImage width={320} height={192} sizes="(max-width: 768px) 25vw, 15vw"
                         src={img}
-                        alt={`${bike.name} ${
-                          index + 1
-                        }`}
+                        alt={`${bikeImageAlt} photo ${index + 1}`}
                         className="h-20 w-full object-cover sm:h-24"
                       />
                     </button>
@@ -368,12 +367,7 @@ ${url}`;
               </p>
 
               <p className="mt-1 text-3xl font-black text-orange-500 sm:text-4xl">
-                ₹
-                {Number(
-                  bike.price
-                ).toLocaleString(
-                  "en-IN"
-                )}
+                {displayPrice > 0 ? `₹${displayPrice.toLocaleString("en-IN")}` : "Price on enquiry"}
               </p>
 
               {/* SHARE TITLE */}
@@ -612,7 +606,7 @@ ${url}`;
             </h2>
 
             <p className="mt-3 whitespace-pre-line leading-7 text-gray-600">
-              {bike.description || bikeListingSummary(bike)}
+              {bikeListingContent(bike)}
             </p>
 
             <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold">
@@ -625,7 +619,7 @@ ${url}`;
 
         </div>
 
-        <RelatedBikes bikes={relatedBikes} currentBikeId={bike.id} brand={bike.brand} />
+        {children}
       </div>
     </main>
   );
