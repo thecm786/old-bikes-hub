@@ -71,6 +71,10 @@ function priceNumber(value: string | number) {
   return Number(String(value).replace(/[^\d.]/g, ""));
 }
 
+function formatPrice(value: number) {
+  return `₹${value.toLocaleString("en-IN")}`;
+}
+
 export async function generateMetadata({ params }: Props) {
   const { collection } = await params;
   const item = getUsedBikeCollection(collection);
@@ -118,6 +122,13 @@ export default async function CollectionPage({ params }: Props) {
     ? availableBikes.filter(bike => locationMatchesDistrict(bike.location, district))
     : availableBikes.filter(bike => matchesUsedBikeCollection(bike, item!));
   const noLocalInventory = Boolean(district && bikes.length === 0);
+  const listedPrices = bikes.map(bike => priceNumber(bike.price)).filter(price => price > 0);
+  const listedYears = bikes.map(bike => Number(bike.year)).filter(year => Number.isInteger(year) && year >= 1980 && year <= new Date().getFullYear() + 1);
+  const listedModels = Array.from(new Set(bikes.map(bike => bikeFullName(bike.brand, bike.name)).filter(Boolean))).slice(0, 5);
+  const minimumPrice = listedPrices.length ? Math.min(...listedPrices) : null;
+  const maximumPrice = listedPrices.length ? Math.max(...listedPrices) : null;
+  const oldestYear = listedYears.length ? Math.min(...listedYears) : null;
+  const newestYear = listedYears.length ? Math.max(...listedYears) : null;
   const title = district ? (noLocalInventory ? `Used Bike Buying Help for ${district}, Bihar` : `Used Bikes in ${district}, Bihar`) : item.title;
   const pagePath = `/used-bikes-bihar/${collection}`;
   const focus = district ? `${district}, Bihar` : item.title.toLowerCase();
@@ -165,6 +176,7 @@ export default async function CollectionPage({ params }: Props) {
     <h1 className="relative mt-4 text-3xl font-black text-white sm:text-4xl">{title}</h1>
     <p className="relative mt-4 max-w-4xl leading-7 text-gray-300">{district ? `Old Bikes Hub sells used bikes to buyers across Bihar, including ${district}. A bike may be listed in Muzaffarpur or another city; every card shows its real location, so confirm inspection, documents, ownership transfer and collection arrangements before purchase.` : "These are currently available listings from Old Bikes Hub. Buyers anywhere in Bihar can enquire about any bike. The card shows the bike’s actual location; contact us to confirm documents, inspection and transport arrangements."}</p></div>
     {noLocalInventory ? <section className="mt-8 max-w-4xl rounded-3xl border border-orange-200 bg-orange-50 p-6 shadow-sm"><h2 className="text-2xl font-black text-gray-900">No verified listings in {district} right now</h2><p className="mt-3 leading-7 text-gray-700">We do not currently show a bike located in {district}. Browse the real Bihar-wide inventory or the verified Muzaffarpur stock, then confirm inspection and transport arrangements before travelling.</p><div className="mt-5 flex flex-wrap gap-4"><Link href="/used-bikes-bihar" className="rounded-xl bg-orange-500 px-4 py-2 font-bold text-white">Browse Bihar-wide bikes</Link><Link href="/used-bikes-muzaffarpur" className="rounded-xl border border-orange-300 px-4 py-2 font-bold text-orange-800">Browse Muzaffarpur stock</Link></div></section> : <><h2 className="mt-8 text-2xl font-black text-gray-900">{bikes.length} live used bikes {district ? `in ${district}` : ""}</h2>
+    {bikes.length > 0 && <section className="mt-6 max-w-4xl rounded-3xl border border-orange-100 bg-orange-50 p-6 shadow-sm"><h2 className="text-2xl font-black text-gray-900">Current price and model snapshot</h2><p className="mt-3 leading-7 text-gray-700">Old Bikes Hub currently shows {bikes.length} available {district ? `used bike${bikes.length === 1 ? "" : "s"} in ${district}` : `listing${bikes.length === 1 ? "" : "s"} for ${title.toLowerCase()}`}{minimumPrice !== null && maximumPrice !== null ? `, with advertised prices from ${formatPrice(minimumPrice)} to ${formatPrice(maximumPrice)}` : ""}{oldestYear !== null && newestYear !== null ? ` and model years from ${oldestYear}${oldestYear === newestYear ? "" : ` to ${newestYear}`}` : ""}. {listedModels.length > 0 ? `Current models include ${listedModels.join(", ")}. ` : ""}Inventory and asking prices can change, so confirm the exact bike, documents and inspection time before travelling.</p></section>}
     <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {bikes.map(bike => <article key={bike.id} className="group overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
         <Link href={bikePath(bike)}><div className="relative h-56"><SiteImage src={bike.images[0] || bike.image || "/bike-placeholder.svg"} alt={`${bikeFullName(bike.brand, bike.name)} ${bike.year}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" /></div>
