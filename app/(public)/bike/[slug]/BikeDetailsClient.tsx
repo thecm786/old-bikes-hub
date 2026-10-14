@@ -4,6 +4,8 @@ import { bikeFullName } from "@/lib/bikeDisplay";
 import { bikeListingContent } from "@/lib/bikeListingSummary";
 import { trackBuyerEnquiry } from "@/lib/analytics";
 import { usedBikeBrandCollectionPath } from "@/lib/usedBikeCollections";
+import { bikePath } from "@/lib/bikeUrls";
+import { useSiteConfig } from "@/providers/SiteConfigProvider";
 
 
 import { useState, type ReactNode } from "react";
@@ -57,6 +59,7 @@ interface BikeType {
 }
 
 export default function BikeDetailsClient({ bike, children }: { bike: BikeType; children?: ReactNode }) {
+  const siteConfig = useSiteConfig();
   const [activeImage, setActiveImage] = useState(bike.images?.[0] || bike.image || "");
   const [copied, setCopied] = useState(false);
   const gallery =
@@ -68,19 +71,30 @@ export default function BikeDetailsClient({ bike, children }: { bike: BikeType; 
       : [];
   const bikeImageAlt = `${bikeFullName(bike.brand, bike.name)}${bike.year ? ` ${bike.year}` : ""}${bike.location ? ` in ${bike.location}` : ""}`;
   const displayPrice = Number(String(bike.price).replace(/[^\d.]/g, ""));
+  const listingUrl = `https://www.oldbikeshub.com${bikePath(bike)}`;
+  const listingStatus = bike.status ?? "Available";
+  const isAvailable = listingStatus === "Available";
+  const enquiryLabel = isAvailable ? "Enquire on WhatsApp" : "Ask about similar bikes";
+  const enquiryTracking = {
+    id: bike.id,
+    slug: bike.slug,
+    brand: bike.brand,
+    status: listingStatus,
+  };
+  const enquiryMessage = [
+    isAvailable ? "Hello Old Bikes Hub, I'm interested in this bike:" : "Hello Old Bikes Hub, I am looking for a similar available bike. I saw this listing:",
+    `${bikeFullName(bike.brand, bike.name)}${bike.year ? ` · ${bike.year}` : ""}`,
+    `Price: ${displayPrice > 0 ? `₹${displayPrice.toLocaleString("en-IN")}` : "Price on enquiry"}`,
+    `Kilometres: ${bike.km ? `${bike.km} km` : "Confirm on enquiry"}`,
+    `Location: ${bike.location || "Confirm on enquiry"}`,
+    `Listing: ${listingUrl}`,
+    isAvailable
+      ? "Please confirm availability, documents and inspection time."
+      : "Please share similar available bikes, documents and inspection time.",
+  ].join("\n");
 
-  /*
-  /* =========================
-   CONTACT
-========================= */
-
-const OLD_BIKES_HUB_PHONE = "8789192394";
-
-const whatsappNumber = OLD_BIKES_HUB_PHONE.replace(/\D/g, "");
-
-const whatsapp = `https://wa.me/91${whatsappNumber}`;
-
-const call = `tel:+91${whatsappNumber}`;
+  const whatsapp = `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(enquiryMessage)}`;
+  const call = `tel:${siteConfig.phone}`;
   /*
    * =========================
    * SHARE URL
@@ -150,41 +164,6 @@ const call = `tel:+91${whatsappNumber}`;
         error
       );
     }
-  };
-
-  /*
-   * =========================
-   * WHATSAPP SHARE
-   * =========================
-   */
-
-  const handleWhatsAppShare = () => {
-    const url = getBikeUrl();
-
-    if (!url) {
-      return;
-    }
-
-    const message = `Check out this bike on Old Bikes Hub:
-
-${bike.name}
-
-Price: ₹${Number(
-      bike.price
-    ).toLocaleString("en-IN")}
-
-${url}`;
-
-    const whatsappUrl =
-      `https://wa.me/?text=${encodeURIComponent(
-        message
-      )}`;
-
-    window.open(
-      whatsappUrl,
-      "_blank",
-      "noopener,noreferrer"
-    );
   };
 
   /*
@@ -371,22 +350,34 @@ ${url}`;
                 {displayPrice > 0 ? `₹${displayPrice.toLocaleString("en-IN")}` : "Price on enquiry"}
               </p>
 
+              <a
+                href={whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${enquiryLabel} about ${bikeFullName(bike.brand, bike.name)} on WhatsApp`}
+                onClick={() => trackBuyerEnquiry("whatsapp", "bike_details_primary", enquiryTracking)}
+                className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-4 font-bold text-white shadow-sm transition hover:bg-green-600 active:scale-95"
+              >
+                <MessageCircle size={22} />
+                {enquiryLabel}
+              </a>
+
               {/* SHARE TITLE */}
 
-              <div className="mt-6 flex items-center gap-2">
+              <div className="mt-6 flex items-center gap-2 border-t border-gray-200 pt-6">
                 <Share2
                   size={22}
                   className="text-orange-500"
                 />
 
                 <h2 className="text-xl font-black">
-                  Share This Bike
+                  Share this bike
                 </h2>
               </div>
 
               {/* SHARE BUTTONS */}
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
 
                 {/* MAIN SHARE */}
 
@@ -402,22 +393,6 @@ ${url}`;
                   {copied
                     ? "Copied!"
                     : "Share Bike"}
-                </button>
-
-                {/* WHATSAPP */}
-
-                <button
-                  type="button"
-                  onClick={
-                    handleWhatsAppShare
-                  }
-                  className="flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-3 font-bold text-white shadow-sm transition hover:bg-green-600 active:scale-95"
-                >
-                  <MessageCircle
-                    size={19}
-                  />
-
-                  WhatsApp
                 </button>
 
                 {/* COPY LINK */}
@@ -451,10 +426,7 @@ ${url}`;
               </div>
 
               <p className="mt-3 text-xs text-gray-500">
-                Customer is bike ko
-                WhatsApp, social apps ya
-                link ke through easily
-                share kar sakta hai.
+                Send this listing to someone who may be interested.
               </p>
 
             </div>
@@ -569,7 +541,7 @@ ${url}`;
     For enquiries from any city in Bihar, contact Old Bikes Hub directly. Confirm availability, inspection options and transport arrangements before purchase.
   </p>
 
-  <div className="mt-5 grid grid-cols-2 gap-4">
+  <div className="mt-5 grid gap-4 sm:grid-cols-2">
 
     {/* WHATSAPP */}
 
@@ -577,18 +549,19 @@ ${url}`;
       href={whatsapp}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={() => trackBuyerEnquiry("whatsapp", "bike_details")}
+      aria-label={`${enquiryLabel} about ${bikeFullName(bike.brand, bike.name)} on WhatsApp`}
+      onClick={() => trackBuyerEnquiry("whatsapp", "bike_details_contact", enquiryTracking)}
       className="flex items-center justify-center gap-2 rounded-xl bg-green-500 py-4 font-bold text-white transition hover:bg-green-600 active:scale-95"
     >
       <MessageCircle size={22} />
-      WhatsApp
+      {enquiryLabel}
     </a>
 
     {/* CALL */}
 
     <a
       href={call}
-      onClick={() => trackBuyerEnquiry("phone", "bike_details")}
+      onClick={() => trackBuyerEnquiry("phone", "bike_details_contact", enquiryTracking)}
       className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-bold text-white transition hover:bg-blue-700 active:scale-95"
     >
       <Phone size={22} />
