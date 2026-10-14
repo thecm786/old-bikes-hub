@@ -36,6 +36,7 @@ import {
 
 import type { BikeType } from "@/types/bike";
 import { normalizeBikeBrand } from "@/lib/bikeBrands";
+import { usedBikeBrandCollectionPath } from "@/lib/usedBikeCollections";
 
 const BIHAR_SERVICE_AREAS = new Set(["araria", "arwal", "aurangabad", "banka", "begusarai", "bhagalpur", "bhojpur", "buxar", "darbhanga", "east champaran", "motihari", "gaya", "gopalganj", "jamui", "jehanabad", "kaimur", "katihar", "khagaria", "kishanganj", "lakhisarai", "madhepura", "madhubani", "munger", "muzaffarpur", "nalanda", "nawada", "patna", "purnia", "rohtas", "saharsa", "samastipur", "saran", "sheikhpura", "sheohar", "sitamarhi", "siwan", "supaul", "vaishali", "west champaran", "bettiah"]);
 const INVENTORY_PAGE_SIZE = 200;
@@ -1008,7 +1009,7 @@ export default function BuyBikesClient({
         </p>
         <nav className="mt-4 flex flex-wrap gap-2" aria-label="Popular used bike brands">
           {["Royal Enfield", "TVS", "Honda", "Hero", "Yamaha", "Bajaj", "KTM"].map((brand) => (
-            <a key={brand} href={`/buy-bikes?brand=${encodeURIComponent(brand)}`} className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-orange-500 hover:text-white">
+            <a key={brand} href={usedBikeBrandCollectionPath(brand)} className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-orange-500 hover:text-white">
               Used {brand} bikes
             </a>
           ))}

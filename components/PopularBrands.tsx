@@ -23,6 +23,7 @@ import {
 import { db } from "@/firebase/firebase";
 import { bikes as defaultBikes } from "@/lib/bikes";
 import { normalizeBikeBrand } from "@/lib/bikeBrands";
+import { usedBikeBrandCollectionPath } from "@/lib/usedBikeCollections";
 
 
 
@@ -545,7 +546,7 @@ brands.map(
 
 key={brand}
 
-href={`/buy-bikes?brand=${encodeURIComponent(brand)}`}
+href={usedBikeBrandCollectionPath(brand)}
 
 className="
 group

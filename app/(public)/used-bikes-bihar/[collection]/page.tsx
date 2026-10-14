@@ -6,18 +6,7 @@ import { bikePath } from "@/lib/bikeUrls";
 import { jsonLd, pageMetadata, SITE_URL } from "@/lib/seo";
 import { getDistrict, locationMatchesDistrict } from "@/lib/biharDistricts";
 import { bikeFullName } from "@/lib/bikeDisplay";
-import { normalizeBikeBrand } from "@/lib/bikeBrands";
-
-const collections = {
-  "royal-enfield": { brand: "Royal Enfield", title: "Used Royal Enfield Bikes for Sale in Bihar" },
-  tvs: { brand: "TVS", title: "Used TVS Bikes for Sale in Bihar" },
-  hero: { brand: "Hero", title: "Used Hero Bikes for Sale in Bihar" },
-  yamaha: { brand: "Yamaha", title: "Used Yamaha Bikes for Sale in Bihar" },
-  honda: { brand: "Honda", title: "Used Honda Bikes for Sale in Bihar" },
-  bajaj: { brand: "Bajaj", title: "Used Bajaj Bikes for Sale in Bihar" },
-  "bikes-under-50000": { maxPrice: 50000, title: "Used Bikes Under ₹50,000 in Bihar" },
-  "bikes-under-100000": { maxPrice: 100000, title: "Used Bikes Under ₹1 Lakh in Bihar" },
-} as const;
+import { getUsedBikeCollection, matchesUsedBikeCollection } from "@/lib/usedBikeCollections";
 
 type BuyerGuide = { heading: string; text: string; article?: { href: string; label: string } };
 
@@ -84,7 +73,7 @@ function priceNumber(value: string | number) {
 
 export async function generateMetadata({ params }: Props) {
   const { collection } = await params;
-  const item = collections[collection as keyof typeof collections];
+  const item = getUsedBikeCollection(collection);
   const district = getDistrict(collection);
   if (!item && !district) return { robots: { index: false } };
   if (district) {
@@ -108,19 +97,26 @@ export async function generateMetadata({ params }: Props) {
       keywords: [`used bikes in ${district}`, `second hand bikes in ${district}`, `buy old bike in ${district}`, `used bikes ${district} Bihar`, `used bike sale ${district}`],
     };
   }
+  const hasLiveInventory = (await getPublicInventory()).some((bike) => matchesUsedBikeCollection(bike, item));
+  if (!hasLiveInventory) {
+    return {
+      ...pageMetadata(item.title, `Browse current Bihar-wide used bike availability and practical buying guidance for ${item.title.toLowerCase()}. Confirm the exact bike location before arranging an inspection.`, `/used-bikes-bihar/${collection}`),
+      robots: { index: false, follow: true },
+    };
+  }
   return pageMetadata(item.title, `Browse live ${item.title.toLowerCase()}. View actual price, year, kilometres and location, then enquire from any Bihar city with Old Bikes Hub.`, `/used-bikes-bihar/${collection}`);
 }
 
 export default async function CollectionPage({ params }: Props) {
   const { collection } = await params;
-  const item = collections[collection as keyof typeof collections];
+  const item = getUsedBikeCollection(collection);
   const district = getDistrict(collection);
   if (!item && !district) notFound();
   if (district === "Muzaffarpur") permanentRedirect("/used-bikes-muzaffarpur");
   const availableBikes = (await getPublicInventory()).filter(bike => bike.status === "Available");
   const bikes = district
     ? availableBikes.filter(bike => locationMatchesDistrict(bike.location, district))
-    : availableBikes.filter(bike => "brand" in item ? normalizeBikeBrand(bike.brand) === item.brand : priceNumber(bike.price) > 0 && priceNumber(bike.price) <= item.maxPrice);
+    : availableBikes.filter(bike => matchesUsedBikeCollection(bike, item!));
   const noLocalInventory = Boolean(district && bikes.length === 0);
   const title = district ? (noLocalInventory ? `Used Bike Buying Help for ${district}, Bihar` : `Used Bikes in ${district}, Bihar`) : item.title;
   const pagePath = `/used-bikes-bihar/${collection}`;

@@ -3,6 +3,7 @@ import SiteImage from "@/components/SiteImage";
 import { bikeFullName } from "@/lib/bikeDisplay";
 import { bikeListingContent } from "@/lib/bikeListingSummary";
 import { trackBuyerEnquiry } from "@/lib/analytics";
+import { usedBikeBrandCollectionPath } from "@/lib/usedBikeCollections";
 
 
 import { useState, type ReactNode } from "react";
@@ -610,7 +611,7 @@ ${url}`;
             </p>
 
             <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold">
-              <Link href={`/buy-bikes?brand=${encodeURIComponent(bike.brand)}`} className="text-orange-700 underline">More used {bike.brand} bikes</Link>
+              <Link href={usedBikeBrandCollectionPath(bike.brand)} className="text-orange-700 underline">More used {bike.brand} bikes</Link>
               <Link href="/used-bikes-bihar" className="text-orange-700 underline">Browse all used bikes in Bihar</Link>
             </div>
 

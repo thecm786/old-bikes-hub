@@ -5,11 +5,8 @@ import { isIndexableListing } from "@/lib/relatedBikes";
 import { newBikeGuides } from "@/lib/newBikeGuides";
 import { blogPosts } from "@/lib/blogPosts";
 import { biharDistricts, districtSlug, locationMatchesDistrict } from "@/lib/biharDistricts";
+import { matchesUsedBikeCollection, usedBikeCollectionSlugs, usedBikeCollections } from "@/lib/usedBikeCollections";
 const baseUrl = "https://www.oldbikeshub.com";
-const seoCollections = [
-  "royal-enfield", "tvs", "hero", "yamaha", "honda", "bajaj",
-  "bikes-under-50000", "bikes-under-100000",
-];
 export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const bikes = await getPublicInventory();
@@ -18,7 +15,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: path === "" || path === "/buy-bikes" ? "daily" : "weekly",
     priority: path === "" ? 1 : 0.8,
   }));
-  const collectionPages = seoCollections.map(slug => ({
+  const collectionPages = usedBikeCollectionSlugs
+    .filter((slug) => bikes.some((bike) => matchesUsedBikeCollection(bike, usedBikeCollections[slug])))
+    .map(slug => ({
     url: `${baseUrl}/used-bikes-bihar/${slug}`,
     changeFrequency: "daily" as const, priority: 0.75,
   }));
