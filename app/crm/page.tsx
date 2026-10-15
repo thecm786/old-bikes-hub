@@ -34,9 +34,18 @@ type Lead = {
 
 type Remark = { id: string; text: string; createdByUid: string; createdAt?: Timestamp };
 type CrmUser = { uid: string; name: string; email: string; active: boolean };
+type Bike = { id: string; name: string; brand: string; price: number; status: string; slug?: string; location?: string; year?: string };
 
 const blankLead = { name: "", phone: "", email: "", source: "WhatsApp" as LeadSource, assignedTo: "" };
 const IMPORT_BATCH_SIZE = 450;
+const QUICK_OUTCOMES = [
+  { label: "No Answer", status: "Follow-up", note: "No answer. Try calling again.", whatsapp: "Not yet" },
+  { label: "Interested", status: "Qualified", note: "Customer is interested.", whatsapp: "Not yet" },
+  { label: "Visit Scheduled", status: "Qualified", note: "Agency visit scheduled.", whatsapp: "Not yet" },
+  { label: "Details Shared", status: "Contacted", note: "Bike details shared on WhatsApp.", whatsapp: "Yes" },
+  { label: "Not Interested", status: "Lost", note: "Customer is not interested.", whatsapp: "Not yet" },
+  { label: "Bought Elsewhere", status: "Lost", note: "Customer has bought a bike elsewhere.", whatsapp: "Not yet" },
+] as const;
 
 type CallForm = { status: LeadStatus; nextFollowUpAt: string; agencyVisitAt: string; interestBrand: string; interestModel: string; budgetRange: string; whatsappDetailsShared: "Yes" | "No" | "Not yet"; remark: string };
 
@@ -79,9 +88,18 @@ function displayDate(value?: Timestamp) {
   return value ? value.toDate().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
 }
 
+function budgetMaximum(range: string) {
+  if (range === "Under ₹50,000") return 50000;
+  if (range === "₹50,000–₹80,000") return 80000;
+  if (range === "₹80,000–₹1.2 lakh") return 120000;
+  if (range === "₹1.2–₹2 lakh") return 200000;
+  return Number.POSITIVE_INFINITY;
+}
+
 export default function CrmPage() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [bikes, setBikes] = useState<Bike[]>([]);
   const [members, setMembers] = useState<CrmUser[]>([]);
   const [selected, setSelected] = useState<Lead | null>(null);
   const [remarks, setRemarks] = useState<Remark[]>([]);
@@ -135,6 +153,10 @@ export default function CrmPage() {
     };
   }, []);
 
+  useEffect(() => onSnapshot(collection(db, "bikes"), (snapshot) => {
+    setBikes(snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<Bike, "id">) })));
+  }, (error) => console.error("CRM bike listener error:", error)), []);
+
   const selectedId = selected?.id;
   useEffect(() => {
     if (!selectedId) return;
@@ -147,6 +169,29 @@ export default function CrmPage() {
     const term = search.trim().toLowerCase();
     return leads.filter((lead) => (filter === "All" || lead.status === filter) && (!term || [lead.name, lead.phone, lead.email, lead.assignedName].join(" ").toLowerCase().includes(term)));
   }, [filter, leads, search]);
+
+  const todaysFollowUps = useMemo(() => {
+    const today = new Date();
+    const key = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    return leads.filter((lead) => dateValue(lead.nextFollowUpAt) === key);
+  }, [leads]);
+
+  const relatedBikes = useMemo(() => {
+    if (!callForm) return [];
+    const preferredBrand = callForm.interestBrand.toLowerCase();
+    const preferredModel = callForm.interestModel.trim().toLowerCase();
+    return bikes.filter((bike) => bike.status === "Available" && (preferredBrand === "any brand" || bike.brand.toLowerCase() === preferredBrand) && Number(bike.price) <= budgetMaximum(callForm.budgetRange)).sort((first, second) => Number(second.name.toLowerCase().includes(preferredModel)) - Number(first.name.toLowerCase().includes(preferredModel))).slice(0, 6);
+  }, [bikes, callForm]);
+
+  const openLead = (lead: Lead) => {
+    setRemarks([]);
+    setSelected(lead);
+    setCallForm(callFormFor(lead));
+  };
+
+  const applyQuickOutcome = (outcome: (typeof QUICK_OUTCOMES)[number]) => {
+    setCallForm((current) => current ? { ...current, status: outcome.status as LeadStatus, whatsappDetailsShared: outcome.whatsapp, remark: current.remark || outcome.note } : current);
+  };
 
   const createLead = async (event: FormEvent) => {
     event.preventDefault();
@@ -265,6 +310,11 @@ export default function CrmPage() {
       <div className="flex gap-2"><a href="/admin/dashboard" className="rounded-xl border border-white/20 px-4 py-2.5 text-sm font-bold hover:bg-white/10">Admin</a><button onClick={logout} className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/20"><LogOut size={16} /> Sign out</button></div>
     </header>
 
+    <section className="mx-auto mt-6 max-w-7xl rounded-2xl border border-orange-100 bg-orange-50 p-4">
+      <div className="flex items-center justify-between"><div><h2 className="font-black text-slate-900">Today&apos;s Follow-ups</h2><p className="mt-1 text-sm text-slate-600">{todaysFollowUps.length} customer{todaysFollowUps.length === 1 ? "" : "s"} scheduled for today</p></div><CalendarClock className="text-orange-500" /></div>
+      {todaysFollowUps.length > 0 ? <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{todaysFollowUps.map((lead) => <button key={lead.id} onClick={() => openLead(lead)} className="shrink-0 rounded-xl border border-orange-200 bg-white px-3 py-2 text-left text-sm shadow-sm hover:border-orange-400"><span className="block font-black">{lead.name}</span><span className="text-slate-500">{lead.phone}</span></button>)}</div> : <p className="mt-3 text-sm text-slate-500">No follow-up calls are scheduled for today.</p>}
+    </section>
+
     <section className="mx-auto mt-6 grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
       <div>
         <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
@@ -278,19 +328,20 @@ export default function CrmPage() {
         </div>
         {showForm && <form onSubmit={createLead} className="mt-4 grid gap-3 rounded-2xl border border-orange-100 bg-orange-50 p-4 sm:grid-cols-2"><input required value={leadForm.name} onChange={(event) => setLeadForm({ ...leadForm, name: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Customer name" /><input required value={leadForm.phone} onChange={(event) => setLeadForm({ ...leadForm, phone: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Phone / WhatsApp number" /><input type="email" value={leadForm.email} onChange={(event) => setLeadForm({ ...leadForm, email: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Email (optional)" /><select value={leadForm.source} onChange={(event) => setLeadForm({ ...leadForm, source: event.target.value as LeadSource })} className="rounded-xl border border-orange-100 bg-white px-3 py-3">{SOURCES.map((source) => <option key={source}>{source}</option>)}</select>{isAdmin && <select value={leadForm.assignedTo} onChange={(event) => setLeadForm({ ...leadForm, assignedTo: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3 sm:col-span-2"><option value="">Assign to me</option>{members.map((member) => <option key={member.uid} value={member.uid}>{member.name} {member.email ? `(${member.email})` : ""}</option>)}</select>}<div className="flex gap-2 sm:col-span-2"><button disabled={saving} className="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white disabled:opacity-60">Save lead</button><button type="button" onClick={() => setShowForm(false)} className="rounded-xl px-5 py-3 font-bold text-slate-600">Cancel</button></div></form>}
         <div className="mt-5 overflow-hidden rounded-2xl bg-white shadow-sm">
-          {loading ? <p className="p-8 text-center font-semibold text-slate-500">Loading leads...</p> : visibleLeads.length === 0 ? <div className="p-12 text-center"><ClipboardList className="mx-auto text-slate-300" size={40} /><h2 className="mt-3 text-xl font-black">No leads here yet</h2><p className="mt-1 text-sm text-slate-500">Add the first customer enquiry to start the calling workflow.</p></div> : <div className="divide-y divide-slate-100">{visibleLeads.map((lead) => <button key={lead.id} onClick={() => { setRemarks([]); setSelected(lead); setCallForm(callFormFor(lead)); }} className={`flex w-full items-center gap-4 px-4 py-4 text-left transition hover:bg-orange-50 ${selected?.id === lead.id ? "bg-orange-50" : ""}`}><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 font-black text-slate-600">{lead.name.slice(0, 1).toUpperCase()}</div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><p className="truncate font-black">{lead.name}</p><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${lead.status === "Won" ? "bg-emerald-100 text-emerald-700" : lead.status === "Lost" ? "bg-rose-100 text-rose-700" : "bg-orange-100 text-orange-700"}`}>{lead.status}</span></div><p className="mt-1 truncate text-sm text-slate-500">{lead.phone} · {lead.source} · {lead.assignedName}</p></div></button>)}</div>}
+          {loading ? <p className="p-8 text-center font-semibold text-slate-500">Loading leads...</p> : visibleLeads.length === 0 ? <div className="p-12 text-center"><ClipboardList className="mx-auto text-slate-300" size={40} /><h2 className="mt-3 text-xl font-black">No leads here yet</h2><p className="mt-1 text-sm text-slate-500">Add the first customer enquiry to start the calling workflow.</p></div> : <div className="divide-y divide-slate-100">{visibleLeads.map((lead) => <button key={lead.id} onClick={() => openLead(lead)} className={`flex w-full items-center gap-4 px-4 py-4 text-left transition hover:bg-orange-50 ${selected?.id === lead.id ? "bg-orange-50" : ""}`}><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 font-black text-slate-600">{lead.name.slice(0, 1).toUpperCase()}</div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><p className="truncate font-black">{lead.name}</p><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${lead.status === "Won" ? "bg-emerald-100 text-emerald-700" : lead.status === "Lost" ? "bg-rose-100 text-rose-700" : "bg-orange-100 text-orange-700"}`}>{lead.status}</span></div><p className="mt-1 truncate text-sm text-slate-500">{lead.phone} · {lead.source} · {lead.assignedName}</p></div></button>)}</div>}
         </div>
       </div>
       <aside className="min-h-[340px] rounded-2xl bg-white p-5 shadow-sm">
         {!selected || !callForm ? <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center"><UserRound size={40} className="text-slate-300" /><h2 className="mt-3 text-lg font-black">Select a lead</h2><p className="mt-1 text-sm text-slate-500">Open a customer to record the call outcome.</p></div> : <div>
           <div className="flex items-start justify-between gap-3"><div><h2 className="text-2xl font-black">{selected.name}</h2><p className="mt-1 text-sm text-slate-500">Added {displayDate(selected.createdAt)} · {selected.source}</p></div><button onClick={() => { setRemarks([]); setCallForm(null); setSelected(null); }} className="text-sm font-bold text-slate-500">Close</button></div>
           <div className="mt-5 grid gap-2"><a href={`tel:${selected.phone}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 font-bold text-white"><Phone size={17} /> Call {selected.phone}</a><a target="_blank" rel="noreferrer" href={`https://wa.me/${selected.phone.replace(/\D/g, "")}`} className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 font-bold text-emerald-800"><ExternalLink size={17} /> Open WhatsApp</a></div>
-          <form onSubmit={saveCallUpdate} className="mt-6 border-t border-slate-100 pt-5"><h3 className="font-black">After-call update</h3><p className="mt-1 text-xs text-slate-500">Fill only what was discussed, then save once.</p>
+          <form onSubmit={saveCallUpdate} className="mt-6 border-t border-slate-100 pt-5"><h3 className="font-black">After-call update</h3><p className="mt-1 text-xs text-slate-500">Fill only what was discussed, then save once.</p><div className="mt-3 flex flex-wrap gap-2">{QUICK_OUTCOMES.map((outcome) => <button type="button" key={outcome.label} onClick={() => applyQuickOutcome(outcome)} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:border-orange-400 hover:bg-orange-50">{outcome.label}</button>)}</div>
             <div className="mt-4 grid grid-cols-2 gap-3"><label className="text-xs font-bold text-slate-600">Lead Status<select value={callForm.status} onChange={(event) => setCallForm({ ...callForm, status: event.target.value as LeadStatus })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold">{STATUSES.map((status) => <option key={status}>{status}</option>)}</select></label><label className="text-xs font-bold text-slate-600">Next Follow-up Date<input type="date" value={callForm.nextFollowUpAt} onChange={(event) => setCallForm({ ...callForm, nextFollowUpAt: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" /></label><label className="text-xs font-bold text-slate-600">Agency Visit Date<input type="date" value={callForm.agencyVisitAt} onChange={(event) => setCallForm({ ...callForm, agencyVisitAt: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" /></label><label className="text-xs font-bold text-slate-600">Preferred Brand<select value={callForm.interestBrand} onChange={(event) => setCallForm({ ...callForm, interestBrand: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">{BRANDS.map((brand) => <option key={brand}>{brand}</option>)}</select></label></div>
             <label className="mt-3 block text-xs font-bold text-slate-600">Preferred Model<input value={callForm.interestModel} onChange={(event) => setCallForm({ ...callForm, interestModel: event.target.value })} maxLength={100} placeholder="Example: Classic 350, Shine 125" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" /></label>
             <div className="mt-3 grid grid-cols-2 gap-3"><label className="text-xs font-bold text-slate-600">Budget Range<select value={callForm.budgetRange} onChange={(event) => setCallForm({ ...callForm, budgetRange: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">{BUDGETS.map((budget) => <option key={budget}>{budget}</option>)}</select></label><label className="text-xs font-bold text-slate-600">Details Shared on WhatsApp?<select value={callForm.whatsappDetailsShared} onChange={(event) => setCallForm({ ...callForm, whatsappDetailsShared: event.target.value as CallForm["whatsappDetailsShared"] })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option>Not yet</option><option>Yes</option><option>No</option></select></label></div>
             <label className="mt-3 block text-xs font-bold text-slate-600">Call Notes<textarea value={callForm.remark} onChange={(event) => setCallForm({ ...callForm, remark: event.target.value })} maxLength={2000} placeholder="Example: Customer wants a black Classic 350. Details sent on WhatsApp; will visit Saturday." className="mt-1.5 min-h-24 w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-orange-500" /></label><button disabled={saving} className="mt-3 w-full rounded-xl bg-orange-500 px-4 py-3 font-black text-white disabled:opacity-60">{saving ? "Saving..." : "Save after-call update"}</button>
           </form>
+          <div className="mt-5 border-t border-slate-100 pt-4"><div className="flex items-center justify-between gap-3"><h3 className="font-black">Related Listed Bikes</h3><span className="text-xs font-bold text-slate-500">{relatedBikes.length} available</span></div>{relatedBikes.length > 0 ? <div className="mt-3 space-y-2">{relatedBikes.map((bike) => <a key={bike.id} href={bike.slug ? `/bike/${bike.slug}` : "/buy-bikes"} target="_blank" rel="noreferrer" className="block rounded-xl border border-slate-200 p-3 transition hover:border-orange-400 hover:bg-orange-50"><div className="flex items-start justify-between gap-3"><div><p className="font-bold">{bike.name || bike.brand}</p><p className="mt-1 text-xs text-slate-500">{bike.location || "Bihar"}{bike.year ? ` · ${bike.year}` : ""}</p></div><p className="font-black text-orange-600">₹{Number(bike.price).toLocaleString("en-IN")}</p></div></a>)}</div> : <p className="mt-2 text-sm text-slate-500">No matching available bike found. Update preferred brand or budget to widen results.</p>}</div>
           <p className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-slate-500"><CalendarClock size={14} /> Assigned to {selected.assignedName}</p><div className="mt-5 border-t border-slate-100 pt-4"><h3 className="inline-flex items-center gap-2 font-black"><MessageSquareText size={18} /> Previous remarks</h3><div className="mt-3 space-y-3">{remarks.length === 0 ? <p className="text-sm text-slate-500">No remarks yet.</p> : remarks.map((remark) => <article key={remark.id} className="rounded-xl bg-slate-50 p-3"><p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{remark.text}</p><p className="mt-2 text-xs font-semibold text-slate-400">{displayDate(remark.createdAt)} · recorded securely</p></article>)}</div></div>
         </div>}
       </aside>
