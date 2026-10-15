@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Firebase Admin includes Node-only dependencies. Keep it external to the
+  // Next.js server bundle so Vercel loads it in the Node runtime correctly.
+  serverExternalPackages: ["firebase-admin"],
   async redirects() {
     return [
       {
