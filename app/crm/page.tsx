@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, Timestamp, updateDoc, where } from "firebase/firestore";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, Timestamp, updateDoc, where, writeBatch } from "firebase/firestore";
 import { onIdTokenChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { CalendarClock, CirclePlus, ClipboardList, ExternalLink, LogOut, MessageSquareText, Phone, Search, UserRound } from "lucide-react";
+import { CalendarClock, CirclePlus, ClipboardList, Download, ExternalLink, FileUp, LogOut, MessageSquareText, Phone, Search, UserRound } from "lucide-react";
 import { auth, db } from "@/firebase/firebase";
 
 const STATUSES = ["New", "Contacted", "Follow-up", "Qualified", "Won", "Lost"] as const;
@@ -29,6 +29,17 @@ type Remark = { id: string; text: string; createdByUid: string; createdAt?: Time
 type CrmUser = { uid: string; name: string; email: string; active: boolean };
 
 const blankLead = { name: "", phone: "", email: "", source: "WhatsApp" as LeadSource, assignedTo: "" };
+const IMPORT_LIMIT = 200;
+
+function importDate(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const standard = /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? new Date(`${trimmed}T00:00:00`) : (() => {
+    const match = trimmed.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+    return match ? new Date(`${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}T00:00:00`) : new Date("invalid");
+  })();
+  return Number.isNaN(standard.getTime()) ? undefined : Timestamp.fromDate(standard);
+}
 
 function dateValue(value: Timestamp | null) {
   if (!value) return "";
@@ -57,6 +68,8 @@ export default function CrmPage() {
   const [userName, setUserName] = useState("Calling team");
   const [leadForm, setLeadForm] = useState(blankLead);
   const [remarkText, setRemarkText] = useState("");
+  const [importMessage, setImportMessage] = useState("");
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let stopLeads: (() => void) | undefined;
@@ -158,6 +171,56 @@ export default function CrmPage() {
     } finally { setSaving(false); }
   };
 
+  const downloadTemplate = async (type: "csv" | "xlsx") => {
+    const XLSX = await import("xlsx");
+    const sheet = XLSX.utils.json_to_sheet([{ Name: "Ravi Kumar", Phone: "9876543210", Email: "", Source: "WhatsApp", "Follow-up Date": "2026-10-20" }]);
+    sheet["!cols"] = [{ wch: 24 }, { wch: 18 }, { wch: 30 }, { wch: 16 }, { wch: 18 }];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, "CRM Leads");
+    XLSX.writeFile(workbook, `old-bikes-hub-lead-format.${type}`, { bookType: type });
+  };
+
+  const importLeads = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!/\.(csv|xlsx|xls)$/i.test(file.name)) {
+      setImportMessage("Use a CSV, XLSX or XLS file.");
+      return;
+    }
+    setSaving(true);
+    setImportMessage("Reading file...");
+    try {
+      const XLSX = await import("xlsx");
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, { defval: "", raw: false });
+      if (!rows.length) throw new Error("The first sheet has no lead rows.");
+      if (rows.length > IMPORT_LIMIT) throw new Error(`Upload up to ${IMPORT_LIMIT} leads at one time.`);
+      const parsed = rows.map((row, index) => {
+        const fields = Object.fromEntries(Object.entries(row).map(([key, value]) => [key.trim().toLowerCase().replace(/[^a-z]/g, ""), String(value ?? "").trim()]));
+        const name = fields.name || fields.customername;
+        const phone = (fields.phone || fields.mobile || fields.whatsapp || "").replace(/\s+/g, "");
+        const email = fields.email || "";
+        const source = (SOURCES.includes(fields.source as LeadSource) ? fields.source : "Other") as LeadSource;
+        const followUp = importDate(fields.followupdate || fields.nextfollowup || "");
+        if (!name || !/^[+]?[0-9]{10,15}$/.test(phone)) throw new Error(`Row ${index + 2}: name and valid phone are required.`);
+        if (email && !/^[^ @]+@[^ @]+[.][^ @]+$/.test(email)) throw new Error(`Row ${index + 2}: email is not valid.`);
+        if (followUp === undefined) throw new Error(`Row ${index + 2}: use YYYY-MM-DD for Follow-up Date.`);
+        return { name, phone, email, source, nextFollowUpAt: followUp };
+      });
+      const batch = writeBatch(db);
+      parsed.forEach((lead) => batch.set(doc(collection(db, "crmLeads")), {
+        ...lead, status: "New", assignedTo: userId, assignedName: userName, createdByUid: userId,
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      }));
+      await batch.commit();
+      setImportMessage(`${parsed.length} lead${parsed.length === 1 ? "" : "s"} added successfully.`);
+    } catch (error) {
+      setImportMessage(error instanceof Error ? error.message : "Lead import could not be completed.");
+    } finally { setSaving(false); }
+  };
+
   const logout = async () => { await signOut(auth); router.replace("/crm/login"); };
 
   return <main className="min-h-screen bg-slate-50 p-4 text-slate-900 sm:p-7">
@@ -172,6 +235,10 @@ export default function CrmPage() {
           <div className="relative flex-1"><Search size={18} className="absolute left-3 top-3.5 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, phone or caller" className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-3 outline-none focus:border-orange-500" /></div>
           <select value={filter} onChange={(event) => setFilter(event.target.value as LeadStatus | "All")} className="rounded-xl border border-slate-200 px-3 py-3 font-semibold outline-none focus:border-orange-500"><option value="All">All statuses</option>{STATUSES.map((status) => <option key={status}>{status}</option>)}</select>
           <button onClick={() => setShowForm((current) => !current)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black text-white hover:bg-orange-600"><CirclePlus size={18} /> Add lead</button>
+        </div>
+        <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-black text-slate-900">Bulk add leads</p><p className="mt-1 text-sm text-slate-600">Upload up to {IMPORT_LIMIT} leads. Every imported lead is assigned to your account.</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => downloadTemplate("xlsx")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> Excel format</button><button type="button" onClick={() => downloadTemplate("csv")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> CSV format</button><button type="button" disabled={saving} onClick={() => fileInput.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"><FileUp size={16} /> Upload file</button><input ref={fileInput} onChange={importLeads} accept=".csv,.xlsx,.xls" type="file" className="hidden" /></div></div>
+          <p className="mt-3 text-xs font-semibold text-slate-500">Required: Name, Phone. Optional: Email, Source (WhatsApp, Phone call, Walk-in, Website, Other), Follow-up Date (YYYY-MM-DD).</p>{importMessage && <p className={`mt-3 rounded-lg px-3 py-2 text-sm font-semibold ${importMessage.includes("successfully") ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>{importMessage}</p>}
         </div>
         {showForm && <form onSubmit={createLead} className="mt-4 grid gap-3 rounded-2xl border border-orange-100 bg-orange-50 p-4 sm:grid-cols-2"><input required value={leadForm.name} onChange={(event) => setLeadForm({ ...leadForm, name: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Customer name" /><input required value={leadForm.phone} onChange={(event) => setLeadForm({ ...leadForm, phone: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Phone / WhatsApp number" /><input type="email" value={leadForm.email} onChange={(event) => setLeadForm({ ...leadForm, email: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Email (optional)" /><select value={leadForm.source} onChange={(event) => setLeadForm({ ...leadForm, source: event.target.value as LeadSource })} className="rounded-xl border border-orange-100 bg-white px-3 py-3">{SOURCES.map((source) => <option key={source}>{source}</option>)}</select>{isAdmin && <select value={leadForm.assignedTo} onChange={(event) => setLeadForm({ ...leadForm, assignedTo: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3 sm:col-span-2"><option value="">Assign to me</option>{members.map((member) => <option key={member.uid} value={member.uid}>{member.name} {member.email ? `(${member.email})` : ""}</option>)}</select>}<div className="flex gap-2 sm:col-span-2"><button disabled={saving} className="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white disabled:opacity-60">Save lead</button><button type="button" onClick={() => setShowForm(false)} className="rounded-xl px-5 py-3 font-bold text-slate-600">Cancel</button></div></form>}
         <div className="mt-5 overflow-hidden rounded-2xl bg-white shadow-sm">
