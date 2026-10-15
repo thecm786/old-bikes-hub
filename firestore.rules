@@ -2,76 +2,185 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ==========================================
+    // AUTHENTICATION HELPERS
+    // ==========================================
+
     function isAdmin() {
       return request.auth != null
         && request.auth.token.admin == true;
     }
 
-    // Calling agents receive this claim through the private Admin SDK script.
-    // Their access is intentionally limited to their own CRM assignments.
     function isCrmAgent() {
       return request.auth != null
-        && request.auth.token.crmAgent == true;
+        && request.auth.token.crmAgent == true
+        && exists(
+          /databases/$(database)/documents/crmUsers/$(request.auth.uid)
+        )
+        && get(
+          /databases/$(database)/documents/crmUsers/$(request.auth.uid)
+        ).data.active == true;
     }
 
     function isCrmUser() {
       return isAdmin() || isCrmAgent();
     }
 
+    // ==========================================
+    // CRM ASSIGNMENT HELPERS
+    // ==========================================
+
+    function hasActiveCrmAssignment(leadId) {
+      let assignmentPath =
+        /databases/$(database)/documents/crmLeadAssignments/$(leadId + "_" + request.auth.uid);
+
+      return isCrmAgent()
+        && exists(assignmentPath)
+        && get(assignmentPath).data.agentUid == request.auth.uid
+        && get(assignmentPath).data.leadId == leadId
+        && get(assignmentPath).data.active == true
+        && (
+          get(assignmentPath).data.protected == true
+          || (
+            get(assignmentPath).data.expiresAt is timestamp
+            && get(assignmentPath).data.expiresAt > request.time
+          )
+        );
+    }
+
+    // Legacy CRM compatibility
     function isAssignedLead() {
-      return isCrmAgent() && resource.data.assignedTo == request.auth.uid;
+      return isCrmAgent()
+        && resource.data.assignedTo == request.auth.uid;
     }
 
     function canReadCrmLead(leadId) {
-      let lead = get(/databases/$(database)/documents/crmLeads/$(leadId));
-      return isAdmin() || (isCrmAgent() && lead.data.assignedTo == request.auth.uid);
+      return isAdmin()
+        || (
+          isCrmAgent()
+          && (
+            get(
+              /databases/$(database)/documents/crmLeads/$(leadId)
+            ).data.assignedTo == request.auth.uid
+            || hasActiveCrmAssignment(leadId)
+          )
+        );
     }
+
+    // ==========================================
+    // CRM LEAD VALIDATION
+    // ==========================================
 
     function validCrmLead(data) {
       return data.keys().hasAll([
           'name', 'phone', 'email', 'source', 'status', 'assignedTo',
-          'assignedName', 'createdByUid', 'nextFollowUpAt', 'createdAt', 'updatedAt'
+          'assignedName', 'createdByUid', 'nextFollowUpAt',
+          'createdAt', 'updatedAt'
         ])
         && data.keys().hasOnly([
           'name', 'phone', 'email', 'source', 'status', 'assignedTo',
-          'assignedName', 'createdByUid', 'nextFollowUpAt', 'agencyVisitAt',
-          'interestBrand', 'interestModel', 'budgetRange', 'whatsappDetailsShared', 'createdAt', 'updatedAt'
+          'assignedName', 'createdByUid', 'nextFollowUpAt',
+          'agencyVisitAt', 'interestBrand', 'interestModel',
+          'budgetRange', 'whatsappDetailsShared',
+          'createdAt', 'updatedAt'
         ])
-        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
-        && data.phone is string && data.phone.matches('[+]?[0-9]{10,15}')
-        && data.email is string && data.email.size() <= 254
-        && (data.email == '' || data.email.matches('[^ @]+@[^ @]+[.][^ @]+'))
-        && data.source in ['WhatsApp', 'Phone call', 'Walk-in', 'Website', 'Other']
-        && data.status in ['New', 'No Answer', 'Contacted', 'Follow-up', 'Qualified', 'Won', 'Lost']
-        && data.assignedTo is string && data.assignedTo.size() > 0 && data.assignedTo.size() <= 128
-        && data.assignedName is string && data.assignedName.size() > 0 && data.assignedName.size() <= 160
-        && data.createdByUid is string && data.createdByUid.size() > 0 && data.createdByUid.size() <= 128
-        && (data.nextFollowUpAt == null || data.nextFollowUpAt is timestamp)
-        && (!data.keys().hasAll(['agencyVisitAt']) || (data.agencyVisitAt == null || data.agencyVisitAt is timestamp))
-        && (!data.keys().hasAll(['interestBrand']) || (data.interestBrand is string && data.interestBrand.size() <= 60))
-        && (!data.keys().hasAll(['interestModel']) || (data.interestModel is string && data.interestModel.size() <= 100))
-        && (!data.keys().hasAll(['budgetRange']) || (data.budgetRange is string && data.budgetRange.size() <= 60))
-        && (!data.keys().hasAll(['whatsappDetailsShared']) || (data.whatsappDetailsShared == null || data.whatsappDetailsShared is bool))
-        && data.createdAt is timestamp && data.updatedAt is timestamp;
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 100
+        && data.phone is string
+        && data.phone.matches('[+]?[0-9]{10,15}')
+        && data.email is string
+        && data.email.size() <= 254
+        && (
+          data.email == ''
+          || data.email.matches('[^ @]+@[^ @]+[.][^ @]+')
+        )
+        && data.source in [
+          'WhatsApp', 'Phone call', 'Walk-in', 'Website', 'Other'
+        ]
+        && data.status in [
+          'New', 'No Answer', 'Contacted',
+          'Follow-up', 'Qualified', 'Won', 'Lost'
+        ]
+        && data.assignedTo is string
+        && data.assignedTo.size() > 0
+        && data.assignedTo.size() <= 128
+        && data.assignedName is string
+        && data.assignedName.size() > 0
+        && data.assignedName.size() <= 160
+        && data.createdByUid is string
+        && data.createdByUid.size() > 0
+        && data.createdByUid.size() <= 128
+        && (
+          data.nextFollowUpAt == null
+          || data.nextFollowUpAt is timestamp
+        )
+        && (
+          !data.keys().hasAll(['agencyVisitAt'])
+          || (
+            data.agencyVisitAt == null
+            || data.agencyVisitAt is timestamp
+          )
+        )
+        && (
+          !data.keys().hasAll(['interestBrand'])
+          || (
+            data.interestBrand is string
+            && data.interestBrand.size() <= 60
+          )
+        )
+        && (
+          !data.keys().hasAll(['interestModel'])
+          || (
+            data.interestModel is string
+            && data.interestModel.size() <= 100
+          )
+        )
+        && (
+          !data.keys().hasAll(['budgetRange'])
+          || (
+            data.budgetRange is string
+            && data.budgetRange.size() <= 60
+          )
+        )
+        && (
+          !data.keys().hasAll(['whatsappDetailsShared'])
+          || data.whatsappDetailsShared == null
+          || data.whatsappDetailsShared is bool
+        )
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
     }
 
-    // Public visitors can browse listings; only admins can change them.
+    // ==========================================
+    // PUBLIC BIKE LISTINGS
+    // ==========================================
+
     match /bikes/{bikeId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
-    // Admin profile fields remain private. Only the public projection is readable.
+    // ==========================================
+    // PRIVATE SITE SETTINGS
+    // ==========================================
+
     match /settings/site {
       allow read, write: if isAdmin();
     }
 
+    // ==========================================
+    // PUBLIC SITE SETTINGS
+    // ==========================================
+
     match /publicSettings/site {
       allow read: if true;
+
       allow create, update: if isAdmin()
         && request.resource.data.keys().hasOnly([
-          'websiteName', 'websiteDescription', 'phone', 'whatsapp',
-          'email', 'address', 'city', 'state'
+          'websiteName', 'websiteDescription', 'phone',
+          'whatsapp', 'email', 'address', 'city', 'state'
         ])
         && request.resource.data.websiteName is string
         && request.resource.data.websiteDescription is string
@@ -81,114 +190,367 @@ service cloud.firestore {
         && request.resource.data.address is string
         && request.resource.data.city is string
         && request.resource.data.state is string;
+
       allow delete: if isAdmin();
     }
 
+    // ==========================================
+    // IMAGE VALIDATION
+    // ==========================================
+
     function validImage(images, index) {
-      return images.size() <= index || (images[index] is string
+      return images.size() <= index || (
+        images[index] is string
         && images[index].size() <= 2048
-        && images[index].matches('https://res[.]cloudinary[.]com/w4eee6vd/image/upload/.+'));
+        && images[index].matches(
+          'https://res[.]cloudinary[.]com/w4eee6vd/image/upload/.+'
+        )
+      );
     }
+
+    // ==========================================
+    // SELL REQUEST VALIDATION
+    // ==========================================
 
     function validSellRequest() {
       let d = request.resource.data;
-      return d.keys().hasAll(['name', 'mobile', 'brand', 'model', 'year', 'km', 'price', 'location', 'description', 'images', 'status', 'createdAt'])
-        && d.keys().hasOnly(['name', 'mobile', 'brand', 'model', 'year', 'km', 'price', 'location', 'description', 'images', 'status', 'createdAt'])
-        && d.name is string && d.name.size() <= 100 && d.name.matches('.*[^[:space:]].*')
-        && d.mobile is string && d.mobile.matches('[+]?[0-9]{10,15}')
-        && d.brand is string && d.brand.size() <= 60 && d.brand.matches('.*[^[:space:]].*')
-        && d.model is string && d.model.size() <= 100 && d.model.matches('.*[^[:space:]].*')
-        && d.year is string && (d.year == '' || (d.year.matches('[0-9]{4}') && int(d.year) >= 1900 && int(d.year) <= request.time.year() + 1))
-        && d.km is string && (d.km == '' || d.km.matches('[0-9]{1,7}'))
-        && d.price is string && (d.price == '' || d.price.matches('[0-9]{1,9}'))
-        && d.location is string && d.location.size() <= 150
-        && d.description is string && d.description.size() <= 3000
-        && d.status == 'Pending' && d.createdAt == request.time
-        && d.images is list && d.images.size() <= 8
-        && validImage(d.images, 0) && validImage(d.images, 1)
-        && validImage(d.images, 2) && validImage(d.images, 3)
-        && validImage(d.images, 4) && validImage(d.images, 5)
-        && validImage(d.images, 6) && validImage(d.images, 7);
+
+      return d.keys().hasAll([
+          'name', 'mobile', 'brand', 'model', 'year',
+          'km', 'price', 'location', 'description',
+          'images', 'status', 'createdAt'
+        ])
+        && d.keys().hasOnly([
+          'name', 'mobile', 'brand', 'model', 'year',
+          'km', 'price', 'location', 'description',
+          'images', 'status', 'createdAt'
+        ])
+        && d.name is string
+        && d.name.size() <= 100
+        && d.name.matches('.*[^[:space:]].*')
+        && d.mobile is string
+        && d.mobile.matches('[+]?[0-9]{10,15}')
+        && d.brand is string
+        && d.brand.size() <= 60
+        && d.brand.matches('.*[^[:space:]].*')
+        && d.model is string
+        && d.model.size() <= 100
+        && d.model.matches('.*[^[:space:]].*')
+        && d.year is string
+        && (
+          d.year == ''
+          || (
+            d.year.matches('[0-9]{4}')
+            && int(d.year) >= 1900
+            && int(d.year) <= request.time.year() + 1
+          )
+        )
+        && d.km is string
+        && (
+          d.km == ''
+          || d.km.matches('[0-9]{1,7}')
+        )
+        && d.price is string
+        && (
+          d.price == ''
+          || d.price.matches('[0-9]{1,9}')
+        )
+        && d.location is string
+        && d.location.size() <= 150
+        && d.description is string
+        && d.description.size() <= 3000
+        && d.status == 'Pending'
+        && d.createdAt == request.time
+        && d.images is list
+        && d.images.size() <= 8
+        && validImage(d.images, 0)
+        && validImage(d.images, 1)
+        && validImage(d.images, 2)
+        && validImage(d.images, 3)
+        && validImage(d.images, 4)
+        && validImage(d.images, 5)
+        && validImage(d.images, 6)
+        && validImage(d.images, 7);
     }
 
-    // Visitors can submit validated requests; only admins can view/manage them.
+    // ==========================================
+    // SELL REQUESTS
+    // ==========================================
+
     match /sellRequests/{requestId} {
       allow create: if validSellRequest();
       allow read, update, delete: if isAdmin();
     }
 
+    // ==========================================
+    // CONTACT MESSAGES
+    // ==========================================
+
     match /contactMessages/{messageId} {
-      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'phone', 'subject', 'message', 'status', 'createdAt'])
-        && request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'subject', 'message', 'status', 'createdAt'])
-        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
-        && request.resource.data.email is string && request.resource.data.email.size() <= 254 && request.resource.data.email.matches('[^ @]+@[^ @]+[.][^ @]+')
-        && request.resource.data.phone is string && (request.resource.data.phone == '' || request.resource.data.phone.matches('[+]?[0-9]{10,15}'))
-        && request.resource.data.subject is string && request.resource.data.subject.size() > 0 && request.resource.data.subject.size() <= 150
-        && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 3000
-        && request.resource.data.status == 'New' && request.resource.data.createdAt == request.time;
+
+      allow create: if request.resource.data.keys().hasAll([
+          'name', 'email', 'phone', 'subject',
+          'message', 'status', 'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'name', 'email', 'phone', 'subject',
+          'message', 'status', 'createdAt'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() <= 254
+        && request.resource.data.email.matches(
+          '[^ @]+@[^ @]+[.][^ @]+'
+        )
+        && request.resource.data.phone is string
+        && (
+          request.resource.data.phone == ''
+          || request.resource.data.phone.matches('[+]?[0-9]{10,15}')
+        )
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() > 0
+        && request.resource.data.subject.size() <= 150
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 3000
+        && request.resource.data.status == 'New'
+        && request.resource.data.createdAt == request.time;
+
       allow read, update, delete: if isAdmin();
     }
 
-    // Visitors can opt in to new-bike alerts; subscriber details stay private.
+    // ==========================================
+    // NEW BIKE ALERT SUBSCRIBERS
+    // ==========================================
+
     match /newBikeAlertSubscribers/{subscriberId} {
+
       allow create: if request.resource.data.keys().hasOnly([
-          'phone', 'whatsappOptIn', 'websitePushOptIn', 'consent', 'status', 'createdAt'
+          'phone', 'whatsappOptIn', 'websitePushOptIn',
+          'consent', 'status', 'createdAt'
         ])
         && request.resource.data.phone is string
-        && (request.resource.data.phone == '' || request.resource.data.phone.matches('[0-9]{10,15}'))
+        && (
+          request.resource.data.phone == ''
+          || request.resource.data.phone.matches('[0-9]{10,15}')
+        )
         && request.resource.data.whatsappOptIn is bool
         && request.resource.data.websitePushOptIn is bool
         && request.resource.data.consent == true
         && request.resource.data.status == 'Active'
         && request.resource.data.createdAt == request.time
-        && (request.resource.data.whatsappOptIn || request.resource.data.websitePushOptIn)
-        && (!request.resource.data.whatsappOptIn || request.resource.data.phone.matches('[0-9]{10,15}'));
+        && (
+          request.resource.data.whatsappOptIn
+          || request.resource.data.websitePushOptIn
+        )
+        && (
+          !request.resource.data.whatsappOptIn
+          || request.resource.data.phone.matches('[0-9]{10,15}')
+        );
+
       allow read, update, delete: if isAdmin();
     }
 
-    // CRM records contain customer contact details. Admins can see the team
-    // queue; agents can only see and action leads assigned to their own UID.
+    // ==========================================
+    // CRM TEAM USERS
+    // ==========================================
+
     match /crmUsers/{userId} {
-      allow read: if isAdmin() || (isCrmAgent() && request.auth.uid == userId);
+
+      allow read: if isAdmin()
+        || (
+          isCrmAgent()
+          && request.auth.uid == userId
+        );
+
+      // Only Admin SDK can modify CRM users.
       allow write: if false;
     }
 
+    // ==========================================
+    // CRM LEAD ASSIGNMENTS
+    // ==========================================
+
+    match /crmLeadAssignments/{assignmentId} {
+
+      // Admin can read all assignments.
+      // Caller can read only their own active assignments.
+      allow get, list: if isAdmin()
+        || (
+          isCrmAgent()
+          && resource.data.agentUid == request.auth.uid
+          && resource.data.active == true
+          && (
+            resource.data.protected == true
+            || (
+              resource.data.expiresAt is timestamp
+              && resource.data.expiresAt > request.time
+            )
+          )
+        );
+
+      // Assignment management uses Firebase Admin SDK.
+      allow create, update, delete: if false;
+    }
+
+    // ==========================================
+    // CRM CUSTOMER LEADS
+    // ==========================================
+
     match /crmLeads/{leadId} {
-      allow read: if isAdmin() || isAssignedLead();
+
+      // Single lead document access.
+      allow get: if isAdmin()
+        || isAssignedLead()
+        || hasActiveCrmAssignment(leadId);
+
+      // Existing legacy queries remain supported.
+      allow list: if isAdmin()
+        || isAssignedLead();
+
       allow create: if isCrmUser()
         && validCrmLead(request.resource.data)
         && request.resource.data.createdByUid == request.auth.uid
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time
-        && (isAdmin() || request.resource.data.assignedTo == request.auth.uid);
+        && (
+          isAdmin()
+          || request.resource.data.assignedTo == request.auth.uid
+        );
+
       allow update: if validCrmLead(request.resource.data)
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.createdByUid == resource.data.createdByUid
         && request.resource.data.updatedAt == request.time
-        && (isAdmin() || (isAssignedLead()
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'status', 'nextFollowUpAt', 'agencyVisitAt', 'interestBrand',
-            'interestModel', 'budgetRange', 'whatsappDetailsShared', 'updatedAt'
-          ])));
+        && (
+          isAdmin()
+          || (
+            isAssignedLead()
+            && request.resource.data.diff(
+              resource.data
+            ).affectedKeys().hasOnly([
+              'status',
+              'nextFollowUpAt',
+              'agencyVisitAt',
+              'interestBrand',
+              'interestModel',
+              'budgetRange',
+              'whatsappDetailsShared',
+              'updatedAt'
+            ])
+          )
+        );
+
       allow delete: if isAdmin();
 
-      // Remarks are append-only: every caller's note remains auditable.
+      // ========================================
+      // CRM LEAD REMARKS
+      // ========================================
+
       match /remarks/{remarkId} {
+
         allow read: if canReadCrmLead(leadId);
+
         allow create: if canReadCrmLead(leadId)
-          && request.resource.data.keys().hasOnly(['text', 'createdByUid', 'createdAt'])
+          && request.resource.data.keys().hasOnly([
+            'text', 'createdByUid', 'createdAt'
+          ])
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0
           && request.resource.data.text.size() <= 2000
           && request.resource.data.createdByUid == request.auth.uid
           && request.resource.data.createdAt == request.time;
+
+        // Remarks are immutable.
         allow update, delete: if false;
       }
     }
 
-    // Deny every collection that has not been explicitly authorized above.
+    // ==========================================
+    // CRM CALL ACTIVITIES
+    // ==========================================
+
+    match /crmCallActivities/{activityId} {
+
+      // Admin sees all activities.
+      // Caller sees only their own history.
+      allow read: if isAdmin()
+        || (
+          isCrmAgent()
+          && resource.data.agentUid == request.auth.uid
+        );
+
+      // Call history is saved together with lead update.
+      allow create: if isCrmUser()
+        && request.resource.data.keys().hasAll([
+          'leadId',
+          'agentUid',
+          'agentName',
+          'status',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'leadId',
+          'agentUid',
+          'agentName',
+          'status',
+          'createdAt'
+        ])
+        && request.resource.data.leadId is string
+        && request.resource.data.leadId.size() > 0
+        && request.resource.data.leadId.size() <= 128
+        && request.resource.data.agentUid == request.auth.uid
+        && request.resource.data.agentName is string
+        && request.resource.data.agentName.size() > 0
+        && request.resource.data.agentName.size() <= 160
+        && request.resource.data.status in [
+          'New',
+          'No Answer',
+          'Contacted',
+          'Follow-up',
+          'Qualified',
+          'Won',
+          'Lost'
+        ]
+        && request.resource.data.createdAt == request.time
+        && exists(
+          /databases/$(database)/documents/crmLeads/$(request.resource.data.leadId)
+        )
+        && (
+          isAdmin()
+          || (
+            isCrmAgent()
+            && (
+              get(
+                /databases/$(database)/documents/crmLeads/$(request.resource.data.leadId)
+              ).data.assignedTo == request.auth.uid
+              || hasActiveCrmAssignment(
+                request.resource.data.leadId
+              )
+            )
+          )
+        )
+        && getAfter(
+          /databases/$(database)/documents/crmLeads/$(request.resource.data.leadId)
+        ).data.updatedAt == request.time
+        && getAfter(
+          /databases/$(database)/documents/crmLeads/$(request.resource.data.leadId)
+        ).data.status == request.resource.data.status;
+
+      // Historical records cannot be modified.
+      allow update, delete: if false;
+    }
+
+    // ==========================================
+    // DENY ALL OTHER COLLECTIONS
+    // ==========================================
+
     match /{document=**} {
       allow read, write: if false;
     }
+
   }
 }
