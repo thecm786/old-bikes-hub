@@ -1,12 +1,10 @@
-import type { Metadata } from "next";
+"use client";
+
+import { usePathname } from "next/navigation";
 import CrmGuard from "@/components/CrmGuard";
 
-export const metadata: Metadata = {
-  title: "CRM | Old Bikes Hub",
-  robots: { index: false, follow: false },
-  alternates: { canonical: null },
-};
-
 export default function CrmLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  if (pathname === "/crm/login") return children;
   return <CrmGuard>{children}</CrmGuard>;
 }
