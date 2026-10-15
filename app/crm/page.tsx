@@ -29,7 +29,7 @@ type Remark = { id: string; text: string; createdByUid: string; createdAt?: Time
 type CrmUser = { uid: string; name: string; email: string; active: boolean };
 
 const blankLead = { name: "", phone: "", email: "", source: "WhatsApp" as LeadSource, assignedTo: "" };
-const IMPORT_LIMIT = 200;
+const IMPORT_BATCH_SIZE = 450;
 
 function importDate(value: string) {
   const trimmed = value.trim();
@@ -196,7 +196,6 @@ export default function CrmPage() {
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, { defval: "", raw: false });
       if (!rows.length) throw new Error("The first sheet has no lead rows.");
-      if (rows.length > IMPORT_LIMIT) throw new Error(`Upload up to ${IMPORT_LIMIT} leads at one time.`);
       const parsed = rows.map((row, index) => {
         const fields = Object.fromEntries(Object.entries(row).map(([key, value]) => [key.trim().toLowerCase().replace(/[^a-z]/g, ""), String(value ?? "").trim()]));
         const name = fields.name || fields.customername;
@@ -209,12 +208,14 @@ export default function CrmPage() {
         if (followUp === undefined) throw new Error(`Row ${index + 2}: use YYYY-MM-DD for Follow-up Date.`);
         return { name, phone, email, source, nextFollowUpAt: followUp };
       });
-      const batch = writeBatch(db);
-      parsed.forEach((lead) => batch.set(doc(collection(db, "crmLeads")), {
-        ...lead, status: "New", assignedTo: userId, assignedName: userName, createdByUid: userId,
-        createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
-      }));
-      await batch.commit();
+      for (let start = 0; start < parsed.length; start += IMPORT_BATCH_SIZE) {
+        const batch = writeBatch(db);
+        parsed.slice(start, start + IMPORT_BATCH_SIZE).forEach((lead) => batch.set(doc(collection(db, "crmLeads")), {
+          ...lead, status: "New", assignedTo: userId, assignedName: userName, createdByUid: userId,
+          createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+        }));
+        await batch.commit();
+      }
       setImportMessage(`${parsed.length} lead${parsed.length === 1 ? "" : "s"} added successfully.`);
     } catch (error) {
       setImportMessage(error instanceof Error ? error.message : "Lead import could not be completed.");
@@ -237,7 +238,7 @@ export default function CrmPage() {
           <button onClick={() => setShowForm((current) => !current)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black text-white hover:bg-orange-600"><CirclePlus size={18} /> Add lead</button>
         </div>
         <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-black text-slate-900">Bulk add leads</p><p className="mt-1 text-sm text-slate-600">Upload up to {IMPORT_LIMIT} leads. Every imported lead is assigned to your account.</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => downloadTemplate("xlsx")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> Excel format</button><button type="button" onClick={() => downloadTemplate("csv")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> CSV format</button><button type="button" disabled={saving} onClick={() => fileInput.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"><FileUp size={16} /> Upload file</button><input ref={fileInput} onChange={importLeads} accept=".csv,.xlsx,.xls" type="file" className="hidden" /></div></div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-black text-slate-900">Bulk add leads</p><p className="mt-1 text-sm text-slate-600">Upload any number of leads. Large files are safely saved in automatic batches.</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => downloadTemplate("xlsx")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> Excel format</button><button type="button" onClick={() => downloadTemplate("csv")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> CSV format</button><button type="button" disabled={saving} onClick={() => fileInput.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"><FileUp size={16} /> Upload file</button><input ref={fileInput} onChange={importLeads} accept=".csv,.xlsx,.xls" type="file" className="hidden" /></div></div>
           <p className="mt-3 text-xs font-semibold text-slate-500">Required: Name, Phone. Optional: Email, Source (WhatsApp, Phone call, Walk-in, Website, Other), Follow-up Date (YYYY-MM-DD).</p>{importMessage && <p className={`mt-3 rounded-lg px-3 py-2 text-sm font-semibold ${importMessage.includes("successfully") ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>{importMessage}</p>}
         </div>
         {showForm && <form onSubmit={createLead} className="mt-4 grid gap-3 rounded-2xl border border-orange-100 bg-orange-50 p-4 sm:grid-cols-2"><input required value={leadForm.name} onChange={(event) => setLeadForm({ ...leadForm, name: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Customer name" /><input required value={leadForm.phone} onChange={(event) => setLeadForm({ ...leadForm, phone: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Phone / WhatsApp number" /><input type="email" value={leadForm.email} onChange={(event) => setLeadForm({ ...leadForm, email: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Email (optional)" /><select value={leadForm.source} onChange={(event) => setLeadForm({ ...leadForm, source: event.target.value as LeadSource })} className="rounded-xl border border-orange-100 bg-white px-3 py-3">{SOURCES.map((source) => <option key={source}>{source}</option>)}</select>{isAdmin && <select value={leadForm.assignedTo} onChange={(event) => setLeadForm({ ...leadForm, assignedTo: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3 sm:col-span-2"><option value="">Assign to me</option>{members.map((member) => <option key={member.uid} value={member.uid}>{member.name} {member.email ? `(${member.email})` : ""}</option>)}</select>}<div className="flex gap-2 sm:col-span-2"><button disabled={saving} className="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white disabled:opacity-60">Save lead</button><button type="button" onClick={() => setShowForm(false)} className="rounded-xl px-5 py-3 font-bold text-slate-600">Cancel</button></div></form>}
