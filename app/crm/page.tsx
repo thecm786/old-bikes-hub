@@ -105,6 +105,8 @@ export default function CrmPage() {
   const [remarks, setRemarks] = useState<Remark[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<LeadStatus | "All">("All");
+  const [visitFrom, setVisitFrom] = useState("");
+  const [visitTo, setVisitTo] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -167,8 +169,12 @@ export default function CrmPage() {
 
   const visibleLeads = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return leads.filter((lead) => (filter === "All" || lead.status === filter) && (!term || [lead.name, lead.phone, lead.email, lead.assignedName].join(" ").toLowerCase().includes(term)));
-  }, [filter, leads, search]);
+    return leads.filter((lead) => {
+      const visitDate = dateValue(lead.agencyVisitAt ?? null);
+      const matchesVisitRange = (!visitFrom || (visitDate && visitDate >= visitFrom)) && (!visitTo || (visitDate && visitDate <= visitTo));
+      return (filter === "All" || lead.status === filter) && matchesVisitRange && (!term || [lead.name, lead.phone, lead.email, lead.assignedName].join(" ").toLowerCase().includes(term));
+    });
+  }, [filter, leads, search, visitFrom, visitTo]);
 
   const todaysFollowUps = useMemo(() => {
     const today = new Date();
@@ -319,6 +325,8 @@ export default function CrmPage() {
       <div className="min-w-0">
         <div className="grid grid-cols-2 gap-3 rounded-2xl bg-white p-3 shadow-sm sm:p-4">
           <div className="relative col-span-2"><Search size={18} className="absolute left-3 top-3.5 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, phone or caller" className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-3 outline-none focus:border-orange-500" /></div>
+          <label className="text-xs font-bold text-slate-600">Agency Visit From<input type="date" value={visitFrom} onChange={(event) => setVisitFrom(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-orange-500" /></label>
+          <label className="text-xs font-bold text-slate-600">Agency Visit To<input type="date" value={visitTo} min={visitFrom || undefined} onChange={(event) => setVisitTo(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-orange-500" /></label>
           <select value={filter} onChange={(event) => setFilter(event.target.value as LeadStatus | "All")} className="w-full rounded-xl border border-slate-200 px-3 py-3 font-semibold outline-none focus:border-orange-500"><option value="All">All statuses</option>{STATUSES.map((status) => <option key={status}>{status}</option>)}</select>
           <button onClick={() => setShowForm((current) => !current)} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-3 py-3 font-black text-white hover:bg-orange-600"><CirclePlus size={18} /> Add lead</button>
         </div>
