@@ -304,23 +304,23 @@ export default function CrmPage() {
 
   const logout = async () => { await signOut(auth); router.replace("/crm/login"); };
 
-  return <main className="min-h-screen bg-slate-50 p-4 text-slate-900 sm:p-7">
-    <header className="mx-auto flex max-w-7xl flex-col gap-4 rounded-3xl bg-slate-950 px-5 py-6 text-white shadow-xl sm:flex-row sm:items-center sm:justify-between sm:px-8">
-      <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-400">Old Bikes Hub</p><h1 className="mt-1 text-3xl font-black">Calling CRM</h1><p className="mt-1 text-sm text-slate-300">Every follow-up is recorded against the customer lead.</p></div>
-      <div className="flex gap-2"><a href="/admin/dashboard" className="rounded-xl border border-white/20 px-4 py-2.5 text-sm font-bold hover:bg-white/10">Admin</a><button onClick={logout} className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/20"><LogOut size={16} /> Sign out</button></div>
+  return <main className="min-h-screen overflow-x-hidden bg-slate-50 p-3 text-slate-900 sm:p-7">
+    <header className="mx-auto flex max-w-7xl flex-col gap-4 rounded-2xl bg-slate-950 px-4 py-5 text-white shadow-xl sm:flex-row sm:items-center sm:justify-between sm:rounded-3xl sm:px-8 sm:py-6">
+      <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-orange-400 sm:text-xs">Old Bikes Hub</p><h1 className="mt-1 text-2xl font-black sm:text-3xl">Calling CRM</h1><p className="mt-1 break-words text-xs leading-5 text-slate-300 sm:text-sm">Every follow-up is recorded against the customer lead.</p></div>
+      <div className="flex flex-wrap gap-2"><a href="/admin/dashboard" className="rounded-xl border border-white/20 px-3 py-2 text-xs font-bold hover:bg-white/10 sm:px-4 sm:py-2.5 sm:text-sm">Admin</a><button onClick={logout} className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-bold hover:bg-white/20 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"><LogOut size={15} /> Sign out</button></div>
     </header>
 
-    <section className="mx-auto mt-6 max-w-7xl rounded-2xl border border-orange-100 bg-orange-50 p-4">
+    <section className="mx-auto mt-4 max-w-7xl rounded-2xl border border-orange-100 bg-orange-50 p-3 sm:mt-6 sm:p-4">
       <div className="flex items-center justify-between"><div><h2 className="font-black text-slate-900">Today&apos;s Follow-ups</h2><p className="mt-1 text-sm text-slate-600">{todaysFollowUps.length} customer{todaysFollowUps.length === 1 ? "" : "s"} scheduled for today</p></div><CalendarClock className="text-orange-500" /></div>
       {todaysFollowUps.length > 0 ? <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{todaysFollowUps.map((lead) => <button key={lead.id} onClick={() => openLead(lead)} className="shrink-0 rounded-xl border border-orange-200 bg-white px-3 py-2 text-left text-sm shadow-sm hover:border-orange-400"><span className="block font-black">{lead.name}</span><span className="text-slate-500">{lead.phone}</span></button>)}</div> : <p className="mt-3 text-sm text-slate-500">No follow-up calls are scheduled for today.</p>}
     </section>
 
-    <section className="mx-auto mt-6 grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+    <section className="mx-auto mt-4 grid max-w-7xl gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
       <div>
-        <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-sm sm:p-4 sm:items-center">
           <div className="relative flex-1"><Search size={18} className="absolute left-3 top-3.5 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, phone or caller" className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-3 outline-none focus:border-orange-500" /></div>
           <select value={filter} onChange={(event) => setFilter(event.target.value as LeadStatus | "All")} className="rounded-xl border border-slate-200 px-3 py-3 font-semibold outline-none focus:border-orange-500"><option value="All">All statuses</option>{STATUSES.map((status) => <option key={status}>{status}</option>)}</select>
-          <button onClick={() => setShowForm((current) => !current)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black text-white hover:bg-orange-600"><CirclePlus size={18} /> Add lead</button>
+          <button onClick={() => setShowForm((current) => !current)} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black text-white hover:bg-orange-600 sm:w-auto"><CirclePlus size={18} /> Add lead</button>
         </div>
         <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-black text-slate-900">Bulk add leads</p><p className="mt-1 text-sm text-slate-600">Upload any number of leads. Large files are safely saved in automatic batches.</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => downloadTemplate("xlsx")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> Excel format</button><button type="button" onClick={() => downloadTemplate("csv")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> CSV format</button><button type="button" disabled={saving} onClick={() => fileInput.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"><FileUp size={16} /> Upload file</button><input ref={fileInput} onChange={importLeads} accept=".csv,.xlsx,.xls" type="file" className="hidden" /></div></div>
