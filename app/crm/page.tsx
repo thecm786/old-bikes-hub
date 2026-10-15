@@ -215,7 +215,10 @@ export default function CrmPage() {
     try {
       const token = await auth.currentUser?.getIdToken();
       const response = await fetch("/api/crm/users", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token || ""}` }, body: JSON.stringify({ name: callerName, phone: callerPhone }) });
-      const result = await response.json();
+      const responseText = await response.text();
+      let result: { name?: string; loginCode?: string; error?: string } = {};
+      try { result = responseText ? JSON.parse(responseText) as typeof result : {}; }
+      catch { result = { error: responseText || `The server returned ${response.status}.` }; }
       if (!response.ok) throw new Error(result.error || "Caller could not be added.");
       setCallerName(""); setCallerPhone(""); setCallerMessage(`${result.name} added. Copy this code now and share it privately: ${result.loginCode}`);
     } catch (error) { setCallerError(true); setCallerMessage(error instanceof Error ? error.message : "Caller could not be added."); }

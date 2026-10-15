@@ -7,8 +7,13 @@ import { join } from "node:path";
 function credentials() {
   const configured = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (configured) return JSON.parse(configured);
-  const localPath = join(process.cwd(), "service-account.json");
-  if (existsSync(localPath)) return JSON.parse(readFileSync(localPath, "utf8"));
+  // Keep the production credential in an environment variable. The second
+  // local filename supports the existing private development file as well.
+  const localPaths = ["service-account.json", "service-account.json.json"];
+  for (const filename of localPaths) {
+    const localPath = join(process.cwd(), filename);
+    if (existsSync(localPath)) return JSON.parse(readFileSync(localPath, "utf8"));
+  }
   throw new Error("Firebase admin credentials are not configured.");
 }
 
