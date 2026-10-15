@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { CalendarClock, CirclePlus, ClipboardList, Download, ExternalLink, FileUp, LogOut, MessageSquareText, Phone, Search, UserRound } from "lucide-react";
 import { auth, db } from "@/firebase/firebase";
 
-const STATUSES = ["New", "Contacted", "Follow-up", "Qualified", "Won", "Lost"] as const;
+const STATUSES = ["New", "No Answer", "Contacted", "Follow-up", "Qualified", "Won", "Lost"] as const;
 const SOURCES = ["WhatsApp", "Phone call", "Walk-in", "Website", "Other"] as const;
 const BRANDS = ["Any brand", "Royal Enfield", "Honda", "Hero", "TVS", "Bajaj", "Yamaha", "Suzuki", "KTM", "Jawa", "Other"] as const;
 const BUDGETS = ["Not discussed", "Under ₹50,000", "₹50,000–₹80,000", "₹80,000–₹1.2 lakh", "₹1.2–₹2 lakh", "Above ₹2 lakh"] as const;
@@ -39,7 +39,7 @@ type Bike = { id: string; name: string; brand: string; price: number; status: st
 const blankLead = { name: "", phone: "", email: "", source: "WhatsApp" as LeadSource, assignedTo: "" };
 const IMPORT_BATCH_SIZE = 450;
 const QUICK_OUTCOMES = [
-  { label: "No Answer", status: "Follow-up", note: "No answer. Try calling again.", whatsapp: "Not yet" },
+  { label: "No Answer", status: "No Answer", note: "No answer. Try calling again.", whatsapp: "Not yet" },
   { label: "Interested", status: "Qualified", note: "Customer is interested.", whatsapp: "Not yet" },
   { label: "Visit Scheduled", status: "Qualified", note: "Agency visit scheduled.", whatsapp: "Not yet" },
   { label: "Details Shared", status: "Contacted", note: "Bike details shared on WhatsApp.", whatsapp: "Yes" },

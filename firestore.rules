@@ -42,7 +42,7 @@ service cloud.firestore {
         && data.email is string && data.email.size() <= 254
         && (data.email == '' || data.email.matches('[^ @]+@[^ @]+[.][^ @]+'))
         && data.source in ['WhatsApp', 'Phone call', 'Walk-in', 'Website', 'Other']
-        && data.status in ['New', 'Contacted', 'Follow-up', 'Qualified', 'Won', 'Lost']
+        && data.status in ['New', 'No Answer', 'Contacted', 'Follow-up', 'Qualified', 'Won', 'Lost']
         && data.assignedTo is string && data.assignedTo.size() > 0 && data.assignedTo.size() <= 128
         && data.assignedName is string && data.assignedName.size() > 0 && data.assignedName.size() <= 160
         && data.createdByUid is string && data.createdByUid.size() > 0 && data.createdByUid.size() <= 128
