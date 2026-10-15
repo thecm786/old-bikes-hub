@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   ClipboardList,
+  Headset,
 } from "lucide-react";
 
 import { signOut } from "firebase/auth";
@@ -114,6 +115,12 @@ export default function AdminSidebar() {
       href: "/admin/sell-requests",
       icon: <ClipboardList size={20} />,
       badge: pendingCount,
+    },
+
+    {
+      name: "Calling CRM",
+      href: "/crm",
+      icon: <Headset size={20} />,
     },
 
     {

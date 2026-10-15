@@ -19,6 +19,7 @@ after(async () => environment?.cleanup());
 const guest = () => environment.unauthenticatedContext().firestore();
 const member = () => environment.authenticatedContext("member").firestore();
 const admin = () => environment.authenticatedContext("admin", { admin: true }).firestore();
+const crmAgent = (uid = "caller") => environment.authenticatedContext(uid, { crmAgent: true }).firestore();
 const photo = "https://res.cloudinary.com/w4eee6vd/image/upload/v1/photo.jpg";
 const request = () => ({ name: "Test User", mobile: "9876543210", brand: "Honda", model: "Shine", year: "2022", km: "12000", price: "75000", location: "Patna", description: "Good condition", images: [photo], status: "Pending", createdAt: serverTimestamp() });
 const publicSettings = { websiteName: "Test Shop", websiteDescription: "Used bikes", phone: "9876543210", whatsapp: "919876543210", email: "shop@example.com", address: "Test address", city: "Patna", state: "Bihar" };
@@ -87,6 +88,23 @@ test("contact submissions validate fields and remain private", async () => {
   }
   await assertFails(getDoc(doc(guest(), "contactMessages", "valid")));
   await assertSucceeds(getDoc(doc(admin(), "contactMessages", "valid")));
+});
+
+test("calling agents only access their assigned CRM leads and can append remarks", async () => {
+  const lead = {
+    name: "CRM customer", phone: "9876543210", email: "", source: "WhatsApp", status: "New",
+    assignedTo: "caller", assignedName: "Caller", createdByUid: "caller", nextFollowUpAt: null,
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  };
+  await assertSucceeds(setDoc(doc(crmAgent(), "crmLeads", "assigned"), lead));
+  await assertSucceeds(getDoc(doc(crmAgent(), "crmLeads", "assigned")));
+  await assertFails(getDocs(collection(crmAgent("other"), "crmLeads")));
+  await assertSucceeds(setDoc(doc(crmAgent(), "crmLeads", "assigned", "remarks", "first"), {
+    text: "Called and asked for a follow-up.", createdByUid: "caller", createdAt: serverTimestamp(),
+  }));
+  await assertFails(updateDoc(doc(crmAgent(), "crmLeads", "assigned"), { phone: "9999999999" }));
+  await assertSucceeds(updateDoc(doc(crmAgent(), "crmLeads", "assigned"), { status: "Contacted", updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(crmAgent(), "crmLeads", "assigned", "remarks", "first"), { text: "Changed" }));
 });
 
 test("concurrent admin approvals create exactly one listing with the real transaction engine", async () => {

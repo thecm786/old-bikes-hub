@@ -7,6 +7,48 @@ service cloud.firestore {
         && request.auth.token.admin == true;
     }
 
+    // Calling agents receive this claim through the private Admin SDK script.
+    // Their access is intentionally limited to their own CRM assignments.
+    function isCrmAgent() {
+      return request.auth != null
+        && request.auth.token.crmAgent == true;
+    }
+
+    function isCrmUser() {
+      return isAdmin() || isCrmAgent();
+    }
+
+    function isAssignedLead() {
+      return isCrmAgent() && resource.data.assignedTo == request.auth.uid;
+    }
+
+    function canReadCrmLead(leadId) {
+      let lead = get(/databases/$(database)/documents/crmLeads/$(leadId));
+      return isAdmin() || (isCrmAgent() && lead.data.assignedTo == request.auth.uid);
+    }
+
+    function validCrmLead(data) {
+      return data.keys().hasAll([
+          'name', 'phone', 'email', 'source', 'status', 'assignedTo',
+          'assignedName', 'createdByUid', 'nextFollowUpAt', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'name', 'phone', 'email', 'source', 'status', 'assignedTo',
+          'assignedName', 'createdByUid', 'nextFollowUpAt', 'createdAt', 'updatedAt'
+        ])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.phone is string && data.phone.matches('[+]?[0-9]{10,15}')
+        && data.email is string && data.email.size() <= 254
+        && (data.email == '' || data.email.matches('[^ @]+@[^ @]+[.][^ @]+'))
+        && data.source in ['WhatsApp', 'Phone call', 'Walk-in', 'Website', 'Other']
+        && data.status in ['New', 'Contacted', 'Follow-up', 'Qualified', 'Won', 'Lost']
+        && data.assignedTo is string && data.assignedTo.size() > 0 && data.assignedTo.size() <= 128
+        && data.assignedName is string && data.assignedName.size() > 0 && data.assignedName.size() <= 160
+        && data.createdByUid is string && data.createdByUid.size() > 0 && data.createdByUid.size() <= 128
+        && (data.nextFollowUpAt == null || data.nextFollowUpAt is timestamp)
+        && data.createdAt is timestamp && data.updatedAt is timestamp;
+    }
+
     // Public visitors can browse listings; only admins can change them.
     match /bikes/{bikeId} {
       allow read: if true;
@@ -96,6 +138,45 @@ service cloud.firestore {
         && (request.resource.data.whatsappOptIn || request.resource.data.websitePushOptIn)
         && (!request.resource.data.whatsappOptIn || request.resource.data.phone.matches('[0-9]{10,15}'));
       allow read, update, delete: if isAdmin();
+    }
+
+    // CRM records contain customer contact details. Admins can see the team
+    // queue; agents can only see and action leads assigned to their own UID.
+    match /crmUsers/{userId} {
+      allow read: if isAdmin() || (isCrmAgent() && request.auth.uid == userId);
+      allow write: if false;
+    }
+
+    match /crmLeads/{leadId} {
+      allow read: if isAdmin() || isAssignedLead();
+      allow create: if isCrmUser()
+        && validCrmLead(request.resource.data)
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && (isAdmin() || request.resource.data.assignedTo == request.auth.uid);
+      allow update: if validCrmLead(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.updatedAt == request.time
+        && (isAdmin() || (isAssignedLead()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'status', 'nextFollowUpAt', 'updatedAt'
+          ])));
+      allow delete: if isAdmin();
+
+      // Remarks are append-only: every caller's note remains auditable.
+      match /remarks/{remarkId} {
+        allow read: if canReadCrmLead(leadId);
+        allow create: if canReadCrmLead(leadId)
+          && request.resource.data.keys().hasOnly(['text', 'createdByUid', 'createdAt'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 2000
+          && request.resource.data.createdByUid == request.auth.uid
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
     }
 
     // Deny every collection that has not been explicitly authorized above.
