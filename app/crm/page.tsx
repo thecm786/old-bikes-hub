@@ -31,6 +31,11 @@ type CrmUser = { uid: string; name: string; email: string; active: boolean };
 const blankLead = { name: "", phone: "", email: "", source: "WhatsApp" as LeadSource, assignedTo: "" };
 const IMPORT_BATCH_SIZE = 450;
 
+function comparablePhone(value: string) {
+  const digits = value.replace(/\D/g, "");
+  return digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits;
+}
+
 function importDate(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -69,6 +74,7 @@ export default function CrmPage() {
   const [leadForm, setLeadForm] = useState(blankLead);
   const [remarkText, setRemarkText] = useState("");
   const [importMessage, setImportMessage] = useState("");
+  const [duplicateLeads, setDuplicateLeads] = useState<Array<{ name: string; phone: string; reason: string }>>([]);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -190,13 +196,16 @@ export default function CrmPage() {
     }
     setSaving(true);
     setImportMessage("Reading file...");
+    setDuplicateLeads([]);
     try {
       const XLSX = await import("xlsx");
       const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, { defval: "", raw: false });
       if (!rows.length) throw new Error("The first sheet has no lead rows.");
-      const parsed = rows.map((row, index) => {
+      const knownPhones = new Set(leads.map((lead) => comparablePhone(lead.phone)));
+      const duplicates: Array<{ name: string; phone: string; reason: string }> = [];
+      const parsed = rows.flatMap((row, index) => {
         const fields = Object.fromEntries(Object.entries(row).map(([key, value]) => [key.trim().toLowerCase().replace(/[^a-z]/g, ""), String(value ?? "").trim()]));
         const name = fields.name || fields.customername;
         const phone = (fields.phone || fields.mobile || fields.whatsapp || "").replace(/\s+/g, "");
@@ -206,8 +215,19 @@ export default function CrmPage() {
         if (!name || !/^[+]?[0-9]{10,15}$/.test(phone)) throw new Error(`Row ${index + 2}: name and valid phone are required.`);
         if (email && !/^[^ @]+@[^ @]+[.][^ @]+$/.test(email)) throw new Error(`Row ${index + 2}: email is not valid.`);
         if (followUp === undefined) throw new Error(`Row ${index + 2}: use YYYY-MM-DD for Follow-up Date.`);
-        return { name, phone, email, source, nextFollowUpAt: followUp };
+        const comparable = comparablePhone(phone);
+        if (knownPhones.has(comparable)) {
+          duplicates.push({ name, phone, reason: "Already available in CRM" });
+          return [];
+        }
+        knownPhones.add(comparable);
+        return [{ name, phone, email, source, nextFollowUpAt: followUp }];
       });
+      setDuplicateLeads(duplicates);
+      if (!parsed.length) {
+        setImportMessage(duplicates.length ? `No new leads added. ${duplicates.length} duplicate number${duplicates.length === 1 ? "" : "s"} skipped.` : "No valid lead rows found.");
+        return;
+      }
       for (let start = 0; start < parsed.length; start += IMPORT_BATCH_SIZE) {
         const batch = writeBatch(db);
         parsed.slice(start, start + IMPORT_BATCH_SIZE).forEach((lead) => batch.set(doc(collection(db, "crmLeads")), {
@@ -216,7 +236,7 @@ export default function CrmPage() {
         }));
         await batch.commit();
       }
-      setImportMessage(`${parsed.length} lead${parsed.length === 1 ? "" : "s"} added successfully.`);
+      setImportMessage(`${parsed.length} lead${parsed.length === 1 ? "" : "s"} added successfully.${duplicates.length ? ` ${duplicates.length} duplicate number${duplicates.length === 1 ? "" : "s"} skipped.` : ""}`);
     } catch (error) {
       setImportMessage(error instanceof Error ? error.message : "Lead import could not be completed.");
     } finally { setSaving(false); }
@@ -239,7 +259,7 @@ export default function CrmPage() {
         </div>
         <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-black text-slate-900">Bulk add leads</p><p className="mt-1 text-sm text-slate-600">Upload any number of leads. Large files are safely saved in automatic batches.</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => downloadTemplate("xlsx")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> Excel format</button><button type="button" onClick={() => downloadTemplate("csv")} className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"><Download size={16} /> CSV format</button><button type="button" disabled={saving} onClick={() => fileInput.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"><FileUp size={16} /> Upload file</button><input ref={fileInput} onChange={importLeads} accept=".csv,.xlsx,.xls" type="file" className="hidden" /></div></div>
-          <p className="mt-3 text-xs font-semibold text-slate-500">Required: Name, Phone. Optional: Email, Source (WhatsApp, Phone call, Walk-in, Website, Other), Follow-up Date (YYYY-MM-DD).</p>{importMessage && <p className={`mt-3 rounded-lg px-3 py-2 text-sm font-semibold ${importMessage.includes("successfully") ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>{importMessage}</p>}
+          <p className="mt-3 text-xs font-semibold text-slate-500">Required: Name, Phone. Optional: Email, Source (WhatsApp, Phone call, Walk-in, Website, Other), Follow-up Date (YYYY-MM-DD). Duplicate phone numbers are skipped automatically.</p>{importMessage && <p className={`mt-3 rounded-lg px-3 py-2 text-sm font-semibold ${importMessage.includes("successfully") ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>{importMessage}</p>}{duplicateLeads.length > 0 && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3"><p className="font-black text-amber-900">Skipped duplicate numbers ({duplicateLeads.length})</p><div className="mt-2 max-h-44 space-y-1 overflow-y-auto text-sm text-amber-900">{duplicateLeads.map((lead, index) => <p key={`${lead.phone}-${index}`}><span className="font-bold">{lead.name}</span> · {lead.phone} <span className="text-amber-700">({lead.reason})</span></p>)}</div></div>}
         </div>
         {showForm && <form onSubmit={createLead} className="mt-4 grid gap-3 rounded-2xl border border-orange-100 bg-orange-50 p-4 sm:grid-cols-2"><input required value={leadForm.name} onChange={(event) => setLeadForm({ ...leadForm, name: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Customer name" /><input required value={leadForm.phone} onChange={(event) => setLeadForm({ ...leadForm, phone: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Phone / WhatsApp number" /><input type="email" value={leadForm.email} onChange={(event) => setLeadForm({ ...leadForm, email: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Email (optional)" /><select value={leadForm.source} onChange={(event) => setLeadForm({ ...leadForm, source: event.target.value as LeadSource })} className="rounded-xl border border-orange-100 bg-white px-3 py-3">{SOURCES.map((source) => <option key={source}>{source}</option>)}</select>{isAdmin && <select value={leadForm.assignedTo} onChange={(event) => setLeadForm({ ...leadForm, assignedTo: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3 sm:col-span-2"><option value="">Assign to me</option>{members.map((member) => <option key={member.uid} value={member.uid}>{member.name} {member.email ? `(${member.email})` : ""}</option>)}</select>}<div className="flex gap-2 sm:col-span-2"><button disabled={saving} className="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white disabled:opacity-60">Save lead</button><button type="button" onClick={() => setShowForm(false)} className="rounded-xl px-5 py-3 font-bold text-slate-600">Cancel</button></div></form>}
         <div className="mt-5 overflow-hidden rounded-2xl bg-white shadow-sm">
