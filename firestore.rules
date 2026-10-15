@@ -34,7 +34,8 @@ service cloud.firestore {
         ])
         && data.keys().hasOnly([
           'name', 'phone', 'email', 'source', 'status', 'assignedTo',
-          'assignedName', 'createdByUid', 'nextFollowUpAt', 'createdAt', 'updatedAt'
+          'assignedName', 'createdByUid', 'nextFollowUpAt', 'agencyVisitAt',
+          'interestBrand', 'interestModel', 'budgetRange', 'whatsappDetailsShared', 'createdAt', 'updatedAt'
         ])
         && data.name is string && data.name.size() > 0 && data.name.size() <= 100
         && data.phone is string && data.phone.matches('[+]?[0-9]{10,15}')
@@ -46,6 +47,11 @@ service cloud.firestore {
         && data.assignedName is string && data.assignedName.size() > 0 && data.assignedName.size() <= 160
         && data.createdByUid is string && data.createdByUid.size() > 0 && data.createdByUid.size() <= 128
         && (data.nextFollowUpAt == null || data.nextFollowUpAt is timestamp)
+        && (!data.keys().hasAll(['agencyVisitAt']) || (data.agencyVisitAt == null || data.agencyVisitAt is timestamp))
+        && (!data.keys().hasAll(['interestBrand']) || (data.interestBrand is string && data.interestBrand.size() <= 60))
+        && (!data.keys().hasAll(['interestModel']) || (data.interestModel is string && data.interestModel.size() <= 100))
+        && (!data.keys().hasAll(['budgetRange']) || (data.budgetRange is string && data.budgetRange.size() <= 60))
+        && (!data.keys().hasAll(['whatsappDetailsShared']) || (data.whatsappDetailsShared == null || data.whatsappDetailsShared is bool))
         && data.createdAt is timestamp && data.updatedAt is timestamp;
     }
 
@@ -161,7 +167,8 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time
         && (isAdmin() || (isAssignedLead()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'status', 'nextFollowUpAt', 'updatedAt'
+            'status', 'nextFollowUpAt', 'agencyVisitAt', 'interestBrand',
+            'interestModel', 'budgetRange', 'whatsappDetailsShared', 'updatedAt'
           ])));
       allow delete: if isAdmin();
 

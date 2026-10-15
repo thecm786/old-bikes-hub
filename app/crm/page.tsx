@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, Timestamp, updateDoc, where, writeBatch } from "firebase/firestore";
+import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, Timestamp, where, writeBatch } from "firebase/firestore";
 import { onIdTokenChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { CalendarClock, CirclePlus, ClipboardList, Download, ExternalLink, FileUp, LogOut, MessageSquareText, Phone, Search, UserRound } from "lucide-react";
@@ -9,6 +9,8 @@ import { auth, db } from "@/firebase/firebase";
 
 const STATUSES = ["New", "Contacted", "Follow-up", "Qualified", "Won", "Lost"] as const;
 const SOURCES = ["WhatsApp", "Phone call", "Walk-in", "Website", "Other"] as const;
+const BRANDS = ["Any brand", "Royal Enfield", "Honda", "Hero", "TVS", "Bajaj", "Yamaha", "Suzuki", "KTM", "Jawa", "Other"] as const;
+const BUDGETS = ["Not discussed", "Under ₹50,000", "₹50,000–₹80,000", "₹80,000–₹1.2 lakh", "₹1.2–₹2 lakh", "Above ₹2 lakh"] as const;
 type LeadStatus = (typeof STATUSES)[number];
 type LeadSource = (typeof SOURCES)[number];
 
@@ -22,6 +24,11 @@ type Lead = {
   assignedTo: string;
   assignedName: string;
   nextFollowUpAt: Timestamp | null;
+  agencyVisitAt?: Timestamp | null;
+  interestBrand?: string;
+  interestModel?: string;
+  budgetRange?: string;
+  whatsappDetailsShared?: boolean | null;
   createdAt?: Timestamp;
 };
 
@@ -30,6 +37,21 @@ type CrmUser = { uid: string; name: string; email: string; active: boolean };
 
 const blankLead = { name: "", phone: "", email: "", source: "WhatsApp" as LeadSource, assignedTo: "" };
 const IMPORT_BATCH_SIZE = 450;
+
+type CallForm = { status: LeadStatus; nextFollowUpAt: string; agencyVisitAt: string; interestBrand: string; interestModel: string; budgetRange: string; whatsappDetailsShared: "Yes" | "No" | "Not yet"; remark: string };
+
+function callFormFor(lead: Lead): CallForm {
+  return {
+    status: lead.status,
+    nextFollowUpAt: dateValue(lead.nextFollowUpAt),
+    agencyVisitAt: dateValue(lead.agencyVisitAt ?? null),
+    interestBrand: lead.interestBrand || "Any brand",
+    interestModel: lead.interestModel || "",
+    budgetRange: lead.budgetRange || "Not discussed",
+    whatsappDetailsShared: lead.whatsappDetailsShared === true ? "Yes" : lead.whatsappDetailsShared === false ? "No" : "Not yet",
+    remark: "",
+  };
+}
 
 function comparablePhone(value: string) {
   const digits = value.replace(/\D/g, "");
@@ -72,9 +94,9 @@ export default function CrmPage() {
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("Calling team");
   const [leadForm, setLeadForm] = useState(blankLead);
-  const [remarkText, setRemarkText] = useState("");
   const [importMessage, setImportMessage] = useState("");
   const [duplicateLeads, setDuplicateLeads] = useState<Array<{ name: string; phone: string; reason: string }>>([]);
+  const [callForm, setCallForm] = useState<CallForm | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -141,7 +163,8 @@ export default function CrmPage() {
       await addDoc(collection(db, "crmLeads"), {
         name: leadForm.name.trim(), phone, email: leadForm.email.trim(), source: leadForm.source,
         status: "New", assignedTo, assignedName, createdByUid: userId,
-        nextFollowUpAt: null, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+        nextFollowUpAt: null, agencyVisitAt: null, interestBrand: "Any brand", interestModel: "", budgetRange: "Not discussed", whatsappDetailsShared: null,
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
       });
       setLeadForm(blankLead);
       setShowForm(false);
@@ -150,30 +173,21 @@ export default function CrmPage() {
     } finally { setSaving(false); }
   };
 
-  const updateLead = async (field: "status" | "nextFollowUpAt", value: LeadStatus | string) => {
-    if (!selected) return;
-    setSaving(true);
-    try {
-      await updateDoc(doc(db, "crmLeads", selected.id), {
-        [field]: field === "nextFollowUpAt" ? (value ? Timestamp.fromDate(new Date(`${value}T00:00:00`)) : null) : value,
-        updatedAt: serverTimestamp(),
-      });
-      setSelected((current) => current ? { ...current, [field]: field === "nextFollowUpAt" ? (value ? Timestamp.fromDate(new Date(`${value}T00:00:00`)) : null) : value } : null);
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Lead could not be updated.");
-    } finally { setSaving(false); }
-  };
-
-  const addRemark = async (event: FormEvent) => {
+  const saveCallUpdate = async (event: FormEvent) => {
     event.preventDefault();
-    if (!selected || !remarkText.trim()) return;
+    if (!selected || !callForm) return;
     setSaving(true);
     try {
-      await addDoc(collection(db, "crmLeads", selected.id, "remarks"), { text: remarkText.trim(), createdByUid: userId, createdAt: serverTimestamp() });
-      await updateDoc(doc(db, "crmLeads", selected.id), { updatedAt: serverTimestamp() });
-      setRemarkText("");
+      const parent = doc(db, "crmLeads", selected.id);
+      const batch = writeBatch(db);
+      const nextFollowUpAt = callForm.nextFollowUpAt ? Timestamp.fromDate(new Date(`${callForm.nextFollowUpAt}T00:00:00`)) : null;
+      const agencyVisitAt = callForm.agencyVisitAt ? Timestamp.fromDate(new Date(`${callForm.agencyVisitAt}T00:00:00`)) : null;
+      batch.update(parent, { status: callForm.status, nextFollowUpAt, agencyVisitAt, interestBrand: callForm.interestBrand, interestModel: callForm.interestModel.trim(), budgetRange: callForm.budgetRange, whatsappDetailsShared: callForm.whatsappDetailsShared === "Yes" ? true : callForm.whatsappDetailsShared === "No" ? false : null, updatedAt: serverTimestamp() });
+      if (callForm.remark.trim()) batch.set(doc(collection(db, "crmLeads", selected.id, "remarks")), { text: callForm.remark.trim(), createdByUid: userId, createdAt: serverTimestamp() });
+      await batch.commit();
+      setCallForm((current) => current ? { ...current, remark: "" } : current);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Remark could not be saved.");
+      alert(error instanceof Error ? error.message : "After-call update could not be saved.");
     } finally { setSaving(false); }
   };
 
@@ -231,7 +245,8 @@ export default function CrmPage() {
       for (let start = 0; start < parsed.length; start += IMPORT_BATCH_SIZE) {
         const batch = writeBatch(db);
         parsed.slice(start, start + IMPORT_BATCH_SIZE).forEach((lead) => batch.set(doc(collection(db, "crmLeads")), {
-          ...lead, status: "New", assignedTo: userId, assignedName: userName, createdByUid: userId,
+        ...lead, status: "New", assignedTo: userId, assignedName: userName, createdByUid: userId,
+        agencyVisitAt: null, interestBrand: "Any brand", interestModel: "", budgetRange: "Not discussed", whatsappDetailsShared: null,
           createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
         }));
         await batch.commit();
@@ -263,11 +278,21 @@ export default function CrmPage() {
         </div>
         {showForm && <form onSubmit={createLead} className="mt-4 grid gap-3 rounded-2xl border border-orange-100 bg-orange-50 p-4 sm:grid-cols-2"><input required value={leadForm.name} onChange={(event) => setLeadForm({ ...leadForm, name: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Customer name" /><input required value={leadForm.phone} onChange={(event) => setLeadForm({ ...leadForm, phone: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Phone / WhatsApp number" /><input type="email" value={leadForm.email} onChange={(event) => setLeadForm({ ...leadForm, email: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3" placeholder="Email (optional)" /><select value={leadForm.source} onChange={(event) => setLeadForm({ ...leadForm, source: event.target.value as LeadSource })} className="rounded-xl border border-orange-100 bg-white px-3 py-3">{SOURCES.map((source) => <option key={source}>{source}</option>)}</select>{isAdmin && <select value={leadForm.assignedTo} onChange={(event) => setLeadForm({ ...leadForm, assignedTo: event.target.value })} className="rounded-xl border border-orange-100 bg-white px-3 py-3 sm:col-span-2"><option value="">Assign to me</option>{members.map((member) => <option key={member.uid} value={member.uid}>{member.name} {member.email ? `(${member.email})` : ""}</option>)}</select>}<div className="flex gap-2 sm:col-span-2"><button disabled={saving} className="rounded-xl bg-slate-950 px-5 py-3 font-bold text-white disabled:opacity-60">Save lead</button><button type="button" onClick={() => setShowForm(false)} className="rounded-xl px-5 py-3 font-bold text-slate-600">Cancel</button></div></form>}
         <div className="mt-5 overflow-hidden rounded-2xl bg-white shadow-sm">
-          {loading ? <p className="p-8 text-center font-semibold text-slate-500">Loading leads...</p> : visibleLeads.length === 0 ? <div className="p-12 text-center"><ClipboardList className="mx-auto text-slate-300" size={40} /><h2 className="mt-3 text-xl font-black">No leads here yet</h2><p className="mt-1 text-sm text-slate-500">Add the first customer enquiry to start the calling workflow.</p></div> : <div className="divide-y divide-slate-100">{visibleLeads.map((lead) => <button key={lead.id} onClick={() => { setRemarks([]); setSelected(lead); }} className={`flex w-full items-center gap-4 px-4 py-4 text-left transition hover:bg-orange-50 ${selected?.id === lead.id ? "bg-orange-50" : ""}`}><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 font-black text-slate-600">{lead.name.slice(0, 1).toUpperCase()}</div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><p className="truncate font-black">{lead.name}</p><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${lead.status === "Won" ? "bg-emerald-100 text-emerald-700" : lead.status === "Lost" ? "bg-rose-100 text-rose-700" : "bg-orange-100 text-orange-700"}`}>{lead.status}</span></div><p className="mt-1 truncate text-sm text-slate-500">{lead.phone} · {lead.source} · {lead.assignedName}</p></div></button>)}</div>}
+          {loading ? <p className="p-8 text-center font-semibold text-slate-500">Loading leads...</p> : visibleLeads.length === 0 ? <div className="p-12 text-center"><ClipboardList className="mx-auto text-slate-300" size={40} /><h2 className="mt-3 text-xl font-black">No leads here yet</h2><p className="mt-1 text-sm text-slate-500">Add the first customer enquiry to start the calling workflow.</p></div> : <div className="divide-y divide-slate-100">{visibleLeads.map((lead) => <button key={lead.id} onClick={() => { setRemarks([]); setSelected(lead); setCallForm(callFormFor(lead)); }} className={`flex w-full items-center gap-4 px-4 py-4 text-left transition hover:bg-orange-50 ${selected?.id === lead.id ? "bg-orange-50" : ""}`}><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 font-black text-slate-600">{lead.name.slice(0, 1).toUpperCase()}</div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><p className="truncate font-black">{lead.name}</p><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${lead.status === "Won" ? "bg-emerald-100 text-emerald-700" : lead.status === "Lost" ? "bg-rose-100 text-rose-700" : "bg-orange-100 text-orange-700"}`}>{lead.status}</span></div><p className="mt-1 truncate text-sm text-slate-500">{lead.phone} · {lead.source} · {lead.assignedName}</p></div></button>)}</div>}
         </div>
       </div>
       <aside className="min-h-[340px] rounded-2xl bg-white p-5 shadow-sm">
-        {!selected ? <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center"><UserRound size={40} className="text-slate-300" /><h2 className="mt-3 text-lg font-black">Select a lead</h2><p className="mt-1 text-sm text-slate-500">Open a customer to update the calling status and leave a remark.</p></div> : <div><div className="flex items-start justify-between gap-3"><div><h2 className="text-2xl font-black">{selected.name}</h2><p className="mt-1 text-sm text-slate-500">Added {displayDate(selected.createdAt)} · {selected.source}</p></div><button onClick={() => { setRemarks([]); setSelected(null); }} className="text-sm font-bold text-slate-500">Close</button></div><div className="mt-5 grid gap-2"><a href={`tel:${selected.phone}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 font-bold text-white"><Phone size={17} /> Call {selected.phone}</a><a target="_blank" rel="noreferrer" href={`https://wa.me/${selected.phone.replace(/\D/g, "")}`} className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 font-bold text-emerald-800"><ExternalLink size={17} /> Open WhatsApp</a></div><div className="mt-5 grid grid-cols-2 gap-3"><label className="text-xs font-bold text-slate-600">Calling status<select disabled={saving} value={selected.status} onChange={(event) => updateLead("status", event.target.value as LeadStatus)} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold"><>{STATUSES.map((status) => <option key={status}>{status}</option>)}</></select></label><label className="text-xs font-bold text-slate-600">Next follow-up<input disabled={saving} type="date" value={dateValue(selected.nextFollowUpAt)} onChange={(event) => updateLead("nextFollowUpAt", event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" /></label></div><p className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-slate-500"><CalendarClock size={14} /> Assigned to {selected.assignedName}</p><div className="mt-6 border-t border-slate-100 pt-5"><h3 className="inline-flex items-center gap-2 font-black"><MessageSquareText size={18} /> Calling remarks</h3><form onSubmit={addRemark} className="mt-3"><textarea maxLength={2000} value={remarkText} onChange={(event) => setRemarkText(event.target.value)} placeholder="Example: Called at 3 PM; customer wants inspection tomorrow." className="min-h-24 w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-orange-500" /><button disabled={saving || !remarkText.trim()} className="mt-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-60">Save remark</button></form><div className="mt-4 space-y-3">{remarks.length === 0 ? <p className="text-sm text-slate-500">No remarks yet.</p> : remarks.map((remark) => <article key={remark.id} className="rounded-xl bg-slate-50 p-3"><p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{remark.text}</p><p className="mt-2 text-xs font-semibold text-slate-400">{displayDate(remark.createdAt)} · recorded securely</p></article>)}</div></div></div>}
+        {!selected || !callForm ? <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center"><UserRound size={40} className="text-slate-300" /><h2 className="mt-3 text-lg font-black">Select a lead</h2><p className="mt-1 text-sm text-slate-500">Open a customer to record the call outcome.</p></div> : <div>
+          <div className="flex items-start justify-between gap-3"><div><h2 className="text-2xl font-black">{selected.name}</h2><p className="mt-1 text-sm text-slate-500">Added {displayDate(selected.createdAt)} · {selected.source}</p></div><button onClick={() => { setRemarks([]); setCallForm(null); setSelected(null); }} className="text-sm font-bold text-slate-500">Close</button></div>
+          <div className="mt-5 grid gap-2"><a href={`tel:${selected.phone}`} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 font-bold text-white"><Phone size={17} /> Call {selected.phone}</a><a target="_blank" rel="noreferrer" href={`https://wa.me/${selected.phone.replace(/\D/g, "")}`} className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 font-bold text-emerald-800"><ExternalLink size={17} /> Open WhatsApp</a></div>
+          <form onSubmit={saveCallUpdate} className="mt-6 border-t border-slate-100 pt-5"><h3 className="font-black">After-call update</h3><p className="mt-1 text-xs text-slate-500">Fill only what was discussed, then save once.</p>
+            <div className="mt-4 grid grid-cols-2 gap-3"><label className="text-xs font-bold text-slate-600">Status<select value={callForm.status} onChange={(event) => setCallForm({ ...callForm, status: event.target.value as LeadStatus })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold">{STATUSES.map((status) => <option key={status}>{status}</option>)}</select></label><label className="text-xs font-bold text-slate-600">Call again on<input type="date" value={callForm.nextFollowUpAt} onChange={(event) => setCallForm({ ...callForm, nextFollowUpAt: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" /></label><label className="text-xs font-bold text-slate-600">Agency visit on<input type="date" value={callForm.agencyVisitAt} onChange={(event) => setCallForm({ ...callForm, agencyVisitAt: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" /></label><label className="text-xs font-bold text-slate-600">Bike brand<select value={callForm.interestBrand} onChange={(event) => setCallForm({ ...callForm, interestBrand: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">{BRANDS.map((brand) => <option key={brand}>{brand}</option>)}</select></label></div>
+            <label className="mt-3 block text-xs font-bold text-slate-600">Preferred model<input value={callForm.interestModel} onChange={(event) => setCallForm({ ...callForm, interestModel: event.target.value })} maxLength={100} placeholder="Example: Classic 350, Shine 125" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" /></label>
+            <div className="mt-3 grid grid-cols-2 gap-3"><label className="text-xs font-bold text-slate-600">Budget range<select value={callForm.budgetRange} onChange={(event) => setCallForm({ ...callForm, budgetRange: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">{BUDGETS.map((budget) => <option key={budget}>{budget}</option>)}</select></label><label className="text-xs font-bold text-slate-600">WhatsApp details sent?<select value={callForm.whatsappDetailsShared} onChange={(event) => setCallForm({ ...callForm, whatsappDetailsShared: event.target.value as CallForm["whatsappDetailsShared"] })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option>Not yet</option><option>Yes</option><option>No</option></select></label></div>
+            <label className="mt-3 block text-xs font-bold text-slate-600">What happened on the call?<textarea value={callForm.remark} onChange={(event) => setCallForm({ ...callForm, remark: event.target.value })} maxLength={2000} placeholder="Example: Customer wants a black Classic 350. Details sent on WhatsApp; will visit Saturday." className="mt-1.5 min-h-24 w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-orange-500" /></label><button disabled={saving} className="mt-3 w-full rounded-xl bg-orange-500 px-4 py-3 font-black text-white disabled:opacity-60">{saving ? "Saving..." : "Save after-call update"}</button>
+          </form>
+          <p className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-slate-500"><CalendarClock size={14} /> Assigned to {selected.assignedName}</p><div className="mt-5 border-t border-slate-100 pt-4"><h3 className="inline-flex items-center gap-2 font-black"><MessageSquareText size={18} /> Previous remarks</h3><div className="mt-3 space-y-3">{remarks.length === 0 ? <p className="text-sm text-slate-500">No remarks yet.</p> : remarks.map((remark) => <article key={remark.id} className="rounded-xl bg-slate-50 p-3"><p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{remark.text}</p><p className="mt-2 text-xs font-semibold text-slate-400">{displayDate(remark.createdAt)} · recorded securely</p></article>)}</div></div>
+        </div>}
       </aside>
     </section>
   </main>;
