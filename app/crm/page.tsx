@@ -120,17 +120,6 @@ type CrmUser = {
   active: boolean;
 };
 
-type Bike = {
-  id: string;
-  name: string;
-  brand: string;
-  price: number;
-  status: string;
-  slug?: string;
-  location?: string;
-  year?: string;
-};
-
 type CallForm = {
   status: LeadStatus;
   nextFollowUpAt: string;
@@ -249,21 +238,6 @@ function importDate(
     : Timestamp.fromDate(date);
 }
 
-function budgetMaximum(range: string): number {
-  switch (range) {
-    case "Under ₹50,000":
-      return 50000;
-    case "₹50,000–₹80,000":
-      return 80000;
-    case "₹80,000–₹1.2 lakh":
-      return 120000;
-    case "₹1.2–₹2 lakh":
-      return 200000;
-    default:
-      return Number.POSITIVE_INFINITY;
-  }
-}
-
 function callFormFor(lead: Lead): CallForm {
   return {
     status: lead.status,
@@ -289,7 +263,6 @@ export default function CrmPage() {
   const router = useRouter();
 
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [bikes, setBikes] = useState<Bike[]>([]);
   const [members, setMembers] = useState<CrmUser[]>([]);
 
   const [selected, setSelected] = useState<Lead | null>(null);
@@ -443,23 +416,6 @@ export default function CrmPage() {
     };
   }, [router]);
 
-  useEffect(() => {
-    return onSnapshot(
-      collection(db, "bikes"),
-      (snapshot) => {
-        setBikes(
-          snapshot.docs.map((item) => ({
-            ...(item.data() as Omit<Bike, "id">),
-            id: item.id,
-          }))
-        );
-      },
-      (error) => {
-        console.error("CRM bikes error:", error);
-      }
-    );
-  }, []);
-
   const selectedId = selected?.id;
 
   useEffect(() => {
@@ -587,43 +543,6 @@ export default function CrmPage() {
         dateValue(lead.nextFollowUpAt) === key
     );
   }, [leads]);
-
-  const relatedBikes = useMemo(() => {
-    if (!callForm) return [];
-
-    const preferredBrand =
-      callForm.interestBrand.toLowerCase();
-
-    const preferredModel =
-      callForm.interestModel
-        .trim()
-        .toLowerCase();
-
-    return bikes
-      .filter(
-        (bike) =>
-          bike.status === "Available" &&
-          (preferredBrand === "any brand" ||
-            bike.brand.toLowerCase() ===
-              preferredBrand) &&
-          Number(bike.price) <=
-            budgetMaximum(callForm.budgetRange)
-      )
-      .sort(
-        (a, b) =>
-          Number(
-            b.name
-              .toLowerCase()
-              .includes(preferredModel)
-          ) -
-          Number(
-            a.name
-              .toLowerCase()
-              .includes(preferredModel)
-          )
-      )
-      .slice(0, 6);
-  }, [bikes, callForm]);
 
   const openLead = (lead: Lead) => {
     setRemarks([]);
@@ -1117,6 +1036,12 @@ export default function CrmPage() {
                   callForm.interestModel,
                 budgetRange:
                   callForm.budgetRange,
+                whatsappDetailsShared:
+                  callForm.whatsappDetailsShared === "Yes"
+                    ? true
+                    : callForm.whatsappDetailsShared === "No"
+                      ? false
+                      : null,
               }
             : current
       );
@@ -1376,6 +1301,201 @@ export default function CrmPage() {
     await signOut(auth);
     router.replace("/crm/login");
   };
+
+  const renderLeadDetails = () => (
+    <>
+      {!selected || !callForm ? (
+            <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center">
+              <UserRound size={40} className="text-slate-300" />
+              <h2 className="mt-3 text-lg font-black">Select a lead</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Open a customer to record the call outcome.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="break-words text-xl font-black sm:text-2xl">
+                    {selected.name}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Added {displayDate(selected.createdAt)} · {selected.source}
+                  </p>
+                </div>
+                <button type="button" onClick={() => {
+                  setRemarks([]);
+                  setCallForm(null);
+                  setSelected(null);
+                }} className="text-sm font-bold text-slate-500">
+                  Close
+                </button>
+              </div>
+
+              <div className="mt-5 grid gap-2">
+                <a href={`tel:${selected.phone}`}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 font-bold text-white">
+                  <Phone size={17} />
+                  Call {selected.phone}
+                </a>
+                <a target="_blank" rel="noreferrer"
+                  href={`https://wa.me/${selected.phone.replace(/\D/g, "")}`}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 font-bold text-emerald-800">
+                  <ExternalLink size={17} />
+                  Open WhatsApp
+                </a>
+              </div>
+
+              <form onSubmit={saveCallUpdate}
+                className="mt-6 border-t border-slate-100 pt-5">
+                <h3 className="font-black">After-call update</h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  Fill only what was discussed, then save once.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {QUICK_OUTCOMES.map((outcome) => (
+                    <button type="button" key={outcome.label}
+                      onClick={() => applyQuickOutcome(outcome)}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:border-orange-400 hover:bg-orange-50">
+                      {outcome.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-bold text-slate-600">
+                    Lead Status
+                    <select value={callForm.status}
+                      onChange={(e) => setCallForm({
+                        ...callForm, status: e.target.value as LeadStatus
+                      })}
+                      className={`mt-1.5 ${inputClass}`}>
+                      {STATUSES.map((status) => (
+                        <option key={status} value={status}>{status}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="text-xs font-bold text-slate-600">
+                    Next Follow-up Date
+                    <input type="date" value={callForm.nextFollowUpAt}
+                      onChange={(e) => setCallForm({
+                        ...callForm, nextFollowUpAt: e.target.value
+                      })}
+                      className={`mt-1.5 ${inputClass}`} />
+                  </label>
+
+                  <label className="text-xs font-bold text-slate-600">
+                    Agency Visit Date
+                    <input type="date" value={callForm.agencyVisitAt}
+                      onChange={(e) => setCallForm({
+                        ...callForm, agencyVisitAt: e.target.value
+                      })}
+                      className={`mt-1.5 ${inputClass}`} />
+                  </label>
+
+                  <label className="text-xs font-bold text-slate-600">
+                    Preferred Brand
+                    <select value={callForm.interestBrand}
+                      onChange={(e) => setCallForm({
+                        ...callForm, interestBrand: e.target.value
+                      })}
+                      className={`mt-1.5 ${inputClass}`}>
+                      {BRANDS.map((brand) => (
+                        <option key={brand} value={brand}>{brand}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <label className="mt-3 block text-xs font-bold text-slate-600">
+                  Preferred Model
+                  <input value={callForm.interestModel}
+                    onChange={(e) => setCallForm({
+                      ...callForm, interestModel: e.target.value
+                    })}
+                    maxLength={100}
+                    placeholder="Example: Classic 350, Shine 125"
+                    className={`mt-1.5 ${inputClass}`} />
+                </label>
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-bold text-slate-600">
+                    Budget Range
+                    <select value={callForm.budgetRange}
+                      onChange={(e) => setCallForm({
+                        ...callForm, budgetRange: e.target.value
+                      })}
+                      className={`mt-1.5 ${inputClass}`}>
+                      {BUDGETS.map((budget) => (
+                        <option key={budget} value={budget}>{budget}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="text-xs font-bold text-slate-600">
+                    Details Shared on WhatsApp?
+                    <select value={callForm.whatsappDetailsShared}
+                      onChange={(e) => setCallForm({
+                        ...callForm,
+                        whatsappDetailsShared: e.target.value as CallForm["whatsappDetailsShared"]
+                      })}
+                      className={`mt-1.5 ${inputClass}`}>
+                      <option>Not yet</option>
+                      <option>Yes</option>
+                      <option>No</option>
+                    </select>
+                  </label>
+                </div>
+
+                <label className="mt-3 block text-xs font-bold text-slate-600">
+                  Call Notes
+                  <textarea value={callForm.remark}
+                    onChange={(e) => setCallForm({
+                      ...callForm, remark: e.target.value
+                    })}
+                    maxLength={2000}
+                    placeholder="Customer wants a black Classic 350. Details sent on WhatsApp."
+                    className={`mt-1.5 min-h-24 ${inputClass}`} />
+                </label>
+
+                <button disabled={saving}
+                  className="mt-3 w-full rounded-xl bg-orange-500 px-4 py-3 font-black text-white disabled:opacity-60">
+                  {saving ? "Saving..." : "Save after-call update"}
+                </button>
+              </form>
+
+              <p className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
+                <CalendarClock size={14} />
+                Assigned to {selected.assignedName}
+              </p>
+
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                <h3 className="inline-flex items-center gap-2 font-black">
+                  <MessageSquareText size={18} />
+                  Previous remarks
+                </h3>
+                <div className="mt-3 space-y-3">
+                  {remarks.length === 0 ? (
+                    <p className="text-sm text-slate-500">No remarks yet.</p>
+                  ) : (
+                    remarks.map((remark) => (
+                      <article key={remark.id} className="rounded-xl bg-slate-50 p-3">
+                        <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                          {remark.text}
+                        </p>
+                        <p className="mt-2 text-xs font-semibold text-slate-400">
+                          {displayDate(remark.createdAt)} · recorded securely
+                        </p>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+      )}
+    </>
+  );
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 p-3 text-slate-900 sm:p-7">
@@ -1803,7 +1923,7 @@ export default function CrmPage() {
               <div className="divide-y divide-slate-100">
                 {visibleLeads.map((lead) => (
                   <div key={lead.id}
-                    className={`flex items-center gap-2 px-3 py-3 sm:px-4 ${
+                    className={`flex flex-wrap items-center gap-2 px-3 py-3 sm:px-4 ${
                       selected?.id === lead.id ? "bg-orange-50" : ""
                     }`}>
                     {isAdmin && (
@@ -1837,6 +1957,13 @@ export default function CrmPage() {
                         </p>
                       </div>
                     </button>
+                    {selected?.id === lead.id && (
+                      <div className="basis-full border-t border-orange-100 pt-3 lg:hidden">
+                        <div className="rounded-2xl bg-orange-50 p-3 shadow-sm">
+                          {renderLeadDetails()}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1844,236 +1971,7 @@ export default function CrmPage() {
           </div>
         </div>
 
-        <aside className="min-h-[340px] rounded-2xl bg-white p-4 shadow-sm sm:p-5">
-          {!selected || !callForm ? (
-            <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center">
-              <UserRound size={40} className="text-slate-300" />
-              <h2 className="mt-3 text-lg font-black">Select a lead</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Open a customer to record the call outcome.
-              </p>
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="break-words text-xl font-black sm:text-2xl">
-                    {selected.name}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Added {displayDate(selected.createdAt)} · {selected.source}
-                  </p>
-                </div>
-                <button type="button" onClick={() => {
-                  setRemarks([]);
-                  setCallForm(null);
-                  setSelected(null);
-                }} className="text-sm font-bold text-slate-500">
-                  Close
-                </button>
-              </div>
-
-              <div className="mt-5 grid gap-2">
-                <a href={`tel:${selected.phone}`}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 font-bold text-white">
-                  <Phone size={17} />
-                  Call {selected.phone}
-                </a>
-                <a target="_blank" rel="noreferrer"
-                  href={`https://wa.me/${selected.phone.replace(/\D/g, "")}`}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 font-bold text-emerald-800">
-                  <ExternalLink size={17} />
-                  Open WhatsApp
-                </a>
-              </div>
-
-              <form onSubmit={saveCallUpdate}
-                className="mt-6 border-t border-slate-100 pt-5">
-                <h3 className="font-black">After-call update</h3>
-                <p className="mt-1 text-xs text-slate-500">
-                  Fill only what was discussed, then save once.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {QUICK_OUTCOMES.map((outcome) => (
-                    <button type="button" key={outcome.label}
-                      onClick={() => applyQuickOutcome(outcome)}
-                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:border-orange-400 hover:bg-orange-50">
-                      {outcome.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <label className="text-xs font-bold text-slate-600">
-                    Lead Status
-                    <select value={callForm.status}
-                      onChange={(e) => setCallForm({
-                        ...callForm, status: e.target.value as LeadStatus
-                      })}
-                      className={`mt-1.5 ${inputClass}`}>
-                      {STATUSES.map((status) => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="text-xs font-bold text-slate-600">
-                    Next Follow-up Date
-                    <input type="date" value={callForm.nextFollowUpAt}
-                      onChange={(e) => setCallForm({
-                        ...callForm, nextFollowUpAt: e.target.value
-                      })}
-                      className={`mt-1.5 ${inputClass}`} />
-                  </label>
-
-                  <label className="text-xs font-bold text-slate-600">
-                    Agency Visit Date
-                    <input type="date" value={callForm.agencyVisitAt}
-                      onChange={(e) => setCallForm({
-                        ...callForm, agencyVisitAt: e.target.value
-                      })}
-                      className={`mt-1.5 ${inputClass}`} />
-                  </label>
-
-                  <label className="text-xs font-bold text-slate-600">
-                    Preferred Brand
-                    <select value={callForm.interestBrand}
-                      onChange={(e) => setCallForm({
-                        ...callForm, interestBrand: e.target.value
-                      })}
-                      className={`mt-1.5 ${inputClass}`}>
-                      {BRANDS.map((brand) => (
-                        <option key={brand} value={brand}>{brand}</option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-
-                <label className="mt-3 block text-xs font-bold text-slate-600">
-                  Preferred Model
-                  <input value={callForm.interestModel}
-                    onChange={(e) => setCallForm({
-                      ...callForm, interestModel: e.target.value
-                    })}
-                    maxLength={100}
-                    placeholder="Example: Classic 350, Shine 125"
-                    className={`mt-1.5 ${inputClass}`} />
-                </label>
-
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <label className="text-xs font-bold text-slate-600">
-                    Budget Range
-                    <select value={callForm.budgetRange}
-                      onChange={(e) => setCallForm({
-                        ...callForm, budgetRange: e.target.value
-                      })}
-                      className={`mt-1.5 ${inputClass}`}>
-                      {BUDGETS.map((budget) => (
-                        <option key={budget} value={budget}>{budget}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="text-xs font-bold text-slate-600">
-                    Details Shared on WhatsApp?
-                    <select value={callForm.whatsappDetailsShared}
-                      onChange={(e) => setCallForm({
-                        ...callForm,
-                        whatsappDetailsShared: e.target.value as CallForm["whatsappDetailsShared"]
-                      })}
-                      className={`mt-1.5 ${inputClass}`}>
-                      <option>Not yet</option>
-                      <option>Yes</option>
-                      <option>No</option>
-                    </select>
-                  </label>
-                </div>
-
-                <label className="mt-3 block text-xs font-bold text-slate-600">
-                  Call Notes
-                  <textarea value={callForm.remark}
-                    onChange={(e) => setCallForm({
-                      ...callForm, remark: e.target.value
-                    })}
-                    maxLength={2000}
-                    placeholder="Customer wants a black Classic 350. Details sent on WhatsApp."
-                    className={`mt-1.5 min-h-24 ${inputClass}`} />
-                </label>
-
-                <button disabled={saving}
-                  className="mt-3 w-full rounded-xl bg-orange-500 px-4 py-3 font-black text-white disabled:opacity-60">
-                  {saving ? "Saving..." : "Save after-call update"}
-                </button>
-              </form>
-
-              <div className="mt-5 border-t border-slate-100 pt-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-black">Related Listed Bikes</h3>
-                  <span className="text-xs font-bold text-slate-500">
-                    {relatedBikes.length} available
-                  </span>
-                </div>
-                {relatedBikes.length > 0 ? (
-                  <div className="mt-3 space-y-2">
-                    {relatedBikes.map((bike) => (
-                      <a key={bike.id}
-                        href={bike.slug ? `/bike/${bike.slug}--${bike.id}` : "/buy-bikes"}
-                        target="_blank" rel="noreferrer"
-                        className="block rounded-xl border border-slate-200 p-3 transition hover:border-orange-400 hover:bg-orange-50">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate font-bold">
-                              {bike.name || bike.brand}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-500">
-                              {bike.location || "Bihar"}
-                              {bike.year ? ` · ${bike.year}` : ""}
-                            </p>
-                          </div>
-                          <p className="shrink-0 whitespace-nowrap font-black text-orange-600">
-                            ₹{Number(bike.price).toLocaleString("en-IN")}
-                          </p>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-2 text-sm text-slate-500">
-                    No matching available bike found. Update preferred brand or budget to widen results.
-                  </p>
-                )}
-              </div>
-
-              <p className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
-                <CalendarClock size={14} />
-                Assigned to {selected.assignedName}
-              </p>
-
-              <div className="mt-5 border-t border-slate-100 pt-4">
-                <h3 className="inline-flex items-center gap-2 font-black">
-                  <MessageSquareText size={18} />
-                  Previous remarks
-                </h3>
-                <div className="mt-3 space-y-3">
-                  {remarks.length === 0 ? (
-                    <p className="text-sm text-slate-500">No remarks yet.</p>
-                  ) : (
-                    remarks.map((remark) => (
-                      <article key={remark.id} className="rounded-xl bg-slate-50 p-3">
-                        <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                          {remark.text}
-                        </p>
-                        <p className="mt-2 text-xs font-semibold text-slate-400">
-                          {displayDate(remark.createdAt)} · recorded securely
-                        </p>
-                      </article>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </aside>
+        <aside className="hidden min-h-[340px] rounded-2xl bg-white p-5 shadow-sm lg:block">{renderLeadDetails()}</aside>
       </section>
     </main>
   );
