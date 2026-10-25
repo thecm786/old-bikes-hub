@@ -108,7 +108,14 @@ export async function generateMetadata({ params }: Props) {
       robots: { index: false, follow: true },
     };
   }
-  return pageMetadata(item.title, `Browse live ${item.title.toLowerCase()}. View actual price, year, kilometres and location, then enquire from any Bihar city with Old Bikes Hub.`, `/used-bikes-bihar/${collection}`);
+  const brand = "brand" in item ? item.brand : undefined;
+  const title = brand
+    ? `Second Hand ${brand} Bikes in Bihar | Prices & Photos`
+    : item.title;
+  const description = brand
+    ? `Find used and second hand ${brand} bikes for sale in Bihar. Compare current price, model year, kilometres, photos and location before you enquire with Old Bikes Hub.`
+    : `Browse live ${item.title.toLowerCase()}. View actual price, year, kilometres and location, then enquire from any Bihar city with Old Bikes Hub.`;
+  return pageMetadata(title, description, `/used-bikes-bihar/${collection}`);
 }
 
 export default async function CollectionPage({ params }: Props) {
