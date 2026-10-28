@@ -12,6 +12,8 @@ import {
 import {
   collection,
   getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 
 import { decideSellRequest } from "@/lib/sellRequestDecision";
@@ -64,10 +66,16 @@ export default function SellRequestsPage() {
    * ----------------------------------------------------
    */
 
-  const fetchRequests = () => getDocs(collection(db, "sellRequests"))
+  const fetchRequests = () => {
+    const requestSource = statusFilter === "All"
+      ? collection(db, "sellRequests")
+      : query(collection(db, "sellRequests"), where("status", "==", statusFilter));
+
+    return getDocs(requestSource)
     .then((snapshot) => setRequests(snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<SellRequest, "id">) }))))
     .catch((error: unknown) => console.error("Failed to fetch sell requests:", error))
     .finally(() => setLoading(false));
+  };
 
   /*
    * ----------------------------------------------------
@@ -77,9 +85,10 @@ export default function SellRequestsPage() {
 
   useEffect(() => {
 
+    setLoading(true);
     fetchRequests();
 
-  }, []);
+  }, [statusFilter]);
 
   /*
    * ----------------------------------------------------
@@ -96,7 +105,15 @@ export default function SellRequestsPage() {
       setRequests((current) => current.filter((request) => request.id !== id));
     } catch (error) {
       console.error("Sell request update failed:", error);
-      alert(error instanceof Error ? error.message : "Unable to process this request. Please try again.");
+      const firebaseCode = typeof error === "object" && error && "code" in error
+        ? String(error.code)
+        : "";
+      const message = error instanceof Error ? error.message : "";
+      if (firebaseCode === "resource-exhausted" || /quota exceeded/i.test(message)) {
+        alert("Firebase quota is currently exhausted. This request has not been changed. Please try again after the quota resets, or enable Firebase billing for uninterrupted approvals.");
+      } else {
+        alert(message || "Unable to process this request. Please try again.");
+      }
     } finally {
       inFlight.current.delete(id);
       setProcessing((current) => current.filter((requestId) => requestId !== id));

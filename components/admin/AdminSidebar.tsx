@@ -20,7 +20,7 @@ import { auth, db } from "@/firebase/firebase";
 
 import {
   collection,
-  onSnapshot,
+  getCountFromServer,
   query,
   where,
 } from "firebase/firestore";
@@ -37,7 +37,7 @@ export default function AdminSidebar() {
 
   /*
    * ----------------------------------------------------
-   * REAL-TIME PENDING SELL REQUEST COUNT
+   * PENDING SELL REQUEST COUNT
    * ----------------------------------------------------
    */
 
@@ -55,32 +55,16 @@ export default function AdminSidebar() {
       )
     );
 
-    const unsubscribe = onSnapshot(
-      pendingQuery,
-      (snapshot) => {
+    let active = true;
+    getCountFromServer(pendingQuery)
+      .then((snapshot) => {
+        if (active) setPendingCount(snapshot.data().count);
+      })
+      .catch((error) => {
+        console.error("Pending request count error:", error);
+      });
 
-        setPendingCount(
-          snapshot.size
-        );
-
-      },
-      (error) => {
-
-        console.error(
-          "Pending request listener error:",
-          error
-        );
-
-      }
-    );
-
-    /*
-     * Cleanup Firestore listener
-     */
-
-    return () => {
-      unsubscribe();
-    };
+    return () => { active = false; };
 
   }, []);
 
